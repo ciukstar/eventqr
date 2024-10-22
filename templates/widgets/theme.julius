@@ -1,0 +1,17 @@
+
+Array.from(
+  document.querySelectorAll('button.theme-mode')
+).forEach(x => {
+  x.addEventListener('click', function (e) {
+    const theme = ui('mode',ui('mode') === 'light' ? 'dark' : 'light');
+    e.target.querySelector('i').textContent = theme === 'dark' ? 'light_mode' : 'mode_night';
+
+    Array.from(document.querySelectorAll('.chart')).forEach(x => {
+      x.dispatchEvent(
+        new CustomEvent(#{eventChangeTheme},{ detail: {theme:theme} })
+      );
+    });
+    
+    localStorage.setItem(#{keyThemeMode},theme);
+  });
+});

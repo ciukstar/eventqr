@@ -1,0 +1,24 @@
+-- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
+-- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
+
+
+UserPhoto
+    user UserId OnDeleteCascade
+    mime Text
+    photo ByteString
+    attribution Html Maybe
+    UniqueUserPhoto user
+
+User
+    email Text
+    password Text Maybe
+    name Text Maybe
+    admin Bool
+    UniqueUser email
+    deriving Typeable
+    
+Email
+    email Text
+    userId UserId Maybe
+    verkey Text Maybe
+    UniqueEmail email

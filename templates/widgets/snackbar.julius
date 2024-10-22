@@ -1,0 +1,15 @@
+
+
+Array.from(
+  document.querySelectorAll('.snackbar')
+).forEach(snackbar => {
+  snackbar.querySelector('button.close').addEventListener('click', e => {
+    snackbar.classList.remove('active');
+  });
+});
+
+setTimeout(() => {
+  Array.from(
+    document.querySelectorAll('.snackbar')
+  ).forEach(x => { x.classList.remove('active'); });
+}, 6000);

@@ -1,0 +1,10 @@
+
+
+Array.from(
+  document.querySelectorAll('button.trigger-main-menu')
+).forEach(x => {
+  x.addEventListener('click', e => {
+    document.getElementById(#{idOverlay}).classList.add('active');
+    document.getElementById(#{idDialogMainMenu}).show();
+  });
+});

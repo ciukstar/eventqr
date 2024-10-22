@@ -1,0 +1,26 @@
+
+^{widgetTopbar Nothing (msgr MsgAppName) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding ##{idMain}>
+    
+
+$if not (null msgs)
+  ^{widgetSnackbar msgs}
+
+<footer.transparent>
+  <nav.transparent>
+      
+    <button.square.round.large.small-blur ##{idButtonSwitch} title=_{MsgAttractions}>
+      <i>park
+      
+    <button.square.round.large.small-blur ##{idButtonSearchTrigger} title=_{MsgSearchByNameOrAddress}>
+      <i>search
+      
+    <button.square.round.large.small-blur ##{idButtonSearchByCategoryTrigger} title=_{MsgRestaurantsShopsAndMore}>
+      <i>checklist
+      
+    <button.square.round.large.small-blur ##{idButtonMainMenu} title=_{MsgMainMenu} data-ui=##{idOverlay}>
+      <i>menu
+
+
+^{widgetMainMenu idOverlay idDialogMainMenu}

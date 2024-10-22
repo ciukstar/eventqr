@@ -1,0 +1,18 @@
+
+<header.responsive.transparent>
+
+
+<main>
+
+  $forall (_,msg) <- msgs
+    <p.error-text>
+      #{msg}
+        
+  <form method=post action=@{PwdResetR}>
+  
+    <div.field.fill.label.round.border>
+      <input type=text name=email required>
+      <label>_{MsgEmail}
+      
+    <button type=submit>
+      _{MsgResetPassword}

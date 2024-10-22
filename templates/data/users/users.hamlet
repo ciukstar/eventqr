@@ -1,0 +1,30 @@
+
+^{widgetTopbar Nothing (msgr MsgUsers) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+  $forall Entity uid (User email _ uname admin) <- users
+    <a.row.padding.surface-container.wave href=@{DataR $ UserR uid}>
+
+      <img.circle.extra src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        
+      <div.max>
+        $maybe name <- uname
+          <h6.small>#{name}
+        $nothing
+          <h6.small>#{email}
+   
+        <div>
+          $if admin
+            <span.upper>_{MsgAdministrator}
+          $else
+            <span.lower>_{MsgUser}
+        
+      <i>arrow_forward_ios
+
+    <hr>
+
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR UserNewR}
+    style="z-index:1" onclick="event.stopPropagation()">
+    <i>add
+
+  ^{widgetSnackbar msgs}

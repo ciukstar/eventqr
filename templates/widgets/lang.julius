@@ -1,0 +1,19 @@
+
+
+Array.from(
+  document.querySelectorAll('button.trigger-lang')
+).forEach(x => {
+  x.addEventListener('click', e => {
+    document.getElementById(#{idHiddenSelect}).click();
+  });
+});
+
+Array.from(
+  document.querySelectorAll('a[role=menuitem][data-lang]')
+).forEach(x => {
+  x.addEventListener('click', e => {
+    document.getElementById(#{idHiddenSelect}).value = e.target.dataset.lang;
+    document.getElementById(#{idInputBacklink}).value = window.location.href;
+    document.getElementById(#{idFormLang}).submit();
+  });
+});

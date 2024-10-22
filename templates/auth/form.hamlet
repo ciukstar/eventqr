@@ -1,0 +1,42 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgAppName) idOverlay Nothing Nothing}
+
+
+<main.responsive>
+
+  <button.border.transparent data-ui=#demoAccountsMenu #idButtonAccountsMenu>
+    <i.no-round>demography
+    <span>_{MsgDemoUserAccounts}
+    <i>arrow_drop_down
+    <menu #demoAccountsMenu>
+      $forall Entity uid (User email _ uname admin) <- users
+        $with pass <- maybe "" (TE.decodeUtf8 . localPart) (emailAddress $ TE.encodeUtf8 email)
+          <a.row href=# onclick="document.getElementById('#{idInputUsername}').value = '#{email}';document.getElementById('#{idInputPassword}').value = '#{pass}';document.getElementById('idButtonAccountsMenu').click()">
+            <img.circle.small src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>
+            <div.max>
+              $maybe name <- uname
+                <h6.small>#{name}
+              $nothing
+                <h6.small>#{email}
+              <label>
+                $if admin
+                  <p.upper>_{MsgAdministrator}
+                $else
+                  <p.lower>_{MsgUser}
+
+  $forall (_,msg) <- msgs
+    <p.error-text>
+      #{msg}
+        
+  <form.reponsive method=post action=@{route}>
+  
+    <div.field.fill.label.round.border>
+      <input type=text name=username required ##{idInputUsername}>
+      <label>_{MsgUsername}
+      
+    <div.field.fill.label.round.border>
+      <input type=password name=password required ##{idInputPassword}>
+      <label>_{MsgPassword}
+      
+    <button type=submit>
+      _{MsgSignIn}

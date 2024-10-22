@@ -1,0 +1,44 @@
+
+
+function snackbar (message, className = '', timeout = 6000) {
+  const snackbar = document.createElement('div');
+  snackbar.className = `snackbar active ${className}`;
+  
+  const content = document.createElement('div');
+  content.className = 'max';
+  content.textContent = message;
+
+  const buttonClose = document.createElement('button');
+  buttonClose.type = 'button';
+  buttonClose.className = 'close transparent circle';
+  buttonClose.addEventListener('click', e => { snackbar.remove(); });
+  
+  const buttonIcon = document.createElement('i');
+  buttonIcon.textContent = 'close';
+  
+  buttonClose.appendChild(buttonIcon);
+  snackbar.appendChild(content);
+  snackbar.appendChild(buttonClose);
+
+  setTimeout(() => { snackbar.remove(); }, timeout);
+  
+  return snackbar;
+}
+
+
+function progress() {
+  const p = document.createElement('progress');
+  p.className = 'circle small center';
+  return p;
+}
+
+
+function debounce(f,t) {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => {
+      f.apply(null, args);
+    }, t);
+  };
+}

@@ -1,0 +1,24 @@
+
+
+$maybe Entity uid (User email _ uname _) <- user
+  <button.circle.transparent data-ui=#accountmenutrigger>
+    <img src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>
+    <menu.left.no-wrap #accountmenutrigger>
+      <a.row href=@{AuthR LogoutR}>
+        <i>logout
+        <div.max>
+          <div>_{MsgSignOut}
+          <label>
+            $maybe name <- uname
+              <h6.small>#{name}
+            $nothing
+              <h6.small>#{email}
+    
+    
+$nothing
+  <a.button.s.small.circle href=@{AuthR LoginR} title=_{MsgSignIn}>
+    <i>login
+  <a.button.m.medium.circle href=@{AuthR LoginR} title=_{MsgSignIn}>
+    <i>login
+  <a.button.l.large.circle href=@{AuthR LoginR} title=_{MsgSignIn}>
+    <i>login

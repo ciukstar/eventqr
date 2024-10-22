@@ -1,0 +1,21 @@
+
+^{widgetTopbar Nothing (m MsgDocumentation) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  <h2.small>_{MsgAppName}
+  <p>
+    #{t $ MsgDoc001 (m MsgAppName) (r HomeR)}
+
+  <section>
+    <h3.small>_{MsgSourceCode}
+    <p>
+      #{t $ MsgDoc002 "https://github.com/ciukstar/eventqr"}
+
+  <section>
+    <h3.small>_{MsgIssueTracking}
+    <p>
+      #{t $ MsgDoc003 "https://github.com/ciukstar/eventqr/issues"}
+
+
+  ^{widgetSnackbar msgs}

@@ -1,0 +1,34 @@
+
+$maybe _ <- backlink
+$nothing
+  ^{widgetMainMenu idOverlay idDialogMainMenu}
+
+<header.fixed :isNothing backlink:.primary>
+  <nav.responsive.max>
+    $maybe (route,params) <- backlink
+      <a.button.circle.transparent href=@?{(route,params)}>
+        <i>arrow_back
+    $nothing
+      ^{widgetMainMenuTrigger idOverlay idDialogMainMenu}
+    
+    <h6.title.max>
+      #{title}
+
+    $maybe _ <- backlink
+    $nothing
+      ^{widgetTheme}
+
+      ^{widgetLang LangR (rndr HomeR stati)}
+
+      ^{widgetAccount}
+      
+    $maybe idDialogDelete <- idDialogDelete
+      <button.circle.transparent type=button title=_{MsgDele} data-ui=##{idOverlay}
+        onclick="document.getElementById('#{idDialogDelete}').show()">
+        
+        <i>delete
+      
+    $maybe route <- editRoute
+      <a.button.circle.transparent href=@{route} title=_{MsgEdit}>
+        <i>edit
+      

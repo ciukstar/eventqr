@@ -1,0 +1,95 @@
+
+body.light
+    --primary:#5b6300
+    --on-primary:#ffffff
+    --primary-container:#dded49
+    --on-primary-container:#1a1d00
+    --secondary:#5e6044
+    --on-secondary:#ffffff
+    --secondary-container:#e4e5c1
+    --on-secondary-container:#1b1d07
+    --tertiary:#3c665a
+    --on-tertiary:#ffffff
+    --tertiary-container:#beecdc
+    --on-tertiary-container:#002019
+    --error:#ba1a1a
+    --on-error:#ffffff
+    --error-container:#ffdad6
+    --on-error-container:#410002
+    --background:#feffd8
+    --on-background:#1c1c17
+    --surface:#fcf9f0
+    --on-surface:#1c1c17
+    --surface-variant:#e5e3d2
+    --on-surface-variant:#47483b
+    --outline:#787869
+    --outline-variant:#c8c7b7
+    --shadow:#000000
+    --scrim:#000000
+    --inverse-surface:#31312b
+    --inverse-on-surface:#f3f1e8
+    --inverse-primary:#c1d02c
+    --surface-dim:#dcdad2
+    --surface-bright:#fcf9f0
+    --surface-container-lowest:#ffffff
+    --surface-container-low:#f6f3eb
+    --surface-container:#f1eee5
+    --surface-container-high:#ebe8df
+    --surface-container-highest:#e5e2da
+
+body.dark
+    --primary:#c1d02c
+    --on-primary:#2f3300
+    --primary-container:#444b00
+    --on-primary-container:#dded49
+    --secondary:#c7c9a6
+    --on-secondary:#30321a
+    --secondary-container:#46492e
+    --on-secondary-container:#e4e5c1
+    --tertiary:#a2d0c1
+    --on-tertiary:#07372d
+    --tertiary-container:#234e43
+    --on-tertiary-container:#beecdc
+    --error:#ffb4ab
+    --on-error:#690005
+    --error-container:#93000a
+    --on-error-container:#ffb4ab
+    --background:#1c1c17
+    --on-background:#e5e2da
+    --surface:#13140f
+    --on-surface:#e5e2da
+    --surface-variant:#47483b
+    --on-surface-variant:#c8c7b7
+    --outline:#929282
+    --outline-variant:#47483b
+    --shadow:#000000
+    --scrim:#000000
+    --inverse-surface:#e5e2da
+    --inverse-on-surface:#31312b
+    --inverse-primary:#5b6300
+    --surface-dim:#13140f
+    --surface-bright:#3a3934
+    --surface-container-lowest:#0e0e0a
+    --surface-container-low:#1c1c17
+    --surface-container:#20201b
+    --surface-container-high:#2a2a25
+    --surface-container-highest:#35352f
+
+
+@media only screen and (max-width: 600px)
+    header
+       padding: 0 0.5rem
+    header, .header-center
+       column-gap: 0.5rem
+
+@media only screen and (min-width: 601px) and (max-width: 992px)
+    header
+       padding: 0 1rem
+    header, .header-center
+       column-gap: 1rem
+
+@media only screen and (min-width: 993px)
+    header
+       padding: 0 1rem
+    header, .header-center
+       column-gap: 1rem

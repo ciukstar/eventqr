@@ -1,0 +1,46 @@
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay} onclick="document.getElementById('#{idDialogDelete}').close()">
+
+^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay (Just idDialogDelete) (Just $ DataR $ UserEditR uid)}
+
+<main.responsive>
+
+  $maybe Entity _ (User email _ uname admin) <- user
+    <dl.margin>
+      <dt>
+        <label.bold.large-text>_{MsgName}
+      <dd.margin>
+        $maybe name <- uname
+          #{name}
+        
+      <dt>
+        <label.bold.large-text>_{MsgEmail}
+      <dd.margin>
+        #{email}
+        
+      <dt>
+        <label.bold.large-text>_{MsgAdministrator}
+      <dd.margin>
+        $if admin
+          _{MsgYes}
+        $else
+          _{MsgNo}
+          
+    <p.center-align>
+      <a.button.border.transparent href=#>
+        <i>lock_reset
+        _{MsgChangePassword}
+
+^{widgetSnackbar msgs}
+
+<dialog ##{idDialogDelete}>
+  <h5>_{MsgConfirmPlease}
+  <div>_{MsgDeleteAreYouSure}
+  <nav.right-align.no-space>
+    <button.transparent.link data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogDelete}').close()">
+      _{MsgCancel}
+    <form method=post action=@{DataR $ UserDeleR uid} enctype=#{et0}>
+      ^{fw0}
+      <button.primary type=submit>
+        _{MsgDele}
