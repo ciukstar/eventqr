@@ -1,0 +1,36 @@
+
+Array.from(
+  document.querySelectorAll('time.full-datetime[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleDateString(
+    navigator.language,
+    { year: 'numeric',
+      month: 'short',
+      weekday: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    }
+  );
+});
+
+document.getElementById(#{idOverlay}).addEventListener('click', e => {
+  Array.from(
+    document.querySelectorAll('dialog')
+  ).forEach(x => {
+    e.target.classList.remove('active');
+    x.close();
+  });
+});
+
+
+function closeDialogQrCode(dialog) {
+  document.getElementById(#{idOverlay}).classList.remove('active');
+  dialog.close();
+}
+
+function showDialogQrCode(dialog) {
+  console.log('showDialogQrCode: ', #{idOverlay});
+  document.getElementById(#{idOverlay}).classList.add('active');
+  dialog.show();
+}

@@ -3,33 +3,41 @@
 
 ^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay (Just idDialogDelete) (Just $ DataR $ UserEditR uid)}
 
-<main.responsive>
+<main.responsive.no-padding>
 
-  $maybe Entity _ (User email _ uname admin) <- user
-    <dl.margin>
-      <dt>
-        <label.bold.large-text>_{MsgName}
-      <dd.margin>
-        $maybe name <- uname
-          #{name}
-        
-      <dt>
-        <label.bold.large-text>_{MsgEmail}
-      <dd.margin>
-        #{email}
-        
-      <dt>
-        <label.bold.large-text>_{MsgAdministrator}
-      <dd.margin>
-        $if admin
-          _{MsgYes}
-        $else
-          _{MsgNo}
-          
-    <p.center-align>
-      <a.button.border.transparent href=#>
-        <i>lock_reset
-        _{MsgChangePassword}
+  <div.tabs>
+    <a.active href=@{DataR $ UserR uid}>
+      _{MsgDetails}
+      
+    <a href=@{DataR $ UserCardsR uid}>
+      _{MsgCards}
+    
+  <div.page.active>
+    $maybe Entity _ (User email _ uname admin) <- user
+      <dl.margin>
+        <dt>
+          <label.bold.large-text>_{MsgName}
+        <dd.margin>
+          $maybe name <- uname
+            #{name}
+
+        <dt>
+          <label.bold.large-text>_{MsgEmail}
+        <dd.margin>
+          #{email}
+
+        <dt>
+          <label.bold.large-text>_{MsgAdministrator}
+        <dd.margin>
+          $if admin
+            _{MsgYes}
+          $else
+            _{MsgNo}
+
+      <p.center-align>
+        <a.button.border.transparent href=#>
+          <i>lock_reset
+          _{MsgChangePassword}
 
 ^{widgetSnackbar msgs}
 

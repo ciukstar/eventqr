@@ -8,6 +8,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Foundation where
 
@@ -20,6 +21,7 @@ import Data.Kind (Type)
 import qualified Data.List.Safe as LS (head)
 import qualified Data.Text as T (intercalate)
 import qualified Data.Text.Encoding as TE
+import Data.Time.Calendar.Month (Month)
 
 import Database.Esqueleto.Experimental
     ( selectOne, from, table, where_, val, (^.), select )
@@ -197,7 +199,24 @@ instance Yesod App where
         -> Handler AuthResult
     -- Routes not requiring authentication.
     isAuthorized (AuthR _) _ = return Authorized
+
     isAuthorized HomeR _ = setUltDestCurrent >> return Authorized
+    isAuthorized (UpcomingEventR _) _ = return Authorized
+    isAuthorized (UpcomingEventAttendeesR _) _ = return Authorized
+    isAuthorized (EventRegistrationR _) _ = return Authorized
+    isAuthorized AttendeeRegistrationR _ = return Authorized
+
+    isAuthorized (ScannerR _) _ = return Authorized
+    isAuthorized ScanQrR _ = return Authorized
+    
+    
+    
+    isAuthorized (CalendarR _) _ = return Authorized
+    isAuthorized (EventsR _) _ = return Authorized
+    isAuthorized (EventR _ _) _ = return Authorized
+    isAuthorized (EventAttendeesR _ _) _ = return Authorized
+    
+    
     
     
     isAuthorized DocsR _ = setUltDestCurrent >> return Authorized
@@ -212,6 +231,12 @@ instance Yesod App where
     
     isAuthorized FetchR _ = setUltDestCurrent >> return Authorized
 
+    
+    isAuthorized (DataR (UserCardR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardsR _)) _ = isAdmin
+
+    isAuthorized (DataR (CardQrCodeR _)) _ = return Authorized
+    
     
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin

@@ -50,7 +50,17 @@ import System.Log.FastLogger
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common (getFaviconR, getRobotsR)
 import Handler.Docs ( getDocsR )
-import Handler.Home ( getHomeR, getFetchR )
+
+import Handler.Home
+    ( getHomeR, getFetchR, getUpcomingEventR, getEventRegistrationR
+    , postEventRegistrationR, getUpcomingEventAttendeesR
+    , getAttendeeRegistrationR, postAttendeeRegistrationR
+    )
+
+import Handler.Scanner (getScannerR, getScanQrR)
+import Handler.Calendar
+    ( getCalendarR, getEventsR, getEventR, getEventAttendeesR
+    )
 
 
 import Handler.Users
@@ -58,6 +68,9 @@ import Handler.Users
     , getUserR, postUserR
     , getUserNewR, getUserEditR, postUserDeleR
     , getUserPhotoR
+    , getUserCardsR
+    , getUserCardR
+    , getCardQrCodeR
     )
 
 import System.Environment.Blank (getEnv)

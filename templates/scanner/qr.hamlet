@@ -1,0 +1,14 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
+
+<main.responsive>
+    
+  <figure>
+
+    <video ##{idScannerVideo} width=250 height=250 
+           poster=@{StaticR img_qr_code_scanner_64dp_013048_FILL0_wght400_GRAD0_opsz48_svg}>
+    
+    <figcaption>
+      <label for=#{idScannerVideo}>
+        _{MsgPointYourCameraToScan}.
+

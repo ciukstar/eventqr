@@ -1,0 +1,45 @@
+
+<div.overlay ##{idOverlay}>
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs>
+    <a href=@{UpcomingEventR eid}>
+      _{MsgDetails}
+      
+    <a.active href=@{UpcomingEventAttendeesR eid}>
+      _{MsgAttendees}
+    
+  <div.page.active>
+    $forall (Entity _ (Subscriber _ _ rdate), Entity cid _, Entity uid (User email _ uname _)) <- attendees
+      $with i <- show $ fromSqlKey cid
+        <dialog #idDialogQrCode#{i}>
+          <h5>_{MsgQrCode}
+          <div>
+            <figure>
+              <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrCodeR cid} width=120 height=120 loading=lazy>
+
+          <nav.right-align>
+            <button.transparent.link onclick="closeDialogQrCode(document.getElementById('idDialogQrCode#{i}'))">
+              _{MsgClose}
+
+        <div.row.padding.no-margin>
+
+          <img.circle.extra src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+          <div.max>
+            $maybe name <- uname
+              <h6.small>#{name}
+            $nothing
+              <h6.small>#{email}
+            <div>
+              $with dt <- show rdate
+                <time.full-datetime datetime=#{dt}>
+                  #{dt}
+
+          <button.circle.tertiary onclick="showDialogQrCode(document.getElementById('idDialogQrCode#{i}'))">
+            <i>qr_code
+        <hr>
+    

@@ -10,6 +10,9 @@ module Handler.Users
   , postUserDeleR
   , getUserEditR
   , getUserNewR
+  , getUserCardsR
+  , getUserCardR
+  , getCardQrCodeR
   ) where
 
 import Control.Monad (void)
@@ -21,23 +24,29 @@ import Data.Text.Encoding (encodeUtf8)
 
 import Database.Esqueleto.Experimental
     ( select, from, table, selectOne, where_, val, update, set
-    , (^.), (==.), (=.)
-    , Value (unValue), orderBy, asc
+    , (^.), (==.), (=.), (:&)((:&))
+    , Value (unValue), orderBy, asc, innerJoin, on
     )
     
 import Database.Persist
     ( Entity (Entity), entityVal, insert, insert_, delete, upsert)
 import qualified Database.Persist as P ((=.))
+import Database.Persist.Sql (fromSqlKey)
+
 
 import Foundation
     ( Handler, Form, widgetTopbar, widgetSnackbar
     , Route (DataR, StaticR)
-    , DataR (UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR)
+    , DataR
+      ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
+      , UserCardsR, UserCardR, CardQrCodeR
+      )
     , AppMessage
       ( MsgUsers, MsgPhoto, MsgUser, MsgAdministrator, MsgEmail, MsgName
       , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel, MsgYes
       , MsgNo, MsgAttribution, MsgPassword, MsgSave, MsgAlreadyExists
       , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgChangePassword
+      , MsgDetails, MsgCards, MsgCard
       )
     )
     
@@ -45,9 +54,10 @@ import Model
     ( msgSuccess, msgError
     , UserId, User(User, userName, userEmail, userPassword, userAdmin)
     , UserPhoto (UserPhoto)
+    , Card (Card)
     , EntityField
       ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
-      , UserPhotoMime, UserName, UserAdmin)
+      , UserPhotoMime, UserName, UserAdmin, CardIssued, CardUser, CardId), CardId
     )
 
 import Settings (widgetFile)
@@ -60,7 +70,7 @@ import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , FileInfo (fileContentType), SomeMessage (SomeMessage), MonadHandler (liftHandler)
-    , addMessageI, fileSourceByteString
+    , addMessageI, fileSourceByteString, selectRep, provideRep, emptyContent, notFound
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 import Yesod.Form.Fields
@@ -74,6 +84,59 @@ import Yesod.Form.Types
     )
 import Yesod.Form.Functions (generateFormPost, mreq, mopt, checkM, runFormPost)
 import Yesod.Auth.Email (saltPass)
+
+import qualified Codec.QRCode as QR 
+import Codec.QRCode.Data.QRCodeOptions (defaultQRCodeOptions)
+import Codec.QRCode.Data.ErrorLevel as ErrorLevel (ErrorLevel (M))
+import Codec.QRCode.JuicyPixels (toImage)
+import Codec.Picture (encodeBitmap)
+import Codec.QRCode (TextEncoding(Iso8859_1OrUtf8WithoutECI))
+
+
+getCardQrCodeR :: CardId -> Handler TypedContent
+getCardQrCodeR cid = do
+    
+    let input = show (fromSqlKey cid)
+
+    case QR.encode (defaultQRCodeOptions ErrorLevel.M) Iso8859_1OrUtf8WithoutECI input of
+      Just qrcode -> return $ TypedContent "image/bmp" $ toContent $ encodeBitmap $ toImage 0 1 qrcode
+      Nothing -> notFound
+    
+
+
+getUserCardR :: UserId -> CardId -> Handler Html
+getUserCardR uid cid = do
+
+    card <- runDB $ selectOne $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardId ==. val cid
+        return (x,u)
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgCard
+        idOverlay <- newIdent
+        $(widgetFile "data/users/cards/card")
+
+
+getUserCardsR :: UserId -> Handler Html
+getUserCardsR uid = do
+
+    cards <- runDB $ select $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardUser ==. val uid
+        orderBy [asc (x ^. CardIssued)]
+        return (x,u)
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgUser
+        idOverlay <- newIdent
+        $(widgetFile "data/users/cards/cards")
 
 
 postUserDeleR :: UserId -> Handler Html

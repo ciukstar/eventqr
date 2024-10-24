@@ -1,0 +1,40 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgCalendar) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  <div.calendar ##{idCalendarPage}>
+    <div.header>
+      <a.button.circle.transparent href=@?{(CalendarR prev,stati)} rel=nofollow aria-label=_{MsgPrevious}>
+        <i>arrow_back_ios_new
+      $with m <- show month
+        <time.month-of-year datetime=#{m}>
+          #{m}
+      <a.button.circle.transparent href=@?{(CalendarR next,stati)} rel=nofollow aria-label=_{MsgNext}>
+        <i>arrow_forward_ios
+
+    $forall wd <- [MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun]
+      <div.col-header>
+        _{wd}
+        
+    $forall i <- [0,1,2,3,4,5]
+      $forall day <- take 7 (drop (i * 7) page)
+        $with (y,m,d) <- toGregorian day
+          $if (==) month (YearMonth y m)
+            $maybe xs <- M.lookup day events
+              <a.cell.tertiary-container href=@?{(EventsR day,stati)} rel=nofollow>
+                <time.day-of-month datetime=#{show day}>
+                  <small>#{d}
+                <div>
+                  #{length xs}
+            $nothing
+              <a.cell.secondary-container href=@?{(EventsR day,stati)} rel=nofollow>
+                <time.day-of-month datetime=#{show day}>
+                  <small>#{d}
+          $else
+            <div>
+  <p.small-text.margin>
+    $if null events
+      _{MsgNoEventsForThisMonth}.
+    $else
+      _{MsgTotalEventsForThisMonth (total events)}

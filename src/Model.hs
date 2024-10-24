@@ -27,8 +27,10 @@ import Data.ByteString (ByteString)
 import Data.Fixed (Fixed (MkFixed))
 import Data.Function ((.))
 import Data.Maybe (Maybe (Just))
+import Data.Text (pack, unpack) 
+import Data.Time.Calendar.Month (Month)
 import Data.Time.Clock
-    ( NominalDiffTime, nominalDiffTimeToSeconds, secondsToNominalDiffTime)
+    ( UTCTime, NominalDiffTime, nominalDiffTimeToSeconds, secondsToNominalDiffTime)
 
 import Database.Persist.Quasi ( lowerCaseSettings )
 
@@ -40,8 +42,21 @@ import GHC.Real ((/), (^))
 import Prelude (truncate)
 
 import Text.Hamlet (Html)
+import Text.Show (show)
+import Text.Read (readMaybe)
 
 import Yesod.Auth.HashDB (HashDBUser (userPasswordHash, setPasswordHash))
+import Yesod.Core.Dispatch (PathPiece, toPathPiece, fromPathPiece)
+import Yesod.Form.Fields (Textarea)
+
+
+instance PathPiece Month where
+    toPathPiece :: Month -> Text
+    toPathPiece = pack . show
+
+    fromPathPiece :: Text -> Maybe Month
+    fromPathPiece = readMaybe . unpack
+
 
 -- You can define all of your database entities in the entities file.
 -- You can find more information on persistent and how to declare entities

@@ -2,6 +2,22 @@
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
 
 
+Subscriber
+    event EventId
+    card  CardId    
+    regDate UTCTime
+
+Card
+    user UserId
+    qr Text
+    issued UTCTime
+
+Event
+    time UTCTime
+    name Text
+    descr Textarea
+
+
 UserPhoto
     user UserId OnDeleteCascade
     mime Text

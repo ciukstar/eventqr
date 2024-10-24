@@ -1,0 +1,25 @@
+
+^{widgetTopbar (Just (CalendarR (dayPeriod day),[])) (msgr MsgEvents) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  $if null events
+    <figure.margin.pading style="text-align:center">
+      <i.extra>folder_open
+      <figcaption>
+        _{MsgNoEventsForThisDayYet}.
+  $else
+    $forall Entity eid (Event time name _) <- events
+      <a.row.padding.surface-container.wave href=@{EventR day eid}>
+        <div.max>
+          <h6.small>
+            #{name}
+          <div>
+            $with dt <- show time
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
+
+        <i>arrow_forward_ios
+        
+          
+        

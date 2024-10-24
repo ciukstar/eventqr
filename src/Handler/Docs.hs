@@ -11,14 +11,16 @@ module Handler.Docs
 
 import Foundation
     ( Handler, widgetSnackbar, widgetTopbar
-    , Route (HomeR)
+    , Route (HomeR, StaticR)
     , AppMessage
       ( MsgAppName, MsgDocumentation, MsgIssueTracking, MsgSourceCode
-      , MsgDoc001, MsgDoc002, MsgDoc003, MsgDoc005
+      , MsgEntityRelationshipDiagram
+      , MsgDoc001, MsgDoc002, MsgDoc003
       )
     )
     
 import Settings (widgetFile)
+import Settings.StaticFiles (img_EventQr_ERD_svg)
 
 import Text.Blaze.Html (preEscapedToHtml)
 import Text.Hamlet (Html)

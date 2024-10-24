@@ -8,6 +8,10 @@
     #{t $ MsgDoc001 (m MsgAppName) (r HomeR)}
 
   <section>
+    <h3.small>_{MsgEntityRelationshipDiagram}
+    <img src=@{StaticR img_EventQr_ERD_svg} alt=_{MsgEntityRelationshipDiagram} loading=lazy>
+
+  <section>
     <h3.small>_{MsgSourceCode}
     <p>
       #{t $ MsgDoc002 "https://github.com/ciukstar/eventqr"}

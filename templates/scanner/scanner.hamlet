@@ -1,0 +1,25 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  $maybe Entity _ (Event time name _) <- event
+    <dl>
+      <dt.large-text>
+        _{MsgRegistrationForEvent}:
+      <dd.small-text>
+        #{name}
+        <br>
+        $with dt <- show time
+          <time.full-datetime datetime=#{dt}>
+            #{dt}
+    
+  <figure>
+  
+    <video ##{idScannerVideo} width=250 height=250 
+           poster=@{StaticR img_qr_code_scanner_64dp_013048_FILL0_wght400_GRAD0_opsz48_svg}>
+      
+    <figcaption>
+      <label for=#{idScannerVideo}>
+        _{MsgPointYourCameraToScan}.
+

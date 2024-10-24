@@ -1,26 +1,67 @@
 
 ^{widgetTopbar Nothing (msgr MsgAppName) idOverlay Nothing Nothing}
 
-<main.responsive.no-padding ##{idMain}>
+<main.responsive ##{idMain}>
+
+  <h5.small.center-align>
+    _{MsgWelcomeTo} _{MsgAppName}
+
+  <a.button.margin href=@{CalendarR month}>
+    _{MsgEventsCalendar}
+    
     
 
 $if not (null msgs)
   ^{widgetSnackbar msgs}
 
-<footer.transparent>
-  <nav.transparent>
-      
-    <button.square.round.large.small-blur ##{idButtonSwitch} title=_{MsgAttractions}>
-      <i>park
-      
-    <button.square.round.large.small-blur ##{idButtonSearchTrigger} title=_{MsgSearchByNameOrAddress}>
-      <i>search
-      
-    <button.square.round.large.small-blur ##{idButtonSearchByCategoryTrigger} title=_{MsgRestaurantsShopsAndMore}>
-      <i>checklist
-      
-    <button.square.round.large.small-blur ##{idButtonMainMenu} title=_{MsgMainMenu} data-ui=##{idOverlay}>
-      <i>menu
+<nav.bottom>
+
+  <a ##{idButtonUpcomingEvents} href=# role=button title=_{MsgUpcomingEvents}>
+    <i>event_note
+    <span>_{MsgEvents}
+
+  <a ##{idButtonSearchEvents} href=# role=button title=_{MsgSearch}>
+    <i>search
+    <span>_{MsgSearch}
+
+  <a ##{idButtonQrScanner} href=@{ScanQrR} title=_{MsgScanQrCode}>
+    <i>qr_code_scanner
+    <span>_{MsgScan}
+    
 
 
 ^{widgetMainMenu idOverlay idDialogMainMenu}
+
+
+<dialog.bottom.no-padding ##{idDialogUpcomingEvents}>
+  <h5.small.row.padding>
+    <div.max>
+      _{MsgUpcomingEvents}
+    
+    <button.transparent.circle ##{idButtonCloseDialogUpcomingEvents}>
+      <i>close
+    
+  $forall Entity eid (Event time name _) <- events
+    <a.row.padding.surface-container.wave href=@{UpcomingEventR eid}>
+      <div.max>
+        <h6.small>
+          #{name}
+        <div>
+          $with dt <- show time
+            <time.full-datetime datetime=#{dt}>
+              #{dt}
+            
+      <i>arrow_forward_ios
+
+      
+<dialog.bottom.no-padding ##{idDialogSearchEvents}>
+  <div.padding.center-align draggable=true>
+    <i>drag_handle
+  <button.transparent.circle ##{idButtonCloseDialogSearchEvents}>
+    <i>close
+
+  <div ##{idListSearchSearchEventsResult}>
+
+  <div.field.large.prefix.round.fill.active>
+    <i.front>search
+    <input type=search ##{idInputSearchEvents} placeholder=_{MsgSearchEvents}>

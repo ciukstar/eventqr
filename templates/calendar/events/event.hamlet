@@ -1,0 +1,40 @@
+
+^{widgetTopbar (Just (EventsR day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs>
+    <a.active href=@{EventR day eid}>
+      _{MsgDetails}
+      
+    <a href=@{EventAttendeesR day eid}>
+      _{MsgAttendees}
+    
+  <div.padding.page.active>
+    $maybe Entity _ (Event time name descr) <- event
+      <dl>
+        <dt.bold.large-text>
+          _{MsgName}
+        <dd>
+          #{name}
+
+        <dt.bold.large-text>
+          _{MsgTime}
+        <dd>
+          $with dt <- show time
+            <time.full-datetime datetime=#{dt}>
+              #{dt}
+
+        <dt.bold.large-text>
+          _{MsgDescription}
+        <dd>
+          #{descr}
+
+    <p ##{idActionQrScan}>
+      <a.button.margin href=@{ScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+        <i>qr_code_scanner
+        <span>_{MsgScanQrCode}
+
+      <label for=#{idButtonQrScan}>
+        _{MsgScanQrCodeAndLinkToEvent}.
+        

@@ -1,71 +1,59 @@
+SearchEvents: Поиск мероприятий
+SelectAnEventToRegisterPlease: Пожалуйста, выберите мероприятие для регистрации
+NoUpcomingEventsYet: Предстоящих событий пока нет
+TotalEventsForThisMonth n: Всего событий за этот месяц: #{show n}
+NoEventsForThisMonth: В данный момент событий на этот месяц нет
+QrCode: QR-код
+Attendees: Участники
+Subscribers: Подписчики
+UserSuccessfullyegisteredForEvent: Пользователь успешно зарегистрирован на мероприятие
+ScanAgain: Сканировать повторно
+ConfirmUserRegistrationForEventPlease: Пожалуйста, подтвердите регистрацию пользователя на мероприятие
+Registration: Регистрация
+NoEventsForThisDayYet: На этот день пока нет мероприятий
+Register: Зарегистрировать
+RegisterUserForEvent: Зарегистрировать пользователя на мероприятие
+RegistrationConfirmation: Подтверждение регистрации
+RegistrationForEvent: Регистрация на мероприятие
+Scan: Сканировать
+Card: Карточка
+Cards: Карточки
+UserCard: Карточка пользователя
+UserCards: Карточки пользователей
+PersonalUserCard: Персональная карта пользователя
+PersonalUserCards: Персональные карты пользователя
+UpcomingEvents: Предстоящие события
+ScanQrCode: Сканировать QR-код
+ScanQrCodeAndLinkToEvent: Сканировать QR-код посетителя и связать его с мероприятием
+EventsCalendar: Календарь событий
+Time: Время
+Events: События
+Event: Событие
+Next: Следующий
+Previous: Предыдущий
+Sun: вс
+Sat: сб
+Fri: пт
+Thu: чт
+Wed: ср
+Tue: вт
+Mon: пн
+Calendar: Календарь
+Stop: Остановить
+PointYourCameraToScan: Наведите камеру на QR-код для сканирования
+Scanner: Сканер
+
 IssueTracking: Отслеживание ошибок
-GeolocationAlternativesMessageCoordinates: координаты
-GeolocationAlternativesMessageOrThe: или
-GeolocationAlternativesMessageAddress: адрес
-GeolocationAlternativesMessageSuffix: вашего местоположения
-GeolocationAlternativesMessagePrefix: Либо вы можете указать
-GeolocationStatusTimeoutUserMessage: Время ожидания определения вашего местоположения истекло.
-GeolocationStatusUserMessage: Ваше местоположение определяется с помощью возможностей геолокации браузера.
-GeolocationNotSupportedUserMessage: Похоже, ваш браузер не поддерживает геолокацию.
-GeolocationStatusDisabledExploreNearby: Похоже, у вас отключена геолокация, так как она нужна для исследования близлежащих объектов. Включите геолокацию для этого сайта в настройках браузера.
-GeolocationStatusDisabledUserMessage: Похоже, у вас отключена геолокация, так как она необходима для определения вашего местоположения. Включите геолокацию для этого сайта в настройках браузера.
-AboutYourLocation: О вашем местоположении
-GeolocationOptions: Параметры геолокации
-Geolocation: Геолокация
-Latitude: Широта
-Longitude: Долгота
-GeolocationDisabled: Геолокация отключена
 Timeout: Тайм-аут
-PositionUnavailable: Местоположение недоступно
 Find: Найти
-PublicInstitutions: Общественные учреждения
-Parks: Парки
-Nearby: Поблизости
-InKilometers: в километрах
-NearbyRadius: Радиус вблизи моего местоположения
 Radius: Радиус
 MainMenu: Главное меню
-RestaurantsShopsAndMore: Рестораны, магазины и многое другое
-Attractions: Достопримечательности
-MapStyleOptions: Варианты стиля карты
-Compass: Компас
-MyLocation: Мое местоположение
-ZoomOut: Уменьшить масштаб
-ZoomIn: Увеличить масштаб
-ExploreNearby: Исследуйте поблизости
-NoShops: Магазинов нет
-NoShopsWereFoundForSearchTerms: Не найдено ни одного магазина, соответствующего всем условиям поиска
-NoRestaurants: Ресторанов нет
-NoRestaurantsWereFoundForSearchTerms: Не найдено ни одного ресторана, соответствующего всем условиям поиска
-ThatIsAll: Вот и всё
-LoadMore: Показать ещё
 Type: Тип
 Brand: Бренд
-ShowOnMap: Показать на карте
 Phone: Телефон
 OpeningHours: Часы работы
 Address: Адрес
-Cuisine: Кухня
-Restaurant: Ресторан
-SearchForShops: Поиск магазинов
-SearchForRestaurants: Поиск ресторанов
-SearchByNameOrAddress: Поиск по названию или адресу
-SearchPlacesByNameOrAddress: Поиск мест по названию или адресу
-SearchPlacesByName: Поиск мест по названию
-SearchByStreetNamesAndPoi: Поиск по названиям улиц и интересующих мест
-NoLocationsWereFound: Не найдено ни одного местоположения, соответствующего вашему запросу
-Shops: Магазины
-Restaurants: Рестораны
 Search: Поиск
-StyleNavigationNight: Ночь навигация
-StyleNavigationDay: Навигация день
-StyleSatelliteStreets: Улицы-спутник
-StyleSatellite: Спутник
-StyleDark: Темный
-StyleLight: Светлый
-StyleOutdoors: На улице
-StyleStreets: Улицы
-CouldNotGetPosition: Не удалось получить позицию
 Landmark: Достопримечательность
 Close: Закрыть
 Tooltip: Подсказка

@@ -3,11 +3,29 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    commit: 7c278eb11aa609f1330fb2b419c429e3c396c510
+    git: https://github.com/prowdsponsor/diagrams-qrcode
+    name: diagrams-qrcode
+    pantry-tree:
+      sha256: 4b75c56bbad44797ccf90013a776aaaef978ff933ed0f351b4ae75458b8df65c
+      size: 577
+    version: '1.3'
+  original:
+    commit: 7c278eb11aa609f1330fb2b419c429e3c396c510
+    git: https://github.com/prowdsponsor/diagrams-qrcode
+- completed:
+    hackage: lucid-svg-0.7.2.0@sha256:ac145997d5d6976d5c77e09992b5b204d7ddb7edba3002801927ed2acc69692b,1091
+    pantry-tree:
+      sha256: d17d9c53627b0b05d62f6fc9b74a7c5a600126318df2b89aca205794be084de3
+      size: 456
+  original:
+    hackage: lucid-svg-0.7.2.0@sha256:ac145997d5d6976d5c77e09992b5b204d7ddb7edba3002801927ed2acc69692b,1091
 snapshots:
 - completed:
-    sha256: 87da71cb0ae9ee1ea1bf51a8eb9812f39f779be76abc0a3c926defd8afda05d1
-    size: 719139
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/28.yaml
+    sha256: 6c5aeace2ca5ecde793a9e0acfaa730ec8f384aa2f6183a2a252f5f9ec55d623
+    size: 720039
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/39.yaml
   original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/28.yaml
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/39.yaml

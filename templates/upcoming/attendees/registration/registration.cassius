@@ -1,0 +1,12 @@
+
+main
+
+    figure
+        text-align: center
+        img
+            clip-path: circle(50%)
+
+    form .form-actions
+        display: flex
+        flex-direction: column
+        row-gap: 1rem

@@ -1,71 +1,59 @@
+SearchEvents: Search for events
+SelectAnEventToRegisterPlease: Please select an event to register
+NoUpcomingEventsYet: There are no upcoming events yet
+TotalEventsForThisMonth n@Int: Total events for this month: #{show n}
+NoEventsForThisMonth: There are currently no events for this month
+QrCode: Qr Code
+Attendees: Attendees
+Subscribers: Subscribers
+UserSuccessfullyegisteredForEvent: User has successfully registered for the event
+ScanAgain: Scan again
+ConfirmUserRegistrationForEventPlease: Please confirm user registration for the event
+Registration: Registration
+NoEventsForThisDayYet: There are no events for this day yet
+Register: Register
+RegisterUserForEvent: Register user for event
+RegistrationConfirmation: Registration confirmation
+RegistrationForEvent: Registration for the event
+Scan: Scan
+Card: Card
+Cards: Cards
+UserCard: User card
+UserCards: User cards
+PersonalUserCard: Personal user card
+PersonalUserCards: Personal user cards
+UpcomingEvents: Upcoming events
+ScanQrCode: Scan QR code
+ScanQrCodeAndLinkToEvent: Scan the visitor's QR code and link it to the event
+EventsCalendar: Events calendar
+Time: Time
+Events: Events
+Event: Event
+Next: Next
+Previous: Previous
+Sun: Sun
+Sat: Sat
+Fri: Fri
+Thu: Thu
+Wed: Wed
+Tue: Tue
+Mon: Mon
+Calendar: Calendar
+Stop: Stop
+PointYourCameraToScan: Point your camera at the QR code to scan
+Scanner: Scanner
+
 IssueTracking: Issue tracking
-GeolocationAlternativesMessageCoordinates: coordinates
-GeolocationAlternativesMessageOrThe: or the
-GeolocationAlternativesMessageAddress: address
-GeolocationAlternativesMessageSuffix: of your location
-GeolocationAlternativesMessagePrefix: Alternatively, you can specify an
-GeolocationStatusTimeoutUserMessage: The timeout for determining your location has expired.
-GeolocationStatusUserMessage: Your location is determined using the browser's geolocation capabilities.
-GeolocationNotSupportedUserMessage: It looks like your browser does not support geolocation.
-GeolocationStatusDisabledExploreNearby: It looks like you have geolocation disabled, for it is needed to explore nearby objects. Please enable geolocation for this site in your browser settings.
-GeolocationStatusDisabledUserMessage: It looks like you have geolocation disabled, for it is needed to map your location. Please enable geolocation for this site in your browser settings.
-AboutYourLocation: About your location
-GeolocationOptions: Geolocation options
-Geolocation: Geolocation
-Latitude: Latitude
-Longitude: Longitude
-GeolocationDisabled: Geolocation is disabled
 Timeout: Timeout
-PositionUnavailable: Position unavailable
 Find: Find
-PublicInstitutions: Public institutions
-Parks: Parks
-Nearby: Nearby
-InKilometers: in kilometers
-NearbyRadius: Radius close to my location
 Radius: Radius
 MainMenu: Main menu
-RestaurantsShopsAndMore: Restaurants, shops and more
-Attractions: Attractions
-MapStyleOptions: Map style options
-Compass: Compass
-MyLocation: My location
-ZoomOut: Zoom out
-ZoomIn: Zoom in
-ExploreNearby: Explore nearby
-NoShops: There are no shops
-NoShopsWereFoundForSearchTerms: No shops were found containing all your search terms
-NoRestaurants: There are no restaurants
-NoRestaurantsWereFoundForSearchTerms: No restaurants were found containing all your search terms
-ThatIsAll: That's all
-LoadMore: Load more
 Type: Type
 Brand: Brand
-ShowOnMap: Show on map
 Phone: Phone
 OpeningHours: Opening hours
 Address: Address
-Cuisine: Cuisine
-Restaurant: Restaurant
-SearchForShops: Search for shops
-SearchForRestaurants: Search for restaurants
-SearchByNameOrAddress: Search by name or address
-SearchPlacesByNameOrAddress: Search for places by name or address
-SearchPlacesByName: Search places by name
-SearchByStreetNamesAndPoi: Search by street names and places of interest
-NoLocationsWereFound: No locations were found matching your search
-Shops: Shops
-Restaurants: Restaurants
 Search: Search
-StyleNavigationNight: Navigation night
-StyleNavigationDay: Navigation day
-StyleSatelliteStreets: Satellite streets
-StyleSatellite: Satellite
-StyleDark: Dark
-StyleLight: Light
-StyleOutdoors: Outdoors
-StyleStreets: Streets
-CouldNotGetPosition: Could not get position
 Landmark: Landmark
 Close: Close
 Tooltip: Tooltip

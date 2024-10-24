@@ -1,0 +1,39 @@
+
+Array.from(
+  document.querySelectorAll('time.full-datetime[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleDateString(
+    navigator.language,
+    { year: 'numeric',
+      month: 'short',
+      weekday: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    }
+  );
+});
+
+
+document.getElementById(#{idButtonUpcomingEvents}).addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById(#{idOverlay}).classList.add('active');
+  document.getElementById(#{idDialogUpcomingEvents}).show();
+});
+
+document.getElementById(#{idButtonCloseDialogUpcomingEvents}).addEventListener('click', e => {
+  document.getElementById(#{idOverlay}).classList.remove('active');
+  document.getElementById(#{idDialogUpcomingEvents}).close();
+});
+
+
+document.getElementById(#{idButtonSearchEvents}).addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById(#{idOverlay}).classList.add('active');
+  document.getElementById(#{idDialogSearchEvents}).show();
+});
+
+document.getElementById(#{idButtonCloseDialogSearchEvents}).addEventListener('click', e => {
+  document.getElementById(#{idOverlay}).classList.remove('active');
+  document.getElementById(#{idDialogSearchEvents}).close();
+});

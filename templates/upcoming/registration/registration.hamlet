@@ -1,0 +1,49 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  $case (card,event)
+    $of (Just (_,Entity uid (User email _ uname _)), Just (Entity _ (Event time name descr)))
+      <p>
+        _{MsgConfirmUserRegistrationForEventPlease}.
+      
+      <figure>
+        <img src=@{DataR $ UserPhotoR uid} height=64 loading=lazy alt=_{MsgPhoto}>
+        <figcaption>
+          $maybe uname <- uname
+            #{uname}
+          $nothing
+            #{email}
+
+      <fieldset>
+        <legend>_{MsgEvent}
+        <p.small-text>
+          #{name}
+          
+        <p.small-text>
+          $with dt <- show time
+            <time.full-datetime datetime=#{dt}>
+              #{dt}
+       
+        <p.small-text>
+          #{descr}
+
+
+      <form method=post action=@{EventRegistrationR eid} enctype=#{et}>
+        ^{fw}
+        <div.form-actions>
+            
+          <button.margin type=submit>
+            _{MsgRegister}
+          
+          <a.link href=@{ScannerR eid}>
+            _{MsgScanAgain}
+          
+          <a.link href=@{HomeR}>
+            _{MsgCancel}
+     
+    $of _
+      
+      MsgError
+     
