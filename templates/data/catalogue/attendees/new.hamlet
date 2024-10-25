@@ -1,0 +1,14 @@
+
+^{widgetTopbar (Just (DataR $ DataEventAttendeesR eid,[])) (msgr MsgAttendee) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  <form.margin method=post action=@{DataR $ DataEventAttendeesR eid} enctype=#{et} novalidate>
+    ^{fw}
+    <nav.right-align>
+      <a.button.transparent href=@{DataR $ DataEventAttendeesR eid}>
+        _{MsgCancel}
+      <button.primary type=submit>
+        _{MsgSave}
+
+  ^{widgetSnackbar msgs}

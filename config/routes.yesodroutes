@@ -35,6 +35,17 @@
 /data DataR:
 
     
+    /catalogue/#EventId/attendees/#AttendeeId/dele DataEventAttendeeDeleR POST
+    /catalogue/#EventId/attendees/new/form         DataEventAttendeeNewR  GET
+    /catalogue/#EventId/attendees/#AttendeeId      DataEventAttendeeR     GET
+    /catalogue/#EventId/attendees                  DataEventAttendeesR    GET POST
+    
+    /catalogue/#EventId/dele      DataEventDeleR      POST
+    /catalogue/#EventId/edit      DataEventEditR      GET
+    /catalogue/new/form           DataEventNewR       GET
+    /catalogue/#EventId           DataEventR          GET POST
+    /catalogue                    DataEventsR         GET POST
+    
     /qrcode/#CardId CardQrCodeR GET
 
     /users/#UserId/cards/#CardId UserCardR  GET

@@ -18,9 +18,9 @@
       <i>home
       <span>_{MsgHome}
 
-    <a href=#>
-      <i>settings
-      <span>_{MsgSettings}
+    <a href=@{DataR DataEventsR}>
+      <i>topic
+      <span>_{MsgEventsCatalogue}
 
     <a href=@{DataR UsersR} :curr == Just (DataR UsersR):.active>
       <i>group
@@ -32,7 +32,7 @@
       <i>quick_reference
       <span>_{MsgDocumentation}
 
-    <a href="https://github.com/ciukstar/almamap" target=_blank>
+    <a href="https://github.com/ciukstar/eventqr" target=_blank>
       <i>
         <img src=@{StaticR img_github_mark_white_svg}>
       <span>_{MsgSourceCode}

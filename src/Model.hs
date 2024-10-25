@@ -128,3 +128,4 @@ nominalDiffTimeToHours =
 hoursToNominalDiffTime :: Double -> NominalDiffTime
 hoursToNominalDiffTime =
     secondsToNominalDiffTime . MkFixed . (* (^) @Integer @Integer 10 12) . truncateDouble @Integer . (* 3600)
+

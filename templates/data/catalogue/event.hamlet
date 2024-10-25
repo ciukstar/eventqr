@@ -1,0 +1,57 @@
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+^{widgetTopbar (Just (DataR $ DataEventsR,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) (Just $ DataR $ DataEventEditR eid)}
+
+<main.responsive.no-padding>
+
+  <div.tabs>
+    <a.active href=@{DataR $ DataEventR eid}>
+      _{MsgDetails}
+      
+    <a href=@{DataR $ DataEventAttendeesR eid}>
+      _{MsgAttendees}
+    
+  <div.padding.page.active>
+    $maybe Entity _ (Event time name descr) <- event
+      <dl>
+        <dt.bold.large-text>
+          _{MsgName}
+        <dd>
+          #{name}
+
+        <dt.bold.large-text>
+          _{MsgTime}
+        <dd>
+          $with dt <- show time
+            <time.full-datetime datetime=#{dt}>
+              #{dt}
+
+        <dt.bold.large-text>
+          _{MsgDescription}
+        <dd>
+          #{descr}
+
+    <p ##{idActionQrScan}>
+      <a.button.margin href=@{ScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+        <i>qr_code_scanner
+        <span>_{MsgScanQrCode}
+
+      <label for=#{idButtonQrScan}>
+        _{MsgScanQrCodeAndLinkToEvent}.
+
+  ^{widgetSnackbar msgs}
+
+
+<dialog ##{idDialogDelete}>
+  <h5>_{MsgConfirmPlease}
+  <div>_{MsgDeleteAreYouSure}
+  <nav.right-align.no-space>
+    <button.transparent.link data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogDelete}').close()">
+      _{MsgCancel}
+    <form method=post action=@{DataR $ DataEventDeleR eid} enctype=#{et0}>
+      ^{fw0}
+      <button.primary type=submit>
+        _{MsgDele}
+        

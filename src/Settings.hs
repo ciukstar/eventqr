@@ -34,6 +34,8 @@ import Network.Wai.Handler.Warp    (HostPreference)
 import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
                                     widgetFileReload)
+import Data.Time.LocalTime (TimeZone, utc)
+import Text.Read (readMaybe)
 
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
@@ -71,6 +73,9 @@ data AppSettings = AppSettings
     -- ^ Copyright text to appear in the footer of the page
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
+    
+    , appTimeZone              :: TimeZone
+    -- ^ Time Zone
 
     , appAuthDummyLogin         :: Bool
     -- ^ Indicate if auth dummy login should be enabled.
@@ -112,6 +117,8 @@ instance FromJSON AppSettings where
 
         appCopyright              <- o .:  "copyright"
         appAnalytics              <- o .:? "analytics"
+                                     
+        appTimeZone               <- fromMaybe utc . readMaybe <$> o .: "time-zone"
 
         appAuthDummyLogin         <- o .:? "auth-dummy-login"      .!= dev
 

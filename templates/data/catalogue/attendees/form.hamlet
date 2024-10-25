@@ -1,0 +1,12 @@
+
+#{extra}
+
+^{md3widget timeV}
+
+    
+^{fvInput cidV}
+
+$maybe err <- fvErrors cidV
+  <div style="text-align:end">
+    <label.error-text>
+      #{err}

@@ -1,0 +1,59 @@
+
+<div.overlay ##{idOverlay}>
+
+^{widgetTopbar (Just (DataR $ DataEventAttendeesR eid,[])) (msgr MsgAttendee) idOverlay (Just idDialogDelete) Nothing}
+
+<main.responsive>
+
+  $maybe (Entity _ (Attendee _ _ _),(Entity _ (Event time name descr),(Entity cid (Card _ _ _),Entity uid (User email _ uname _)))) <- attendee
+
+    <figure>
+      <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+      <figcaption>
+        $maybe name <- uname
+          #{name}
+        $nothing
+          #{email}
+
+    <fieldset>
+      <legend>_{MsgEvent}
+      <p.small-text>
+        #{name}
+
+      <p.small-text>
+        $with dt <- show time
+          <time.full-datetime datetime=#{dt}>
+            #{dt}
+
+      <p.small-text>
+        #{descr}
+
+    <button.border.transparent ##{idButtonShowDialogQrCode}>
+      <i>qr_code
+      <span>_{MsgQrCode}
+
+    <dialog ##{idDialogQrCode}>
+      <h5>_{MsgQrCode}
+      <div>
+        <figure>
+          <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrCodeR cid} width=120 height=120 loading=lazy>
+
+      <nav.right-align>
+        <button.transparent.link ##{idButtonCloseDialogQrCode}>
+          _{MsgClose}
+
+
+  ^{widgetSnackbar msgs}
+
+
+<dialog ##{idDialogDelete}>
+  <h5>_{MsgConfirmPlease}
+  <div>_{MsgDeleteAreYouSure}
+  <nav.right-align.no-space>
+    <button.transparent.link data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogDelete}').close()">
+      _{MsgCancel}
+    <form method=post action=@{DataR $ DataEventAttendeeDeleR eid aid} enctype=#{et0}>
+      ^{fw0}
+      <button.primary type=submit>
+        _{MsgDele}

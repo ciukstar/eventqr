@@ -1,9 +1,14 @@
+RegistrationDate: Date of registration
+IssueDate: Issue date
+NoCardsRegisteredYet: No cards have been registered yet
+EventsCatalogue: Events catalogue
 SearchEvents: Search for events
 SelectAnEventToRegisterPlease: Please select an event to register
 NoUpcomingEventsYet: There are no upcoming events yet
 TotalEventsForThisMonth n@Int: Total events for this month: #{show n}
 NoEventsForThisMonth: There are currently no events for this month
 QrCode: Qr Code
+Attendee: Attendee
 Attendees: Attendees
 Subscribers: Subscribers
 UserSuccessfullyegisteredForEvent: User has successfully registered for the event

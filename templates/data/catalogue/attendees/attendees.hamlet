@@ -1,0 +1,38 @@
+
+^{widgetTopbar (Just (DataR $ DataEventsR,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs>
+    <a href=@{DataR $ DataEventR eid}>
+      _{MsgDetails}
+      
+    <a.active href=@{DataR $ DataEventAttendeesR eid}>
+      _{MsgAttendees}
+    
+  <div.page.active>
+    $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _)) <- attendees
+      <a.row.padding.surface-container.wave href=@{DataR $ DataEventAttendeeR eid aid}>
+
+        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+        <div.max>
+          $maybe name <- uname
+            <h6.small>#{name}
+          $nothing
+            <h6.small>#{email}
+          <div>
+            $with dt <- show rdate
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
+
+        <i>arrow_forward_ios
+
+      <hr>
+
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventAttendeeNewR eid}
+    style="z-index:1" onclick="event.stopPropagation()">
+    <i>add
+
+  ^{widgetSnackbar msgs}
+    

@@ -62,6 +62,12 @@ import Handler.Calendar
     ( getCalendarR, getEventsR, getEventR, getEventAttendeesR
     )
 
+import Handler.Catalogue
+  ( getDataEventsR, postDataEventsR, getDataEventNewR
+  , getDataEventR, postDataEventR, getDataEventEditR, postDataEventDeleR
+  , getDataEventAttendeesR, postDataEventAttendeesR, getDataEventAttendeeNewR
+  , getDataEventAttendeeR, postDataEventAttendeeDeleR
+  )
 
 import Handler.Users
     ( getUsersR, postUsersR

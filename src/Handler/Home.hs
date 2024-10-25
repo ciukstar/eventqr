@@ -56,9 +56,9 @@ import Model
     , EventId, Event (Event)
     , CardId, Card
     , User (User)
-    , Subscriber (Subscriber, subscriberEvent, subscriberCard, subscriberRegDate)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , EntityField
-      ( EventTime, EventId, CardId, CardUser, UserId, SubscriberCard, SubscriberEvent
+      ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
       )
     )
 
@@ -100,9 +100,9 @@ postAttendeeRegistrationR = do
     case fr of
       FormSuccess (eid,cid) -> do
           now <- liftIO getCurrentTime
-          runDB $ insert_ Subscriber { subscriberEvent = eid
-                                     , subscriberCard = cid
-                                     , subscriberRegDate = now
+          runDB $ insert_ Attendee { attendeeEvent = eid
+                                     , attendeeCard = cid
+                                     , attendeeRegDate = now
                                      }
           addMessageI msgSuccess MsgUserSuccessfullyegisteredForEvent
           redirect HomeR
@@ -204,9 +204,9 @@ postEventRegistrationR eid = do
     case fr of
       FormSuccess (eid',cid') -> do
           now <- liftIO getCurrentTime
-          runDB $ insert_ Subscriber { subscriberEvent = eid'
-                                     , subscriberCard = cid'
-                                     , subscriberRegDate = now
+          runDB $ insert_ Attendee { attendeeEvent = eid'
+                                     , attendeeCard = cid'
+                                     , attendeeRegDate = now
                                      }
           addMessageI msgSuccess MsgUserSuccessfullyegisteredForEvent
           redirect HomeR
@@ -255,10 +255,10 @@ getUpcomingEventAttendeesR :: EventId -> Handler Html
 getUpcomingEventAttendeesR eid = do
 
     attendees <- runDB $ select $ do
-        x :& c :& u <- from $ table @Subscriber
-            `innerJoin` table @Card `on` (\(x :& c) -> x ^. SubscriberCard ==. c ^. CardId)
+        x :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
             `innerJoin` table @User `on` (\(_ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
-        where_ $ x ^. SubscriberEvent ==. val eid
+        where_ $ x ^. AttendeeEvent ==. val eid
         return (x,c,u)
 
     msgr <- getMessageRender

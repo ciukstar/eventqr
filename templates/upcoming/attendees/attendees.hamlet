@@ -13,7 +13,7 @@
       _{MsgAttendees}
     
   <div.page.active>
-    $forall (Entity _ (Subscriber _ _ rdate), Entity cid _, Entity uid (User email _ uname _)) <- attendees
+    $forall (Entity _ (Attendee _ _ rdate), Entity cid _, Entity uid (User email _ uname _)) <- attendees
       $with i <- show $ fromSqlKey cid
         <dialog #idDialogQrCode#{i}>
           <h5>_{MsgQrCode}

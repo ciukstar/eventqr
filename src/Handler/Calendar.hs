@@ -48,10 +48,10 @@ import Foundation
     
 import Model
     ( EventId, Event(Event)
-    , Subscriber (Subscriber)
+    , Attendee (Attendee)
     , Card, User (User)
     , EntityField
-      ( EventTime, EventId, SubscriberCard, CardId, CardUser, SubscriberEvent
+      ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId
       )
     )
@@ -71,10 +71,10 @@ getEventAttendeesR :: Day -> EventId -> Handler Html
 getEventAttendeesR day eid = do
 
     attendees <- runDB $ select $ do
-        x :& c :& u <- from $ table @Subscriber
-            `innerJoin` table @Card `on` (\(x :& c) -> x ^. SubscriberCard ==. c ^. CardId)
+        x :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
             `innerJoin` table @User `on` (\(_ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
-        where_ $ x ^. SubscriberEvent ==. val eid
+        where_ $ x ^. AttendeeEvent ==. val eid
         return (x,c,u)
     
     msgr <- getMessageRender

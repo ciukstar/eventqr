@@ -1,9 +1,14 @@
+RegistrationDate: Дата регистрации
+IssueDate: Дата выпуска
+NoCardsRegisteredYet: Пока что ни одна карта не зарегистрирована
+EventsCatalogue: Каталог событий
 SearchEvents: Поиск мероприятий
 SelectAnEventToRegisterPlease: Пожалуйста, выберите мероприятие для регистрации
 NoUpcomingEventsYet: Предстоящих событий пока нет
 TotalEventsForThisMonth n: Всего событий за этот месяц: #{show n}
 NoEventsForThisMonth: В данный момент событий на этот месяц нет
 QrCode: QR-код
+Attendee: Участник
 Attendees: Участники
 Subscribers: Подписчики
 UserSuccessfullyegisteredForEvent: Пользователь успешно зарегистрирован на мероприятие

@@ -7,15 +7,17 @@ RUN mkdir -p /opt/eventqr \
         && rm -rf /var/lib/apt/lists/*
 
 ARG YESOD_DEMO_LANG=EN
+ARG YESOD_TIME_ZONE
 
 WORKDIR       /opt/eventqr
-COPY eventqr /opt/eventqr
+COPY eventqr  /opt/eventqr
 COPY static   /opt/eventqr/static
 COPY config   /opt/eventqr/config
 COPY demo     /opt/eventqr/demo
 
 ENV YESOD_PORT=8080
 ENV YESOD_DEMO_LANG=${YESOD_DEMO_LANG}
+ENV YESOD_TIME_ZONE=${YESOD_TIME_ZONE}
 
 EXPOSE 8080
 CMD ["./eventqr"]

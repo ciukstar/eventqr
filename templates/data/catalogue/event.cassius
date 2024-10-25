@@ -1,0 +1,15 @@
+
+main
+    .page
+
+        display: flex
+        flex-direction: column
+
+        dl
+            dt + dd
+                margin-bottom: 1rem
+
+        ##{idActionQrScan}
+            display: flex
+            flex-direction: column
+            text-align: center

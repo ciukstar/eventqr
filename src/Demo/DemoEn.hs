@@ -20,7 +20,7 @@ import Model
       )
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
-    , Subscriber (Subscriber, subscriberEvent, subscriberCard, subscriberRegDate)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     )
 
 import Text.Hamlet (shamlet)
@@ -139,49 +139,49 @@ fillDemoEn = do
                            , eventDescr = "Board meeting, then Disco"
                            }
 
-    insert_ $ Subscriber { subscriberEvent = eid1
-                         , subscriberCard = cid1
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid1
+                         , attendeeCard = cid1
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid1
-                         , subscriberCard = cid2
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid1
+                         , attendeeCard = cid2
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid2
-                         , subscriberCard = cid3
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid2
+                         , attendeeCard = cid3
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid2
-                         , subscriberCard = cid4
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid2
+                         , attendeeCard = cid4
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid3
-                         , subscriberCard = cid1
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid3
+                         , attendeeCard = cid1
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid3
-                         , subscriberCard = cid2
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid3
+                         , attendeeCard = cid2
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid4
-                         , subscriberCard = cid1
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid4
+                         , attendeeCard = cid1
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid4
-                         , subscriberCard = cid2
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid4
+                         , attendeeCard = cid2
+                         , attendeeRegDate = now
                          }
 
-    insert_ $ Subscriber { subscriberEvent = eid4
-                         , subscriberCard = cid3
-                         , subscriberRegDate = now
+    insert_ $ Attendee { attendeeEvent = eid4
+                         , attendeeCard = cid3
+                         , attendeeRegDate = now
                          }
     
     return ()
