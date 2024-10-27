@@ -47,7 +47,7 @@ import Foundation
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
       , MsgDetails, MsgAttendees, MsgUserSuccessfullyegisteredForEvent
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
-      , MsgSelectAnEventToRegisterPlease, MsgSearchEvents
+      , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
       )
     )
 

@@ -1,0 +1,34 @@
+
+^{widgetTopbar (Just (DataR $ DataEventCalendarR month,[])) (msgr MsgEvents) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  $if null events
+    <figure.margin.pading style="text-align:center">
+      <i.extra>folder_open
+      <figcaption>
+        _{MsgNoEventsForThisDayYet}.
+  $else
+    $forall Entity eid (Event time name _) <- events
+      <a.row.padding.wave href=@{DataR $ DataEventCalendarEventR month day eid}>
+        <div.max>
+          <h6.small>
+            #{name}
+          <div>
+            $with dt <- show time
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
+
+        <i>arrow_forward_ios
+        
+      <hr>
+
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventCalendarEventNewR month day}
+    style="z-index:1" onclick="event.stopPropagation()">
+    <i>add
+
+
+  ^{widgetSnackbar msgs}
+        
+          
+        

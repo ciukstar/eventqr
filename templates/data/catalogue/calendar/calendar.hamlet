@@ -1,0 +1,55 @@
+
+^{widgetTopbar Nothing (msgr MsgEventsCatalogue) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a.vertical href=@{DataR DataEventsR}>
+      <i>list
+      <span>_{MsgList}
+      
+    <a.active.vertical href=@{DataR $ DataEventCalendarR month}>
+      <i>calendar_month
+      <span>_{MsgCalendar}
+    
+  <div.page.active.no-margin.no-padding>
+
+    <div.calendar ##{idCalendarPage}>
+      <div.header>
+        <a.button.circle.transparent href=@?{(DataR $ DataEventCalendarR prev,stati)} rel=nofollow aria-label=_{MsgPrevious}>
+          <i>arrow_back_ios_new
+        $with m <- show month
+          <time.month-of-year datetime=#{m}>
+            #{m}
+        <a.button.circle.transparent href=@?{(DataR $ DataEventCalendarR next,stati)} rel=nofollow aria-label=_{MsgNext}>
+          <i>arrow_forward_ios
+
+      $forall wd <- [MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun]
+        <div.col-header>
+          _{wd}
+
+      $forall i <- [0,1,2,3,4,5]
+        $forall day <- take 7 (drop (i * 7) page)
+          $with (y,m,d) <- toGregorian day
+            $if (==) month (YearMonth y m)
+              $maybe xs <- M.lookup day events
+                <a.cell.tertiary-container href=@?{(DataR $ DataEventCalendarEventsR month day,stati)} rel=nofollow>
+                  <time.day-of-month datetime=#{show day}>
+                    <small>#{d}
+                  <div>
+                    <b>#{length xs}
+              $nothing
+                <a.cell.secondary-container href=@?{(DataR $ DataEventCalendarEventsR month day,stati)} rel=nofollow>
+                  <time.day-of-month datetime=#{show day}>
+                    <small>#{d}
+            $else
+              <div>
+    <div ##{idCalendarLegend}>
+      $if null events
+        <span.small-text>_{MsgNoEventsForThisMonth}.
+      $else
+        <span.small-text>_{MsgTotalEventsForThisMonth}: #
+        <b>#{total events}
+
+
+  ^{widgetSnackbar msgs}

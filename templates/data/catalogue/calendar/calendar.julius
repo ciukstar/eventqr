@@ -1,0 +1,22 @@
+
+Array.from(
+  document.querySelectorAll('time.month-of-year[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleDateString(
+    navigator.language,
+    { year: 'numeric',
+      month: 'long'
+    }
+  );
+});
+
+Array.from(
+  document.querySelectorAll('time.time-of-day[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleTimeString(
+    navigator.language,
+    { hour: 'numeric',
+      minute: 'numeric'
+    }
+  );
+});

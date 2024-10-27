@@ -34,7 +34,8 @@ fillDemoRu = do
 
     now <- liftIO getCurrentTime
 
-    let dayLong = 24 * 60 * 60
+    let hour = 60 * 60
+    let day = 24 * hour
 
     let freepik = [shamlet|
                           Designed by #
@@ -100,54 +101,69 @@ fillDemoRu = do
                         }
 
     cid1 <- insert $ Card { cardUser = uid1
-                          , cardIssued = addUTCTime ((-30) * dayLong) now
+                          , cardIssued = addUTCTime ((-30) * day) now
                           , cardQr = ""
                           }
 
     cid2 <- insert $ Card { cardUser = uid2
-                          , cardIssued = addUTCTime ((-31) * dayLong) now
+                          , cardIssued = addUTCTime ((-31) * day) now
                           , cardQr = ""
                           }
 
     cid3 <- insert $ Card { cardUser = uid3
-                          , cardIssued = addUTCTime ((-32) * dayLong) now
+                          , cardIssued = addUTCTime ((-32) * day) now
                           , cardQr = ""
                           }
 
     cid4 <- insert $ Card { cardUser = uid4
-                          , cardIssued = addUTCTime ((-33) * dayLong) now
+                          , cardIssued = addUTCTime ((-33) * day) now
                           , cardQr = ""
                           }
 
-    eid1 <- insert $ Event { eventTime = addUTCTime (1 * dayLong) now
-                           , eventName = "Частная вечеринка"
-                           , eventDescr = "Только Дискотека"
-                           }
+    eid11 <- insert $ Event { eventTime = addUTCTime hour now
+                            , eventName = "Частная вечеринка"
+                            , eventDescr = "Только Дискотека"
+                            }
 
-    eid2 <- insert $ Event { eventTime = addUTCTime (2 * dayLong) now
+    eid12 <- insert $ Event { eventTime = addUTCTime (2 * hour) now
+                            , eventName = "Оздоровительная вечеринка"
+                            , eventDescr = "Оздоровительная вечеринка, затем дискотека"
+                            }
+
+    eid2 <- insert $ Event { eventTime = addUTCTime (2 * day) now
                            , eventName = "Мероприятие по сплочению коллектива"
                            , eventDescr = "Командообразование, затем дискотека"
                            }
 
-    eid3 <- insert $ Event { eventTime = addUTCTime (3 * dayLong) now
+    eid3 <- insert $ Event { eventTime = addUTCTime (3 * day) now
                            , eventName = "Собрание акционеров"
                            , eventDescr = "Собрание акционеров, затем дискотека"
                            }
 
-    eid4 <- insert $ Event { eventTime = addUTCTime (4 * dayLong) now
+    eid4 <- insert $ Event { eventTime = addUTCTime (4 * day) now
                            , eventName = "Заседание правления"
                            , eventDescr = "Заседание совета директоров, затем дискотека"
                            }
 
-    insert_ $ Attendee { attendeeEvent = eid1
-                         , attendeeCard = cid1
-                         , attendeeRegDate = now
-                         }
+    insert_ $ Attendee { attendeeEvent = eid11
+                       , attendeeCard = cid1
+                       , attendeeRegDate = now
+                       }
 
-    insert_ $ Attendee { attendeeEvent = eid1
-                         , attendeeCard = cid2
-                         , attendeeRegDate = now
-                         }
+    insert_ $ Attendee { attendeeEvent = eid11
+                       , attendeeCard = cid2
+                       , attendeeRegDate = now
+                       }
+
+    insert_ $ Attendee { attendeeEvent = eid12
+                       , attendeeCard = cid3
+                       , attendeeRegDate = now
+                       }
+
+    insert_ $ Attendee { attendeeEvent = eid12
+                       , attendeeCard = cid4
+                       , attendeeRegDate = now
+                       }
 
     insert_ $ Attendee { attendeeEvent = eid2
                          , attendeeCard = cid3

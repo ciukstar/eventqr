@@ -1,0 +1,44 @@
+
+^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a href=@{DataR $ DataEventCalendarEventR month day eid}>
+      _{MsgDetails}
+      
+    <a.active href=@{DataR $ DataEventCalendarEventAttendeesR month day eid}>
+      _{MsgAttendees}
+    
+  <div.page.active.no-padding>
+    $if null attendees
+      <figure.margin.pading style="text-align:center">
+        <i.extra>folder_open
+        <figcaption>
+          _{MsgNoAttendeesForThisEventYet}.
+    $else
+      $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _)) <- attendees
+        <a.row.padding.wave href=@{DataR $ DataEventCalendarEventAttendeeR month day eid aid}>
+
+          <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+          <div.max>
+            $maybe name <- uname
+              <h6.small>#{name}
+            $nothing
+              <h6.small>#{email}
+            <div>
+              $with dt <- show rdate
+                <time.full-datetime datetime=#{dt}>
+                  #{dt}
+
+          <i>arrow_forward_ios
+
+        <hr>
+
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventAttendeeNewR eid}
+    style="z-index:1" onclick="event.stopPropagation()">
+    <i>add
+
+  ^{widgetSnackbar msgs}
+    

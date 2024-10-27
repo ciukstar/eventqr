@@ -9,17 +9,21 @@
       <figcaption>
         _{MsgNoEventsForThisDayYet}.
   $else
-    $forall Entity eid (Event time name _) <- events
-      <a.row.padding.surface-container.wave href=@{EventR day eid}>
+    $forall (Entity eid (Event time name _), attendees) <- events
+      <a.row.padding.wave href=@{EventR day eid}>
         <div.max>
           <h6.small>
             #{name}
-          <div>
+          <div.small-text>
             $with dt <- show time
               <time.full-datetime datetime=#{dt}>
                 #{dt}
+          <div.small-text>
+            _{MsgAttendees}: #{attendees}
 
         <i>arrow_forward_ios
+        
+      <hr>
         
           
         

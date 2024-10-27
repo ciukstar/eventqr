@@ -1,3 +1,8 @@
+TotalAttendees: Total attendees
+TotalEventsForThisMonth: Total events for this month
+NoEventsYet: There are no events yet
+NoAttendeesForThisEventYet: There are no participants for this event yet
+List: List
 RegistrationDate: Date of registration
 IssueDate: Issue date
 NoCardsRegisteredYet: No cards have been registered yet
@@ -5,7 +10,7 @@ EventsCatalogue: Events catalogue
 SearchEvents: Search for events
 SelectAnEventToRegisterPlease: Please select an event to register
 NoUpcomingEventsYet: There are no upcoming events yet
-TotalEventsForThisMonth n@Int: Total events for this month: #{show n}
+TotalEventsForThisMonthN n@Int: Total events for this month: #{show n}
 NoEventsForThisMonth: There are currently no events for this month
 QrCode: Qr Code
 Attendee: Attendee

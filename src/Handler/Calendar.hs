@@ -13,24 +13,25 @@ import qualified Data.List as L (length)
 import qualified Data.Map as M (lookup, foldr)
 import Data.Time.Calendar
     ( toGregorian, weekFirstDay, DayOfWeek (Monday), addDays
-    , DayPeriod (periodFirstDay, periodLastDay, dayPeriod), Day
+    , DayPeriod (periodFirstDay, dayPeriod), Day
     )
 import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
-import Data.Time.Clock (UTCTime(utctDay))
 import Data.Time.LocalTime
-    ( LocalTime (LocalTime), localTimeToUTC, utc, TimeOfDay (TimeOfDay) )
+    ( LocalTime (LocalTime, localDay), localTimeToUTC, utcToLocalTime
+    , TimeOfDay (TimeOfDay)
+    )
 
 
 import Database.Esqueleto.Experimental
-    ( select, selectOne, from, table, where_, between, val
-    , (^.), (==.), (:&) ((:&))
-    , innerJoin, on
+    ( SqlExpr, select, selectOne, from, table, where_, val
+    , (^.), (==.), (:&) ((:&)), (>=.), (<.)
+    , innerJoin, on, subSelectCount, Value (unValue)
     )
-import Database.Persist (Entity (Entity))
+import Database.Persist (Entity (Entity), entityVal)
 import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
-    ( Handler, widgetTopbar
+    ( App (appSettings), Handler, widgetTopbar
     , Route
       ( EventAttendeesR, ScannerR, CalendarR, EventsR, EventR, HomeR
       , DataR
@@ -42,12 +43,12 @@ import Foundation
       , MsgDescription, MsgScanQrCode, MsgScanQrCodeAndLinkToEvent
       , MsgNoEventsForThisDayYet, MsgAttendees, MsgDetails, MsgPhoto
       , MsgClose, MsgNoEventsForThisMonth, MsgTotalEventsForThisMonth
-      , MsgQrCode
+      , MsgQrCode, MsgTotalAttendees, MsgRegistrationDate
       )
     )
     
 import Model
-    ( EventId, Event(Event)
+    ( EventId, Event(Event, eventTime)
     , Attendee (Attendee)
     , Card, User (User)
     , EntityField
@@ -56,15 +57,16 @@ import Model
       )
     )
 
-import Settings (widgetFile)
+import Settings (widgetFile, AppSettings (appTimeZone))
 
 import Text.Hamlet (Html)
 
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, YesodRequest (reqGetParams)
-    , getRequest, getMessageRender
+    , getRequest, getMessageRender, getYesod
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Data.Bifunctor (Bifunctor(second))
 
 
 getEventAttendeesR :: Day -> EventId -> Handler Html
@@ -107,17 +109,24 @@ getEventR day eid = do
 
 getEventsR :: Day -> Handler Html
 getEventsR day = do
+    
+    tz <- appTimeZone . appSettings <$> getYesod
 
-    events <- runDB $ select $ do
+    events <- (second unValue <$>) <$> runDB ( select $ do
         x <- from $ table @Event
-        where_ $ x ^. EventTime `between` ( val $ localTimeToUTC utc (LocalTime day (TimeOfDay 0 0 0))
-                                          , val $ localTimeToUTC utc (LocalTime day (TimeOfDay 23 59 0))
-                                          )
-        return x
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+        
+        where_ $ x ^. EventTime >=. val (localTimeToUTC tz (LocalTime day (TimeOfDay 0 0 0)))
+        where_ $ x ^. EventTime <.  val (localTimeToUTC tz (LocalTime (addDays 1 day) (TimeOfDay 0 0 0)))
+        return (x,attendees) )
     
     msgr <- getMessageRender
     defaultLayout $ do
-        setTitleI MsgEvents
+        setTitleI MsgEvents 
 
         idOverlay <- newIdent
         
@@ -134,14 +143,19 @@ getCalendarR month = do
     let next = addMonths 1 month
     let prev = addMonths (-1) month
 
-    events <- groupByKey (\(Entity _ (Event time _ _)) -> utctDay time) <$> runDB ( select $ do
-        x <- from $ table @Event
-        where_ $ x ^. EventTime `between` ( val $ localTimeToUTC utc (LocalTime (periodFirstDay month) (TimeOfDay 0 0 0))
-                                          , val $ localTimeToUTC utc (LocalTime (periodLastDay month) (TimeOfDay 0 0 0))
-                                          )
-        return x )
+    tz <- appTimeZone . appSettings <$> getYesod
 
-    let total = M.foldr (\xs a -> L.length xs + a) 0
+    events <- groupByKey (dayAt tz) . (second unValue <$>) <$> runDB ( select $ do
+        x <- from $ table @Event
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+                
+        where_ $ x ^. EventTime >=. val (localTimeToUTC tz (LocalTime (periodFirstDay month) (TimeOfDay 0 0 0)))
+        where_ $ x ^. EventTime <.  val (localTimeToUTC tz (LocalTime (periodFirstDay next) (TimeOfDay 0 0 0)))
+        return (x,attendees) )
 
     msgr <- getMessageRender
     
@@ -150,10 +164,17 @@ getCalendarR month = do
 
         idOverlay <- newIdent
         idCalendarPage <- newIdent
+        idCalendarLegend <- newIdent
         
         $(widgetFile "calendar/calendar")
 
   where
+      
+      total :: Map k [(a,Int)] -> (Int,Int)
+      total = M.foldr (\xs (a,b) -> (L.length xs + a, sum (snd <$> xs) + b)) (0,0)
+      
+      dayAt tz = localDay . utcToLocalTime tz . eventTime . entityVal . fst
+      
       groupByKey :: Ord k => (v -> k) -> [v] -> Map k [v]
       groupByKey f = fromListWith (<>) . fmap (\x -> (f x,[x]))
       

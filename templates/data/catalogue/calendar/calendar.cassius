@@ -1,0 +1,53 @@
+
+main
+
+    div.page.active
+
+       display: flex
+       flex-direction: column
+
+       form
+           margin: 0 1rem
+           display: flex
+           flex-direction: column
+
+       ##{idCalendarPage}
+           display: grid
+           gap: 0.5rem
+           padding: 0 0.5rem
+           grid-template-columns: repeat(7,1fr)
+           grid-template-rows: repeat(8,1fr)
+           grid-template-areas: "head head head head head head head"
+           div.header
+               grid-area: head
+               display: flex
+               flex-direction: row
+               justify-content: space-around
+               align-items: center
+           div.col-header
+               text-align: center
+           .cell
+               text-align: center
+               vertical-align: text-top
+               text-decoration: none
+               border-radius: 8px
+               time.day-of-month
+                   font-size: 1.2rem
+                   line-height: 1.4rem
+               time.time-of-day
+                   display: block
+                   font-size: 0.7rem
+                   line-height: 1
+                   text-decoration: none
+
+           a.cell
+               display: block
+               border: 2px solid var(--md-sys-color-primary-container,black)
+               box-shadow: 1px 1px 1px var(--md-sys-color-surface-dim)
+
+           div.cell.disabled
+               border: 1px dashed var(--md-sys-color-surface-dim,black)
+               color: rgba(0,0,0,0.6)
+
+    ##{idCalendarLegend}
+        margin-left: 1rem

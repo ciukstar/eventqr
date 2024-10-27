@@ -6,7 +6,7 @@
 /events/#Day/#EventId           EventR          GET
 /events/#Day                    EventsR         GET
 
-/calenar/#Month CalendarR GET
+/calendar/#Month CalendarR GET
 
 /scanner/attendee/register AttendeeRegistrationR GET POST
 /scanner/#EventId          ScannerR              GET
@@ -35,6 +35,17 @@
 /data DataR:
 
     
+    /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/dele DataEventCalendarEventAttendeeDeleR  POST
+    /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId      DataEventCalendarEventAttendeeR      GET
+    /catalogue/#Month/calendar/#Day/events/#EventId/attendees                  DataEventCalendarEventAttendeesR     GET
+    
+    /catalogue/#Month/calendar/#Day/events/#EventId/dele DataEventCalendarEventDeleR POST
+    /catalogue/#Month/calendar/#Day/events/#EventId/edit DataEventCalendarEventEditR GET
+    /catalogue/#Month/calendar/#Day/events/new/form      DataEventCalendarEventNewR  GET
+    /catalogue/#Month/calendar/#Day/events/#EventId      DataEventCalendarEventR     GET POST
+    /catalogue/#Month/calendar/#Day/events               DataEventCalendarEventsR    GET POST
+    /catalogue/#Month/calendar                           DataEventCalendarR          GET
+
     /catalogue/#EventId/attendees/#AttendeeId/dele DataEventAttendeeDeleR POST
     /catalogue/#EventId/attendees/new/form         DataEventAttendeeNewR  GET
     /catalogue/#EventId/attendees/#AttendeeId      DataEventAttendeeR     GET

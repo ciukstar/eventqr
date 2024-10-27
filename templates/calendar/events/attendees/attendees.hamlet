@@ -34,6 +34,8 @@
               <h6.small>#{name}
             $nothing
               <h6.small>#{email}
+            <div.small-text>
+              _{MsgRegistrationDate}
             <div>
               $with dt <- show rdate
                 <time.full-datetime datetime=#{dt}>

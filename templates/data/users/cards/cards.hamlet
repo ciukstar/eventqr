@@ -11,7 +11,7 @@
       _{MsgCards}
     
   <div.page.active>
-    $forall (Entity cid (Card _ qr issued),Entity uid (User email _ uname _)) <- cards
+    $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _)) <- cards
       <a.row.padding.surface-container.wave href=@{DataR $ UserCardR uid cid}>
 
         <img.circle.extra src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

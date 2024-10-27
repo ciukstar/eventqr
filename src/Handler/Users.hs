@@ -70,7 +70,7 @@ import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , FileInfo (fileContentType), SomeMessage (SomeMessage), MonadHandler (liftHandler)
-    , addMessageI, fileSourceByteString, selectRep, provideRep, emptyContent, notFound
+    , addMessageI, fileSourceByteString, notFound
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 import Yesod.Form.Fields

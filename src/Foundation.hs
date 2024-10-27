@@ -255,7 +255,19 @@ instance Yesod App where
     isAuthorized (DataR (DataEventAttendeeR _ _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeNewR _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeDeleR _ _)) _ = isAdmin
-        
+
+    isAuthorized (DataR (DataEventCalendarR _)) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventsR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventNewR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventEditR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventDeleR {})) _ = isAdmin
+    
+    isAuthorized (DataR (DataEventCalendarEventAttendeesR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventAttendeeR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventAttendeeDeleR {})) _ = isAdmin
+    
+    
     
 
     -- This function creates static content files in the static folder

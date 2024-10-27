@@ -2,20 +2,37 @@
 ^{widgetTopbar Nothing (msgr MsgEventsCatalogue) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
-  $forall Entity eid (Event time name _) <- events
-    <a.row.padding.surface-container.wave href=@{DataR $ DataEventR eid}>
-        
-      <div.max>
-        #{name}
-   
-        <div>
-          $with dt <- show time
-            <time.full-datetime datetime=#{dt}>
-              #{dt}
-        
-      <i>arrow_forward_ios
 
-    <hr>
+  <div.tabs.min>
+    <a.active.vertical href=@{DataR DataEventsR}>
+      <i>list
+      <span>_{MsgList}
+      
+    <a.vertical href=@{DataR $ DataEventCalendarR month}>
+      <i>calendar_month
+      <span>_{MsgCalendar}
+    
+  <div.page.active.no-margin.no-padding>
+    $if null events
+      <figure.margin.pading style="text-align:center">
+        <i.extra>folder_open
+        <figcaption>
+          _{MsgNoEventsYet}.
+    $else
+      $forall Entity eid (Event time name _) <- events
+        <a.row.padding.wave href=@{DataR $ DataEventR eid}>
+
+          <div.max>
+            #{name}
+
+            <div>
+              $with dt <- show time
+                <time.full-datetime datetime=#{dt}>
+                  #{dt}
+
+          <i>arrow_forward_ios
+
+        <hr>
 
   <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR DataEventNewR}
     style="z-index:1" onclick="event.stopPropagation()">

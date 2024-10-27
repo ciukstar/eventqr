@@ -1,0 +1,8 @@
+
+main
+
+    .page
+        dialog
+        
+            figure
+                text-align: center

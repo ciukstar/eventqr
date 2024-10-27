@@ -7,6 +7,10 @@
     <figure>
       <img src=@{DataR $ CardQrCodeR cid} width=120 height=120 loading=lazy>
       <figcaption>
-        #{email}
+        <p>
+          $maybe name <- uname
+            #{name}
+          $nothing
+            #{email}
 
 ^{widgetSnackbar msgs}

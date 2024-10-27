@@ -46,3 +46,6 @@ main
         div.cell.disabled
             border: 1px dashed var(--md-sys-color-surface-dim,black)
             color: rgba(0,0,0,0.6)
+
+    ##{idCalendarLegend}
+        margin-left: 1rem

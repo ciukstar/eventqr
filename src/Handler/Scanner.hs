@@ -17,8 +17,7 @@ import Foundation
     ( Handler, widgetTopbar
     , Route (HomeR, StaticR, EventRegistrationR, AttendeeRegistrationR)
     , AppMessage
-      ( MsgScanner, MsgPointYourCameraToScan
-      , MsgRegistrationForEvent, MsgRegister, MsgRegistrationConfirmation
+      ( MsgScanner, MsgPointYourCameraToScan, MsgRegistrationForEvent
       )
     )
     

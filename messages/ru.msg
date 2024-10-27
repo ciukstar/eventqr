@@ -1,3 +1,8 @@
+TotalAttendees: Всего участников
+TotalEventsForThisMonth: Всего событий за этот месяц
+NoEventsYet: Мероприятий пока нет
+NoAttendeesForThisEventYet: Участников на это мероприятие пока нет
+List: Список
 RegistrationDate: Дата регистрации
 IssueDate: Дата выпуска
 NoCardsRegisteredYet: Пока что ни одна карта не зарегистрирована
@@ -5,7 +10,7 @@ EventsCatalogue: Каталог событий
 SearchEvents: Поиск мероприятий
 SelectAnEventToRegisterPlease: Пожалуйста, выберите мероприятие для регистрации
 NoUpcomingEventsYet: Предстоящих событий пока нет
-TotalEventsForThisMonth n: Всего событий за этот месяц: #{show n}
+TotalEventsForThisMonthN n: Всего событий за этот месяц: #{show n}
 NoEventsForThisMonth: В данный момент событий на этот месяц нет
 QrCode: QR-код
 Attendee: Участник

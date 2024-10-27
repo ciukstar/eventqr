@@ -26,15 +26,28 @@
                 <time.day-of-month datetime=#{show day}>
                   <small>#{d}
                 <div>
-                  #{length xs}
+                  <b>
+                    #{length xs}
+                  <span>
+                    <div.badge.border.secondary-border.secondary-text.bottom.right>
+                      <small>#{sum $ snd <$> xs}
             $nothing
               <a.cell.secondary-container href=@?{(EventsR day,stati)} rel=nofollow>
                 <time.day-of-month datetime=#{show day}>
                   <small>#{d}
           $else
             <div>
-  <p.small-text.margin>
+            
+  <div ##{idCalendarLegend}>
     $if null events
-      _{MsgNoEventsForThisMonth}.
+      <span.small-text>_{MsgNoEventsForThisMonth}.
     $else
-      _{MsgTotalEventsForThisMonth (total events)}
+      $with (n,m) <- total events
+        <div>
+          <span.small-text>_{MsgTotalEventsForThisMonth}: #
+          <b>#{n}
+        <div>
+          <span.small-text>_{MsgTotalAttendees}: #
+          <span>
+            <span.badge.border.secondary-border.secondary-text.bottom.right>
+              <small>#{m}

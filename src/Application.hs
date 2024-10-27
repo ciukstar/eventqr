@@ -67,6 +67,15 @@ import Handler.Catalogue
   , getDataEventR, postDataEventR, getDataEventEditR, postDataEventDeleR
   , getDataEventAttendeesR, postDataEventAttendeesR, getDataEventAttendeeNewR
   , getDataEventAttendeeR, postDataEventAttendeeDeleR
+  , getDataEventCalendarR
+  , getDataEventCalendarEventsR, postDataEventCalendarEventsR
+  , getDataEventCalendarEventR, postDataEventCalendarEventR
+  , getDataEventCalendarEventAttendeesR
+  , getDataEventCalendarEventAttendeeR
+  , postDataEventCalendarEventAttendeeDeleR
+  , getDataEventCalendarEventNewR
+  , getDataEventCalendarEventEditR
+  , postDataEventCalendarEventDeleR
   )
 
 import Handler.Users
