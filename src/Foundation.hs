@@ -230,12 +230,6 @@ instance Yesod App where
 
     
     isAuthorized FetchR _ = setUltDestCurrent >> return Authorized
-
-    
-    isAuthorized (DataR (UserCardR _ _)) _ = isAdmin
-    isAuthorized (DataR (UserCardsR _)) _ = isAdmin
-
-    isAuthorized (DataR (CardQrCodeR _)) _ = return Authorized
     
     
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
@@ -244,6 +238,12 @@ instance Yesod App where
     isAuthorized (DataR (UserR _)) _ = isAdmin
     isAuthorized (DataR UsersR) _ = setUltDestCurrent >> isAdmin
     isAuthorized (DataR (UserPhotoR _)) _ = return Authorized
+
+    isAuthorized (DataR (UserCardR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardNewR _)) _ = isAdmin
+    isAuthorized (DataR (UserCardsR _)) _ = isAdmin
+
+    isAuthorized (DataR (CardQrImageR _)) _ = return Authorized
 
     isAuthorized (DataR DataEventsR) _ = setUltDestCurrent >> isAdmin
     isAuthorized (DataR DataEventNewR) _ = isAdmin

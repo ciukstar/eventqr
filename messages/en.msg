@@ -1,3 +1,8 @@
+Value: Value
+Cardholder: Cardholder
+CardNumber: Card number
+NewField: New field
+AddField: Add field
 TotalAttendees: Total attendees
 TotalEventsForThisMonth: Total events for this month
 NoEventsYet: There are no events yet

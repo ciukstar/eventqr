@@ -36,7 +36,7 @@ import Foundation
       ( EventAttendeesR, ScannerR, CalendarR, EventsR, EventR, HomeR
       , DataR
       )
-    , DataR (UserPhotoR, CardQrCodeR)
+    , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
       ( MsgCalendar, MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgPrevious, MsgNext, MsgEvents, MsgEvent, MsgName, MsgTime

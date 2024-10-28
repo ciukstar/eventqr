@@ -4,13 +4,42 @@
 <main.responsive.no-padding>
 
   $maybe (Entity cid _,Entity _ (User email _ uname _)) <- card
-    <figure>
-      <img src=@{DataR $ CardQrCodeR cid} width=120 height=120 loading=lazy>
-      <figcaption>
-        <p>
-          $maybe name <- uname
-            #{name}
-          $nothing
-            #{email}
+    <dl.margin>
+      <dt>
+        <label.bold.medium-text>_{MsgCardNumber}
+      <dd>
+        #{fromSqlKey cid}
+      
+      <dt>
+        <label.bold.medium-text>_{MsgCardholder}
+      <dd>
+        <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        $maybe name <- uname
+          #{name}
+        $nothing
+          #{email}
 
-^{widgetSnackbar msgs}
+      $forall Entity _ (Info _ name val) <- attrs
+        <dt>
+          <label.bold.medium-text>#{name}
+        <dd>
+          #{val}
+        
+
+    <button.border.transparent ##{idButtonShowDialogQrCode}>
+      <i>qr_code
+      <span>_{MsgQrCode}
+
+  ^{widgetSnackbar msgs}
+
+<div.overlay ##{idOverlay}>
+
+<dialog ##{idDialogQrCode}>
+  <h5>_{MsgQrCode}
+  <div>
+    <figure>
+      <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=120 height=120 loading=lazy>
+
+  <nav.right-align>
+    <button.transparent.link ##{idButtonCloseDialogQrCode}>
+      _{MsgClose}

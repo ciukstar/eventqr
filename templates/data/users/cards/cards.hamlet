@@ -3,7 +3,7 @@
 
 <main.responsive.no-padding>
 
-  <div.tabs>
+  <div.tabs.min>
     <a href=@{DataR $ UserR uid}>
       _{MsgDetails}
       
@@ -14,14 +14,15 @@
     $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _)) <- cards
       <a.row.padding.surface-container.wave href=@{DataR $ UserCardR uid cid}>
 
-        <img.circle.extra src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
         <div.max>
           $maybe name <- uname
             <h6.small>#{name}
           $nothing
             <h6.small>#{email}
-
+          <div.small-text>
+            _{MsgIssueDate}
           <div>
             $with dt <- show issued
               <time.day datetime=#{dt}>
@@ -31,7 +32,7 @@
 
       <hr>
 
-  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=#
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ UserCardNewR uid}
     style="z-index:1" onclick="event.stopPropagation()">
     <i>add
 

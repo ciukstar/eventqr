@@ -1,3 +1,8 @@
+Value: Значение
+Cardholder: Владелец карты
+CardNumber: Номер карты
+NewField: Новое поле
+AddField: Добавить поле
 TotalAttendees: Всего участников
 TotalEventsForThisMonth: Всего событий за этот месяц
 NoEventsYet: Мероприятий пока нет

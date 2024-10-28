@@ -5,7 +5,7 @@
   $forall Entity uid (User email _ uname admin) <- users
     <a.row.padding.surface-container.wave href=@{DataR $ UserR uid}>
 
-      <img.circle.extra src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+      <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
         
       <div.max>
         $maybe name <- uname

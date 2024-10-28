@@ -38,7 +38,7 @@ import Foundation
       ( ScanQrR, ScannerR, CalendarR, HomeR, UpcomingEventR, EventRegistrationR
       , AttendeeRegistrationR, UpcomingEventAttendeesR, DataR
       )
-    , DataR (UserPhotoR, CardQrCodeR)
+    , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
       ( MsgAppName, MsgEventsCalendar, MsgName, MsgTime
       , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent

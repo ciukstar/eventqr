@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 
 module Handler.Users
   ( getUsersR, postUsersR
@@ -10,80 +11,12 @@ module Handler.Users
   , postUserDeleR
   , getUserEditR
   , getUserNewR
-  , getUserCardsR
+  , getUserCardsR, postUserCardsR
   , getUserCardR
-  , getCardQrCodeR
+  , getUserCardNewR
+  , getCardQrImageR
   ) where
 
-import Control.Monad (void)
-import Control.Monad.IO.Class (liftIO)
-
-import Data.Maybe (isJust)
-import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
-
-import Database.Esqueleto.Experimental
-    ( select, from, table, selectOne, where_, val, update, set
-    , (^.), (==.), (=.), (:&)((:&))
-    , Value (unValue), orderBy, asc, innerJoin, on
-    )
-    
-import Database.Persist
-    ( Entity (Entity), entityVal, insert, insert_, delete, upsert)
-import qualified Database.Persist as P ((=.))
-import Database.Persist.Sql (fromSqlKey)
-
-
-import Foundation
-    ( Handler, Form, widgetTopbar, widgetSnackbar
-    , Route (DataR, StaticR)
-    , DataR
-      ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
-      , UserCardsR, UserCardR, CardQrCodeR
-      )
-    , AppMessage
-      ( MsgUsers, MsgPhoto, MsgUser, MsgAdministrator, MsgEmail, MsgName
-      , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel, MsgYes
-      , MsgNo, MsgAttribution, MsgPassword, MsgSave, MsgAlreadyExists
-      , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgChangePassword
-      , MsgDetails, MsgCards, MsgCard
-      )
-    )
-    
-import Model
-    ( msgSuccess, msgError
-    , UserId, User(User, userName, userEmail, userPassword, userAdmin)
-    , UserPhoto (UserPhoto)
-    , Card (Card)
-    , EntityField
-      ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
-      , UserPhotoMime, UserName, UserAdmin, CardIssued, CardUser, CardId), CardId
-    )
-
-import Settings (widgetFile)
-import Settings.StaticFiles
-    ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
-
-import Text.Hamlet (Html)
-
-import Yesod.Core
-    ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
-    , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
-    , FileInfo (fileContentType), SomeMessage (SomeMessage), MonadHandler (liftHandler)
-    , addMessageI, fileSourceByteString, notFound
-    )
-import Yesod.Persist.Core (YesodPersist(runDB))
-import Yesod.Form.Fields
-    ( emailField, textField, fileField, passwordField, htmlField
-    , checkBoxField
-    )
-import Yesod.Form.Types
-    ( Field
-    , FieldSettings(FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
-    , FieldView (fvErrors, fvInput, fvRequired, fvLabel, fvId ), FormResult (FormSuccess)
-    )
-import Yesod.Form.Functions (generateFormPost, mreq, mopt, checkM, runFormPost)
-import Yesod.Auth.Email (saltPass)
 
 import qualified Codec.QRCode as QR 
 import Codec.QRCode.Data.QRCodeOptions (defaultQRCodeOptions)
@@ -92,16 +25,143 @@ import Codec.QRCode.JuicyPixels (toImage)
 import Codec.Picture (encodeBitmap)
 import Codec.QRCode (TextEncoding(Iso8859_1OrUtf8WithoutECI))
 
+import Control.Monad (void, forM)
+import Control.Monad.IO.Class (liftIO)
 
-getCardQrCodeR :: CardId -> Handler TypedContent
-getCardQrCodeR cid = do
-    
-    let input = show (fromSqlKey cid)
+import Data.Bifunctor (Bifunctor(first))
+import Data.Maybe (isJust)
+import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
+import Data.Time.Clock (getCurrentTime)
 
-    case QR.encode (defaultQRCodeOptions ErrorLevel.M) Iso8859_1OrUtf8WithoutECI input of
-      Just qrcode -> return $ TypedContent "image/bmp" $ toContent $ encodeBitmap $ toImage 0 1 qrcode
-      Nothing -> notFound
+import Database.Esqueleto.Experimental
+    ( select, from, table, selectOne, where_, val, update, set
+    , (^.), (==.), (=.), (:&)((:&))
+    , Value (unValue), orderBy, asc, innerJoin, on
+    , delete, PersistStoreWrite (insertMany_)
+    )
     
+import Database.Persist
+    ( Entity (Entity), entityVal, insert, insert_, upsert)
+import qualified Database.Persist as P ((=.), delete)
+import Database.Persist.Sql (fromSqlKey)
+
+import Foundation
+    ( Handler, Form, widgetTopbar, widgetSnackbar
+    , Route (DataR, StaticR)
+    , DataR
+      ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
+      , UserCardsR, UserCardR, CardQrImageR, UserCardNewR
+      )
+    , AppMessage
+      ( MsgUsers, MsgPhoto, MsgUser, MsgAdministrator, MsgEmail, MsgName
+      , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel, MsgYes
+      , MsgNo, MsgAttribution, MsgPassword, MsgSave, MsgAlreadyExists
+      , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgNewField
+      , MsgDetails, MsgCards, MsgCard, MsgIssueDate, MsgAddField, MsgAdd
+      , MsgChangePassword, MsgClose, MsgQrCode, MsgCardNumber, MsgCardholder, MsgValue
+      )
+    )
+    
+import Model
+    ( msgSuccess, msgError
+    , UserId, User(User, userName, userEmail, userPassword, userAdmin)
+    , UserPhoto (UserPhoto)
+    , Card (Card)
+    , CardId, Info (Info)
+    , EntityField
+      ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
+      , UserPhotoMime, UserName, UserAdmin, CardIssued, CardUser, CardId, InfoCard, InfoId)
+    )
+
+import Settings (widgetFile)
+import Settings.StaticFiles
+    ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
+
+import Text.Hamlet (Html)
+
+import Yesod.Auth.Email (saltPass)
+import Yesod.Core
+    ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
+    , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
+    , FileInfo (fileContentType), SomeMessage (SomeMessage), notFound
+    , MonadHandler (liftHandler), addMessageI, fileSourceByteString
+    )
+import Yesod.Persist.Core (YesodPersist(runDB))
+import Yesod.Form.Fields
+    ( emailField, textField, fileField, passwordField, htmlField
+    , checkBoxField
+    )
+import Yesod.Form.Types
+    ( Field, FormResult (FormSuccess)
+    , FieldSettings(FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
+    , FieldView (fvErrors, fvInput, fvRequired, fvLabel, fvId )
+    )
+import Yesod.Form.Functions (generateFormPost, mreq, mopt, checkM, runFormPost)
+
+
+postUserCardsR :: UserId -> Handler Html
+postUserCardsR uid = do
+
+    ((fr,fw),et) <- runFormPost $ formCard uid Nothing [("field 1","value 1")]
+
+    case fr of
+      FormSuccess (c,attrs) -> do          
+          cid <- runDB $ insert c
+          runDB $ delete $ do
+              x <- from $ table @Info
+              where_ $ x ^. InfoCard ==. val cid
+          runDB $ insertMany_ $ uncurry (Info cid) <$> attrs
+          addMessageI msgSuccess MsgRecordAdded
+          redirect $ DataR $ UserCardsR uid
+      _otherwise -> do
+          msgr <- getMessageRender
+          addMessageI msgError MsgInvalidFormData
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgCard 
+              idOverlay <- newIdent
+              idButtonAddField <- newIdent
+              idDialogAddField <- newIdent
+              idButtonCloseDialogAddField <- newIdent
+              $(widgetFile "data/users/cards/new")
+
+
+getUserCardNewR :: UserId -> Handler Html
+getUserCardNewR uid = do
+
+    (fw,et) <- generateFormPost $ formCard uid Nothing []
+
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgCard 
+        idOverlay <- newIdent
+        idButtonAddField <- newIdent
+        idDialogAddField <- newIdent
+        idButtonCloseDialogAddField <- newIdent
+        $(widgetFile "data/users/cards/new")
+
+
+formCard :: UserId -> Maybe (Entity Card) -> [(Text, Text)] -> Form (Card,[(Text,Text)])
+formCard uid card fields extra = do
+    now <- liftIO getCurrentTime
+
+    attrs <- forM fields $ \(name, value) -> mreq textField FieldSettings
+        { fsLabel = SomeMessage name
+        , fsId = Nothing, fsName = Nothing, fsTooltip = Nothing, fsAttrs = []
+        } (Just value) >>= \x -> return (first ((name,) <$>) x,name)
+    
+    let r = (,) (Card uid "" now) <$> traverse (fst . fst) attrs
+    let w = [whamlet|
+                    ^{extra}
+                    $forall ((_,v), name) <- attrs
+                      <div.field.label.round.border>
+                        ^{fvInput v}
+                        <label for=#{fvId v}>
+                          #{name}
+                    |]
+    return (r,w)
 
 
 getUserCardR :: UserId -> CardId -> Handler Html
@@ -112,12 +172,21 @@ getUserCardR uid cid = do
             `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
         where_ $ x ^. CardId ==. val cid
         return (x,u)
+
+    attrs <- runDB $ select $ do
+        x <- from $ table @Info
+        where_ $ x ^. InfoCard ==. val cid
+        orderBy [asc (x ^. InfoId)]
+        return x
     
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgCard
         idOverlay <- newIdent
+        idButtonShowDialogQrCode <- newIdent
+        idDialogQrCode <- newIdent
+        idButtonCloseDialogQrCode <- newIdent
         $(widgetFile "data/users/cards/card")
 
 
@@ -144,7 +213,7 @@ postUserDeleR uid = do
     ((fr,_),_) <- runFormPost formUserDelete
     case fr of
       FormSuccess () -> do
-          runDB $ delete uid
+          runDB $ P.delete uid
           addMessageI msgSuccess MsgRecordDeleted
           redirect $ DataR UsersR
       _otherwise -> do
@@ -458,3 +527,13 @@ getUserPhotoR uid = do
     case photo of
       Just (Entity _ (UserPhoto _ mime bs _)) -> return $ TypedContent (encodeUtf8 mime) $ toContent bs
       Nothing -> redirect $ StaticR img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg
+
+
+getCardQrImageR :: CardId -> Handler TypedContent
+getCardQrImageR cid = do
+    
+    let input = show (fromSqlKey cid)
+
+    case QR.encode (defaultQRCodeOptions ErrorLevel.M) Iso8859_1OrUtf8WithoutECI input of
+      Just qrcode -> return $ TypedContent "image/bmp" $ toContent $ encodeBitmap $ toImage 0 1 qrcode
+      Nothing -> notFound

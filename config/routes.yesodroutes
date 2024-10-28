@@ -57,10 +57,11 @@
     /catalogue/#EventId           DataEventR          GET POST
     /catalogue                    DataEventsR         GET POST
     
-    /qrcode/#CardId CardQrCodeR GET
+    /qrcode/#CardId CardQrImageR GET
 
-    /users/#UserId/cards/#CardId UserCardR  GET
-    /users/#UserId/cards         UserCardsR GET
+    /users/#UserId/cards/new/form UserCardNewR GET
+    /users/#UserId/cards/#CardId  UserCardR    GET
+    /users/#UserId/cards          UserCardsR   GET POST
     
     /users/#UserId/dele UserDeleR POST
     /users/#UserId/edit UserEditR GET

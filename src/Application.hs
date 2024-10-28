@@ -83,9 +83,10 @@ import Handler.Users
     , getUserR, postUserR
     , getUserNewR, getUserEditR, postUserDeleR
     , getUserPhotoR
-    , getUserCardsR
+    , getUserCardsR, postUserCardsR
     , getUserCardR
-    , getCardQrCodeR
+    , getUserCardNewR
+    , getCardQrImageR
     )
 
 import System.Environment.Blank (getEnv)

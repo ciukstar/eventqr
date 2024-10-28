@@ -1,4 +1,10 @@
 
 main
+
+    dl
+        dt + dd
+            margin: 0 0 1rem 2rem
+
+##{idDialogQrCode}
     figure
         text-align: center

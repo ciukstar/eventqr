@@ -1,0 +1,9 @@
+
+document.getElementById(#{idOverlay}).addEventListener('click', e => {
+  document.getElementById(#{idDialogAddField}).close();
+});
+
+document.getElementById(#{idButtonCloseDialogAddField}).addEventListener('click', e => {
+  document.getElementById(#{idDialogAddField}).close();
+});
+

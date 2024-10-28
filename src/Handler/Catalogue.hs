@@ -49,7 +49,7 @@ import Foundation
     ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar
     , Route (DataR, ScannerR)
     , DataR
-      ( DataEventR, DataEventAttendeesR, DataEventsR, UserPhotoR, CardQrCodeR
+      ( DataEventR, DataEventAttendeesR, DataEventsR, UserPhotoR, CardQrImageR
       , DataEventNewR, DataEventEditR, DataEventDeleR, DataEventAttendeeNewR
       , DataEventAttendeeR, DataEventAttendeeDeleR, DataEventCalendarR
       , DataEventCalendarEventsR, DataEventCalendarEventR

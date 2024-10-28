@@ -1,11 +1,11 @@
 
-<div.overlay ##{idOverlay} data-ui=##{idOverlay} onclick="document.getElementById('#{idDialogDelete}').close()">
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
 
 ^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay (Just idDialogDelete) (Just $ DataR $ UserEditR uid)}
 
 <main.responsive.no-padding>
 
-  <div.tabs>
+  <div.tabs.min>
     <a.active href=@{DataR $ UserR uid}>
       _{MsgDetails}
       

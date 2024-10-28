@@ -6,6 +6,11 @@ Attendee
     card  CardId OnDeleteCascade
     regDate UTCTime
 
+Info
+    card CardId OnDeleteCascade
+    name Text
+    value Text
+
 Card
     user UserId
     qr Text

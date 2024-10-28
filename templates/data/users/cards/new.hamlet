@@ -1,0 +1,53 @@
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+^{widgetTopbar (Just (DataR $ UserCardsR uid,[])) (msgr MsgCard) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  <form.margin method=post action=@{DataR $ UserCardsR uid} enctype=#{et} novalidate>
+    ^{fw}
+      
+    <nav.right-align>
+      <a.button.transparent href=@{DataR $ UserCardsR uid}>
+        _{MsgCancel}
+      <button.primary type=submit>
+        _{MsgSave}
+
+  <details>
+    <summary.none.button.small.tertiary>
+      <i>expand_more
+      <span>_{MsgNewField}
+      
+    <form>
+
+      <div.field.round.border>
+        <input type=text name=name placeholder=_{MsgName}>
+
+      <div.field.round.border>
+        <input type=text name=value placeholder=_{MsgValue}>
+
+      <nav.left-align>
+        <button.small.primary type=submit>
+          _{MsgAdd}
+
+      
+
+  ^{widgetSnackbar msgs}
+
+
+<dialog ##{idDialogAddField}>
+  <h6>_{MsgNewField}
+  <div>
+    <div.field.round.border>
+      <input type=text placeholder=_{MsgName}>
+      
+    
+  <nav.right-align.no-space>
+    <button.transparent.link ##{idButtonCloseDialogAddField} data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogAddField}').close()">
+      _{MsgCancel}
+    <form method=post action=#>
+      
+      <button.primary type=submit>
+        _{MsgAdd}
