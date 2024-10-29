@@ -20,7 +20,7 @@ import Model
       )
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
-    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate), Info (Info, infoCard, infoName, infoValue)
     )
 
 import Text.Hamlet (shamlet)
@@ -103,21 +103,85 @@ fillDemoEn = do
                           , cardIssued = addUTCTime ((-30) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Birthday"
+                   , infoValue = "11/22/1996"
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Phone"
+                   , infoValue = "098755432"
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Facebook"
+                   , infoValue = "https://facebook.com/1234123"
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Instagram"
+                   , infoValue = "https://instagram.com/234234234"
+                   }
 
     cid2 <- insert $ Card { cardUser = uid2
                           , cardIssued = addUTCTime ((-31) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Birthday"
+                   , infoValue = "10/21/1995"
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Phone"
+                   , infoValue = "+9098755432"
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Facebook"
+                   , infoValue = "https://facebook.com/000120"
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Instagram"
+                   , infoValue = "https://instagram.com/234234"
+                   }
 
     cid3 <- insert $ Card { cardUser = uid3
                           , cardIssued = addUTCTime ((-32) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Birthday"
+                   , infoValue = "09/20/1994"
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Phone"
+                   , infoValue = "+14098755432"
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Facebook"
+                   , infoValue = "https://facebook.com/985287782"
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Instagram"
+                   , infoValue = "https://instagram.com/09876666"
+                   }
 
     cid4 <- insert $ Card { cardUser = uid4
                           , cardIssued = addUTCTime ((-33) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Birthday"
+                   , infoValue = "08/19/1993"
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Phone"
+                   , infoValue = "+454655657"
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Facebook"
+                   , infoValue = "https://facebook.com/23898"
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Instagram"
+                   , infoValue = "https://instagram.com/12431265"
+                   }
 
     eid11 <- insert $ Event { eventTime = addUTCTime hour now
                             , eventName = "Private party"

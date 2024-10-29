@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (DataR $ UserCardsR uid,[])) (msgr MsgCard) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ UserCardsR uid,[])) (msgr MsgCard) idOverlay (Just idDialogDelete) (Just $ DataR $ UserCardEditR uid cid)}
 
 <main.responsive.no-padding>
 
@@ -26,13 +26,15 @@
           #{val}
         
 
-    <button.border.transparent ##{idButtonShowDialogQrCode}>
+    <button.border.transparent.margin ##{idButtonShowDialogQrCode}>
       <i>qr_code
       <span>_{MsgQrCode}
 
   ^{widgetSnackbar msgs}
 
+
 <div.overlay ##{idOverlay}>
+
 
 <dialog ##{idDialogQrCode}>
   <h5>_{MsgQrCode}
@@ -43,3 +45,16 @@
   <nav.right-align>
     <button.transparent.link ##{idButtonCloseDialogQrCode}>
       _{MsgClose}
+
+
+<dialog ##{idDialogDelete}>
+  <h5>_{MsgConfirmPlease}
+  <div>_{MsgDeleteAreYouSure}
+  <nav.right-align.no-space>
+    <button.transparent.link data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogDelete}').close()">
+      _{MsgCancel}
+    <form method=post action=@{DataR $ UserCardDeleR uid cid} enctype=#{et0}>
+      ^{fw0}
+      <button.primary type=submit>
+        _{MsgDele}

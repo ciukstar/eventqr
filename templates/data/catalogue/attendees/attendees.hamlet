@@ -11,24 +11,30 @@
       _{MsgAttendees}
     
   <div.page.active>
-    $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _)) <- attendees
-      <a.row.padding.surface-container.wave href=@{DataR $ DataEventAttendeeR eid aid}>
+    $if null attendees
+      <figure.margin.pading style="text-align:center">
+        <i.extra>folder_open
+        <figcaption>
+          _{MsgNoAttendeesForThisEventYet}.
+    $else
+      $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _)) <- attendees
+        <a.row.padding.surface-container.wave href=@{DataR $ DataEventAttendeeR eid aid}>
 
-        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+          <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
-        <div.max>
-          $maybe name <- uname
-            <h6.small>#{name}
-          $nothing
-            <h6.small>#{email}
-          <div>
-            $with dt <- show rdate
-              <time.full-datetime datetime=#{dt}>
-                #{dt}
+          <div.max>
+            $maybe name <- uname
+              <h6.small>#{name}
+            $nothing
+              <h6.small>#{email}
+            <div>
+              $with dt <- show rdate
+                <time.full-datetime datetime=#{dt}>
+                  #{dt}
 
-        <i>arrow_forward_ios
+          <i>arrow_forward_ios
 
-      <hr>
+        <hr>
 
   <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventAttendeeNewR eid}
     style="z-index:1" onclick="event.stopPropagation()">

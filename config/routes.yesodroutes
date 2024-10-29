@@ -59,9 +59,13 @@
     
     /qrcode/#CardId CardQrImageR GET
 
-    /users/#UserId/cards/new/form UserCardNewR GET
-    /users/#UserId/cards/#CardId  UserCardR    GET
-    /users/#UserId/cards          UserCardsR   GET POST
+    /users/#UserId/cards/#CardId/dele       UserCardDeleR      POST
+    /users/#UserId/cards/#CardId/field      UserCardNewFieldR  POST
+    /users/#UserId/cards/#CardId/edit       UserCardEditR      GET
+    /users/#UserId/cards/new/form           UserCardNewR       GET
+    /users/#UserId/cards/new/field/form     UserCardsNewFieldR POST
+    /users/#UserId/cards/#CardId            UserCardR          GET POST
+    /users/#UserId/cards                    UserCardsR         GET POST
     
     /users/#UserId/dele UserDeleR POST
     /users/#UserId/edit UserEditR GET

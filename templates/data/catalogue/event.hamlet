@@ -1,6 +1,4 @@
 
-<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
-
 ^{widgetTopbar (Just (DataR $ DataEventsR,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) (Just $ DataR $ DataEventEditR eid)}
 
 <main.responsive.no-padding>
@@ -42,6 +40,7 @@
 
   ^{widgetSnackbar msgs}
 
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
 
 <dialog ##{idDialogDelete}>
   <h5>_{MsgConfirmPlease}

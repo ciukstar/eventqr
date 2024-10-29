@@ -84,8 +84,12 @@ import Handler.Users
     , getUserNewR, getUserEditR, postUserDeleR
     , getUserPhotoR
     , getUserCardsR, postUserCardsR
-    , getUserCardR
+    , getUserCardR, postUserCardR
     , getUserCardNewR
+    , postUserCardsNewFieldR
+    , getUserCardEditR
+    , postUserCardNewFieldR
+    , postUserCardDeleR
     , getCardQrImageR
     )
 

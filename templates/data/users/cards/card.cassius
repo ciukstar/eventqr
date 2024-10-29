@@ -1,6 +1,9 @@
 
 main
 
+    display: flex
+    flex-direction: column
+
     dl
         dt + dd
             margin: 0 0 1rem 2rem

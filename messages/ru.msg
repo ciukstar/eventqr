@@ -1,3 +1,6 @@
+UserHasNoCardsYet: У пользователя пока нет карточек
+NoFieldsForThisCardYet: Для этой карточки пока нет полей
+NewFieldNameRequired: Необходимо указать имя нового поля
 Value: Значение
 Cardholder: Владелец карты
 CardNumber: Номер карты
@@ -156,7 +159,7 @@ EmptyDataSet: Пустой набор данных
 AccessDeniedAdminsOnly: Доступ к этой странице имеют только администраторы. Пожалуйста, войдите под учетной записью администратора
 LoginPlease: Пожалуйста, войдите для доступа к этой странице
 Users: Пользователи
-Email: E-mail
+Email: Электронная почта
 ResetPassword: Сбросить пароль
 RestoreLogin: Восстановить вход
 Password: Пароль

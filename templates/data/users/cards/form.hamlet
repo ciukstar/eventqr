@@ -1,0 +1,30 @@
+
+^{extra}
+$forall (_,v) <- attrs
+  ^{md3widget v}
+
+$if null fields
+  <figure.margin.pading style="text-align:center">
+    <i.extra>folder_open
+    <figcaption>
+      _{MsgNoFieldsForThisCardYet}.
+
+$else
+  <nav.right-align>
+    <a.button.transparent href=@{DataR $ UserCardsR uid}>
+      _{MsgCancel}
+    <button.primary type=submit>
+      _{MsgSave}
+
+<details ##{idDetailsNewField}>
+  <summary.none.button.small.tertiary>
+    <i>add
+    <span>_{MsgNewField}
+
+  $forall v <- [nameV, valV]
+    ^{md3widget v}
+
+  <nav.right-align>
+    <button.small.primary type=submit formaction=@{route}>
+      <i>add
+      _{MsgAdd}

@@ -239,9 +239,15 @@ instance Yesod App where
     isAuthorized (DataR UsersR) _ = setUltDestCurrent >> isAdmin
     isAuthorized (DataR (UserPhotoR _)) _ = return Authorized
 
-    isAuthorized (DataR (UserCardR _ _)) _ = isAdmin
-    isAuthorized (DataR (UserCardNewR _)) _ = isAdmin
     isAuthorized (DataR (UserCardsR _)) _ = isAdmin
+    isAuthorized (DataR (UserCardR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardsNewFieldR _)) _ = isAdmin
+    isAuthorized (DataR (UserCardNewR _)) _ = isAdmin
+    isAuthorized (DataR (UserCardEditR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardNewFieldR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardDeleR _ _)) _ = isAdmin
+    
+    
 
     isAuthorized (DataR (CardQrImageR _)) _ = return Authorized
 

@@ -20,7 +20,7 @@ import Model
       )
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
-    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate), Info (Info, infoCard, infoName, infoValue)
     )
     
 import Text.Hamlet (shamlet)
@@ -104,21 +104,85 @@ fillDemoRu = do
                           , cardIssued = addUTCTime ((-30) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Дата рождения"
+                   , infoValue = "22.11.1996"
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Телефон"
+                   , infoValue = "098755432"
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "ВКонтакте"
+                   , infoValue = "https://vk.ru/1234123"
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Одноклассники"
+                   , infoValue = "https://ok.ru/234234234"
+                   }
 
     cid2 <- insert $ Card { cardUser = uid2
                           , cardIssued = addUTCTime ((-31) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Дата рождения"
+                   , infoValue = "21.10.1995"
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Телефон"
+                   , infoValue = "+9098755432"
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "ВКонтакте"
+                   , infoValue = "https://vk.ru/000120"
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Одноклассники"
+                   , infoValue = "https://ok.ru/234234"
+                   }
 
     cid3 <- insert $ Card { cardUser = uid3
                           , cardIssued = addUTCTime ((-32) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Дата рождения"
+                   , infoValue = "20.09.1994"
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Телефон"
+                   , infoValue = "+14098755432"
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "ВКонтакте"
+                   , infoValue = "https://vk.ru/985287782"
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Одноклассники"
+                   , infoValue = "https://ok.ru/09876666"
+                   }
 
     cid4 <- insert $ Card { cardUser = uid4
                           , cardIssued = addUTCTime ((-33) * day) now
                           , cardQr = ""
                           }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Дата рождения"
+                   , infoValue = "19.08.1993"
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Телефон"
+                   , infoValue = "+454655657"
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "ВКонтакте"
+                   , infoValue = "https://vk.ru/23898"
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Одноклассники"
+                   , infoValue = "https://ok.ru/12431265"
+                   }
 
     eid11 <- insert $ Event { eventTime = addUTCTime hour now
                             , eventName = "Частная вечеринка"

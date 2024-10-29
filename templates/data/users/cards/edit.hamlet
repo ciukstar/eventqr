@@ -1,12 +1,13 @@
 
-<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
-
 ^{widgetTopbar (Just (DataR $ UserCardsR uid,[])) (msgr MsgCard) idOverlay Nothing Nothing}
 
 <main.responsive>
 
-  <form.margin method=post action=@{DataR $ UserCardsR uid} enctype=#{et} novalidate>
+  <form.margin method=post action=@{DataR $ UserCardR uid cid} enctype=#{et} novalidate>
     ^{fw}
       
 
   ^{widgetSnackbar msgs}
+
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
