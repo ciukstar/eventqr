@@ -1,3 +1,4 @@
+NumberOfAttendees: Number of attendees
 UserHasNoCardsYet: The user has no cards yet
 NoFieldsForThisCardYet: There are no fields for this card yet
 NewFieldNameRequired: The name of the new field must be specified

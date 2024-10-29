@@ -8,8 +8,7 @@
 
   <a.button.margin href=@{CalendarR month}>
     _{MsgEventsCalendar}
-    
-    
+        
 
 $if not (null msgs)
   ^{widgetSnackbar msgs}

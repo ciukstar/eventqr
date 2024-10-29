@@ -8,6 +8,7 @@ module Handler.Calendar
   , getEventAttendeesR, getEventAttendeeR
   ) where
 
+import Data.Bifunctor (Bifunctor(second))
 import Data.Map (Map, fromListWith)
 import qualified Data.List as L (length)
 import qualified Data.Map as M (lookup, foldr)
@@ -44,7 +45,7 @@ import Foundation
       , MsgNoEventsForThisDayYet, MsgAttendees, MsgDetails, MsgPhoto
       , MsgClose, MsgNoEventsForThisMonth, MsgTotalEventsForThisMonth
       , MsgQrCode, MsgTotalAttendees, MsgRegistrationDate, MsgCardholder
-      , MsgCardNumber, MsgCard
+      , MsgCardNumber, MsgCard, MsgNumberOfAttendees
       )
     )
     
@@ -67,7 +68,6 @@ import Yesod.Core
     , getRequest, getMessageRender, getYesod, getMessages
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
-import Data.Bifunctor (Bifunctor(second))
 
 
 getEventAttendeeR :: Day -> EventId -> AttendeeId -> Handler Html
@@ -121,10 +121,16 @@ getEventAttendeesR day eid = do
 getEventR :: Day -> EventId -> Handler Html
 getEventR day eid = do
 
-    event <- runDB $ selectOne $ do
+    event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+                
         where_ $ x ^. EventId ==. val eid
-        return x
+        return (x,attendees) )
     
     msgr <- getMessageRender
     defaultLayout $ do

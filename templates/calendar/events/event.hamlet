@@ -3,7 +3,7 @@
 
 <main.responsive.no-padding>
 
-  <div.tabs>
+  <div.tabs.min>
     <a.active href=@{EventR day eid}>
       _{MsgDetails}
       
@@ -11,24 +11,29 @@
       _{MsgAttendees}
     
   <div.padding.page.active>
-    $maybe Entity _ (Event time name descr) <- event
+    $maybe (Entity _ (Event time name descr),attendees) <- event
       <dl>
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgName}
-        <dd>
+        <dd.small-margin>
           #{name}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgTime}
-        <dd>
+        <dd.small-margin>
           $with dt <- show time
             <time.full-datetime datetime=#{dt}>
               #{dt}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgDescription}
-        <dd>
+        <dd.small-margin>
           #{descr}
+
+        <dt.bold>
+          _{MsgNumberOfAttendees}
+        <dd.small-margin>
+          #{attendees}
 
     <p ##{idActionQrScan}>
       <a.button.margin href=@{ScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>

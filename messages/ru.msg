@@ -1,3 +1,4 @@
+NumberOfAttendees: Количество участников
 UserHasNoCardsYet: У пользователя пока нет карточек
 NoFieldsForThisCardYet: Для этой карточки пока нет полей
 NewFieldNameRequired: Необходимо указать имя нового поля

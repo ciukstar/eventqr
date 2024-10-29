@@ -197,7 +197,6 @@ $else
           }
 
 
-
 postEventRegistrationR :: EventId -> Handler Html
 postEventRegistrationR eid = do
 
@@ -207,9 +206,9 @@ postEventRegistrationR eid = do
       FormSuccess (eid',cid') -> do
           now <- liftIO getCurrentTime
           runDB $ insert_ Attendee { attendeeEvent = eid'
-                                     , attendeeCard = cid'
-                                     , attendeeRegDate = now
-                                     }
+                                   , attendeeCard = cid'
+                                   , attendeeRegDate = now
+                                   }
           addMessageI msgSuccess MsgUserSuccessfullyegisteredForEvent
           redirect HomeR
       _otherwise -> do
@@ -238,9 +237,7 @@ getEventRegistrationR eid = do
     msgr <- getMessageRender
     defaultLayout $ do
         setTitleI MsgRegistration
-
         idOverlay <- newIdent
-
         $(widgetFile "upcoming/registration/registration")
 
 
