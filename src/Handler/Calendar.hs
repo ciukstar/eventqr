@@ -5,7 +5,7 @@
 
 module Handler.Calendar
   ( getCalendarR, getEventsR, getEventR
-  , getEventAttendeesR
+  , getEventAttendeesR, getEventAttendeeR
   ) where
 
 import Data.Map (Map, fromListWith)
@@ -25,16 +25,16 @@ import Data.Time.LocalTime
 import Database.Esqueleto.Experimental
     ( SqlExpr, select, selectOne, from, table, where_, val
     , (^.), (==.), (:&) ((:&)), (>=.), (<.)
-    , innerJoin, on, subSelectCount, Value (unValue)
+    , innerJoin, on, subSelectCount, Value (unValue), asc, orderBy
     )
 import Database.Persist (Entity (Entity), entityVal)
 import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
-    ( App (appSettings), Handler, widgetTopbar
+    ( App (appSettings), Handler, widgetTopbar, widgetSnackbar
     , Route
       ( EventAttendeesR, ScannerR, CalendarR, EventsR, EventR, HomeR
-      , DataR
+      , EventAttendeeR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -43,7 +43,8 @@ import Foundation
       , MsgDescription, MsgScanQrCode, MsgScanQrCodeAndLinkToEvent
       , MsgNoEventsForThisDayYet, MsgAttendees, MsgDetails, MsgPhoto
       , MsgClose, MsgNoEventsForThisMonth, MsgTotalEventsForThisMonth
-      , MsgQrCode, MsgTotalAttendees, MsgRegistrationDate
+      , MsgQrCode, MsgTotalAttendees, MsgRegistrationDate, MsgCardholder
+      , MsgCardNumber, MsgCard
       )
     )
     
@@ -53,8 +54,8 @@ import Model
     , Card, User (User)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
-      , UserId
-      )
+      , UserId, AttendeeId, InfoCard, InfoId
+      ), AttendeeId, Info (Info)
     )
 
 import Settings (widgetFile, AppSettings (appTimeZone))
@@ -63,10 +64,39 @@ import Text.Hamlet (Html)
 
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, YesodRequest (reqGetParams)
-    , getRequest, getMessageRender, getYesod
+    , getRequest, getMessageRender, getYesod, getMessages
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 import Data.Bifunctor (Bifunctor(second))
+
+
+getEventAttendeeR :: Day -> EventId -> AttendeeId -> Handler Html
+getEventAttendeeR day eid aid = do
+
+    card <- runDB $ selectOne $ do
+        x :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @User `on` (\(_ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. AttendeeId ==. val aid
+        return (c,u)
+
+    attrs <- case card of
+      Just (Entity cid _, _) -> runDB $ select $ do
+          x <- from $ table @Info
+          where_ $ x ^. InfoCard ==. val cid
+          orderBy [asc (x ^. InfoId)]
+          return x
+      Nothing -> return []
+
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgAttendees
+        idOverlay <- newIdent
+        idButtonShowDialogQrCode <- newIdent
+        idDialogQrCode <- newIdent
+        idButtonCloseDialogQrCode <- newIdent
+        $(widgetFile "calendar/events/attendees/card")
 
 
 getEventAttendeesR :: Day -> EventId -> Handler Html

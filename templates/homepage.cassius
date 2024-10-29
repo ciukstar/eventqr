@@ -4,6 +4,8 @@ main
     flex-direction: column
     row-gap: 1rem
 
+    .intro
+        margin-top: 2rem
 
 ##{idButtonCloseDialogSearchEvents}
     position: absolute

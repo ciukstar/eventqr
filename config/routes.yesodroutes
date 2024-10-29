@@ -2,9 +2,10 @@
 -- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
 
 
-/events/#Day/#EventId/attendees EventAttendeesR GET
-/events/#Day/#EventId           EventR          GET
-/events/#Day                    EventsR         GET
+/events/#Day/#EventId/attendees/#AttendeeId EventAttendeeR  GET
+/events/#Day/#EventId/attendees             EventAttendeesR GET
+/events/#Day/#EventId                       EventR          GET
+/events/#Day                                EventsR         GET
 
 /calendar/#Month CalendarR GET
 
@@ -12,9 +13,10 @@
 /scanner/#EventId          ScannerR              GET
 /scanner                   ScanQrR               GET
 
-/upcoming/#EventId/register  EventRegistrationR      GET POST
-/upcoming/#EventId/attendees UpcomingEventAttendeesR GET
-/upcoming/#EventId           UpcomingEventR          GET
+/upcoming/#EventId/register              EventRegistrationR      GET POST
+/upcoming/#EventId/attendees/#AttendeeId UpcomingEventAttendeeR  GET
+/upcoming/#EventId/attendees             UpcomingEventAttendeesR GET
+/upcoming/#EventId                       UpcomingEventR          GET
 
 / HomeR GET
 

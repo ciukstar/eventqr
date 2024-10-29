@@ -203,21 +203,19 @@ instance Yesod App where
     isAuthorized HomeR _ = setUltDestCurrent >> return Authorized
     isAuthorized (UpcomingEventR _) _ = return Authorized
     isAuthorized (UpcomingEventAttendeesR _) _ = return Authorized
+    isAuthorized (UpcomingEventAttendeeR _ _) _ = return Authorized
     isAuthorized (EventRegistrationR _) _ = return Authorized
     isAuthorized AttendeeRegistrationR _ = return Authorized
 
     isAuthorized (ScannerR _) _ = return Authorized
     isAuthorized ScanQrR _ = return Authorized
-    
-    
+        
     
     isAuthorized (CalendarR _) _ = return Authorized
     isAuthorized (EventsR _) _ = return Authorized
     isAuthorized (EventR _ _) _ = return Authorized
     isAuthorized (EventAttendeesR _ _) _ = return Authorized
-    
-    
-    
+    isAuthorized (EventAttendeeR {}) _ = return Authorized
     
     isAuthorized DocsR _ = setUltDestCurrent >> return Authorized
     

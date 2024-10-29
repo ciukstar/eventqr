@@ -53,13 +53,14 @@ import Handler.Docs ( getDocsR )
 
 import Handler.Home
     ( getHomeR, getFetchR, getUpcomingEventR, getEventRegistrationR
-    , postEventRegistrationR, getUpcomingEventAttendeesR
+    , postEventRegistrationR, getUpcomingEventAttendeesR, getUpcomingEventAttendeeR
     , getAttendeeRegistrationR, postAttendeeRegistrationR
     )
 
 import Handler.Scanner (getScannerR, getScanQrR)
 import Handler.Calendar
     ( getCalendarR, getEventsR, getEventR, getEventAttendeesR
+    , getEventAttendeeR
     )
 
 import Handler.Catalogue

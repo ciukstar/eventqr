@@ -1,0 +1,49 @@
+
+^{widgetTopbar (Just (EventAttendeesR day eid,[])) (msgr MsgCard) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  $maybe (Entity cid _,Entity uid (User email _ uname _)) <- card
+      
+    <dl.margin>
+      <dt>
+        <label.bold.medium-text>_{MsgCardNumber}
+      <dd>
+        #{fromSqlKey cid}
+      
+      <dt>
+        <label.bold.medium-text>_{MsgCardholder}
+      <dd>
+        <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        $maybe name <- uname
+          #{name}
+        $nothing
+          #{email}
+
+      $forall Entity _ (Info _ name val) <- attrs
+        <dt>
+          <label.bold.medium-text>#{name}
+        <dd>
+          #{val}
+        
+
+    <button.border.transparent.margin ##{idButtonShowDialogQrCode}>
+      <i>qr_code
+      <span>_{MsgQrCode}
+
+
+    <div.overlay ##{idOverlay}>
+
+
+    <dialog ##{idDialogQrCode}>
+      <h5>_{MsgQrCode}
+      <div>
+        <figure>
+          <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=120 height=120 loading=lazy>
+
+      <nav.right-align>
+        <button.transparent.link ##{idButtonCloseDialogQrCode}>
+          _{MsgClose}
+   
+
+  ^{widgetSnackbar msgs}

@@ -13,7 +13,7 @@
       _{MsgAttendees}
     
   <div.page.active>
-    $forall (Entity _ (Attendee _ _ rdate), Entity cid _, Entity uid (User email _ uname _)) <- attendees
+    $forall (Entity aid (Attendee _ _ rdate), Entity cid _, Entity uid (User email _ uname _)) <- attendees
       $with i <- show $ fromSqlKey cid
         <dialog #idDialogQrCode#{i}>
           <h5>_{MsgQrCode}
@@ -27,13 +27,16 @@
 
         <div.row.padding.no-margin>
 
-          <img.circle.extra src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+          <a href=@{UpcomingEventAttendeeR eid aid}>
+            <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
           <div.max>
-            $maybe name <- uname
-              <h6.small>#{name}
-            $nothing
-              <h6.small>#{email}
+            <a.link.large-text href=@{UpcomingEventAttendeeR eid aid}>
+              $maybe name <- uname
+                #{name}
+              $nothing
+                #{email}
+              
             <div.small-text>
               _{MsgRegistrationDate}
             <div>

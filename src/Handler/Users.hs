@@ -32,7 +32,7 @@ import Codec.QRCode (TextEncoding(Iso8859_1OrUtf8WithoutECI))
 import Control.Monad (void, forM)
 import Control.Monad.IO.Class (liftIO)
 
-import Data.Bifunctor (Bifunctor(first))
+import Data.Bifunctor (Bifunctor(first, second))
 import Data.Maybe (isJust, fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
@@ -51,7 +51,7 @@ import qualified Database.Persist as P ((=.), delete)
 import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
-    ( Handler, Form, widgetTopbar, widgetSnackbar
+    ( Handler, Form, App, widgetTopbar, widgetSnackbar
     , Route (DataR, StaticR)
     , DataR
       ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
@@ -68,10 +68,10 @@ import Foundation
       , MsgChangePassword, MsgQrCode, MsgCardNumber, MsgCardholder
       , MsgValue, MsgNewFieldNameRequired, MsgNoFieldsForThisCardYet
       , MsgUserHasNoCardsYet, MsgRecordEdited
-      ), App
+      )
     )
 
-import Material3 (md3widget)
+import Material3 (md3widget, md3textareaWidget)
     
 import Model
     ( msgSuccess, msgError
@@ -97,7 +97,8 @@ import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , FileInfo (fileContentType), SomeMessage (SomeMessage), notFound
-    , MonadHandler (liftHandler), addMessageI, fileSourceByteString, getPostParams
+    , MonadHandler (liftHandler), addMessageI, fileSourceByteString, toHtml
+    , getPostParams
     )
 import Yesod.Form.Fields
     ( emailField, textField, fileField, passwordField, htmlField
@@ -128,7 +129,7 @@ postUserCardDeleR  uid cid = do
 postUserCardNewFieldR :: UserId -> CardId -> Handler Html
 postUserCardNewFieldR uid cid = do
 
-    fields <- filter paramsOut <$> getPostParams
+    fields <- (second toHtml <$>) . filter paramsOut <$> getPostParams
 
     card <- runDB $ selectOne $ do
         x <- from $ table @Card
@@ -183,7 +184,7 @@ postUserCardNewFieldR uid cid = do
 postUserCardR :: UserId -> CardId -> Handler Html
 postUserCardR uid cid = do
 
-    fields <- filter paramsOut <$> getPostParams
+    fields <- (second toHtml <$>) . filter paramsOut <$> getPostParams
 
     card <- runDB $ selectOne $ do
         x <- from $ table @Card
@@ -239,7 +240,7 @@ getUserCardEditR uid cid = do
 postUserCardsNewFieldR :: UserId -> Handler Html
 postUserCardsNewFieldR uid = do
 
-    fields <- filter paramsOut <$> getPostParams
+    fields <- (second toHtml <$>) . filter paramsOut <$> getPostParams
     
     let route = DataR $ UserCardsNewFieldR uid
     
@@ -289,7 +290,7 @@ postUserCardsNewFieldR uid = do
 postUserCardsR :: UserId -> Handler Html
 postUserCardsR uid = do
 
-    fields <- filter paramsOut <$> getPostParams
+    fields <- (second toHtml <$>) . filter paramsOut <$> getPostParams
 
     ((fr,fw),et) <- runFormPost $ formCard (DataR $ UserCardsNewFieldR uid) uid Nothing fields
 
@@ -326,12 +327,12 @@ getUserCardNewR uid = do
         $(widgetFile "data/users/cards/new")
 
 
-formCard :: Route App -> UserId -> Maybe (Entity Card) -> [(Text, Text)]
-         -> Form ((Card,[(Text,Text)]),(Maybe Text,Maybe Text))
+formCard :: Route App -> UserId -> Maybe (Entity Card) -> [(Text, Html)]
+         -> Form ((Card,[(Text,Html)]),(Maybe Text,Maybe Html))
 formCard route uid card fields extra = do
     now <- liftIO getCurrentTime
 
-    attrs <- forM fields $ \(name, value) -> mreq textField FieldSettings
+    attrs <- forM fields $ \(name, value) -> mreq htmlField FieldSettings
         { fsLabel = SomeMessage name
         , fsName = Just name
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
@@ -343,7 +344,7 @@ formCard route uid card fields extra = do
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
         } Nothing
         
-    (valR,valV) <- mopt textField FieldSettings
+    (valR,valV) <- mopt htmlField FieldSettings
         { fsLabel = SomeMessage MsgValue
         , fsName = Just paramFieldNewValue
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []

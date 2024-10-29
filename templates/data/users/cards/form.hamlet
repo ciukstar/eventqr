@@ -1,7 +1,7 @@
 
 ^{extra}
 $forall (_,v) <- attrs
-  ^{md3widget v}
+  ^{md3textareaWidget v}
 
 $if null fields
   <figure.margin.pading style="text-align:center">
@@ -21,8 +21,9 @@ $else
     <i>add
     <span>_{MsgNewField}
 
-  $forall v <- [nameV, valV]
-    ^{md3widget v}
+  ^{md3widget nameV}
+
+  ^{md3textareaWidget valV}
 
   <nav.right-align>
     <button.small.primary type=submit formaction=@{route}>

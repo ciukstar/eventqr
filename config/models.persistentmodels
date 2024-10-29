@@ -9,7 +9,7 @@ Attendee
 Info
     card CardId OnDeleteCascade
     name Text
-    value Text
+    value Html
 
 Card
     user UserId

@@ -12,6 +12,7 @@ module Handler.Home
   , getEventRegistrationR
   , postEventRegistrationR
   , getUpcomingEventAttendeesR
+  , getUpcomingEventAttendeeR
   , getAttendeeRegistrationR
   , postAttendeeRegistrationR
   ) where
@@ -36,7 +37,8 @@ import Foundation
     ( Handler, Form, widgetSnackbar, widgetMainMenu, widgetTopbar
     , Route
       ( ScanQrR, ScannerR, CalendarR, HomeR, UpcomingEventR, EventRegistrationR
-      , AttendeeRegistrationR, UpcomingEventAttendeesR, DataR
+      , AttendeeRegistrationR, UpcomingEventAttendeesR, UpcomingEventAttendeeR
+      , DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -47,7 +49,7 @@ import Foundation
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
       , MsgDetails, MsgAttendees, MsgUserSuccessfullyegisteredForEvent
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
-      , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
+      , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate, MsgCardholder, MsgCardNumber, MsgCard
       )
     )
 
@@ -58,8 +60,8 @@ import Model
     , User (User)
     , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , EntityField
-      ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
-      )
+      ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent, AttendeeId, InfoCard, InfoId
+      ), AttendeeId, Info (Info)
     )
 
 import Network.Wreq (get)
@@ -249,6 +251,35 @@ formRegistration event card extra = do
     let r = (,) <$> eidR <*> cidR
     let w = [whamlet|#{extra} ^{fvInput eidV} ^{fvInput cidV}|]
     return (r,w)
+
+
+getUpcomingEventAttendeeR :: EventId -> AttendeeId -> Handler Html
+getUpcomingEventAttendeeR eid aid = do
+
+    card <- runDB $ selectOne $ do
+        x :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @User `on` (\(_ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. AttendeeId ==. val aid
+        return (c,u)
+
+    attrs <- case card of
+      Just (Entity cid _, _) -> runDB $ select $ do
+          x <- from $ table @Info
+          where_ $ x ^. InfoCard ==. val cid
+          orderBy [asc (x ^. InfoId)]
+          return x
+      Nothing -> return []
+
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgAttendees
+        idOverlay <- newIdent
+        idButtonShowDialogQrCode <- newIdent
+        idDialogQrCode <- newIdent
+        idButtonCloseDialogQrCode <- newIdent
+        $(widgetFile "upcoming/attendees/card")
 
 
 getUpcomingEventAttendeesR :: EventId -> Handler Html

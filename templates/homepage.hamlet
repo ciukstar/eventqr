@@ -3,7 +3,7 @@
 
 <main.responsive ##{idMain}>
 
-  <h5.small.center-align>
+  <h5.intro.small.center-align>
     _{MsgWelcomeTo} _{MsgAppName}
 
   <a.button.margin href=@{CalendarR month}>

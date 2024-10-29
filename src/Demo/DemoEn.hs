@@ -8,6 +8,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Reader (ReaderT)
 
 import qualified Data.ByteString as BS
+import Data.Text (Text)
 
 import Database.Persist (PersistStoreWrite (insert, insert_))
 import Database.Persist.SqlBackend (SqlBackend)
@@ -20,7 +21,8 @@ import Model
       )
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
-    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate), Info (Info, infoCard, infoName, infoValue)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , Info (Info, infoCard, infoName, infoValue)
     )
 
 import Text.Hamlet (shamlet)
@@ -44,11 +46,12 @@ fillDemoEn = do
                           |]
 
     pass1 <- liftIO $ saltPass "marylopez"
-    uid1 <- insert $ User { userEmail = "marylopez@xmail.edu"
-                          , userPassword = Just pass1
-                          , userName = Just "Mary Lopez"
-                          , userAdmin = True
-                          }
+    let user1 = User { userEmail = "marylopez@xmail.edu"
+                     , userPassword = Just pass1
+                     , userName = Just "Mary Lopez"
+                     , userAdmin = True
+                     }
+    uid1 <- insert user1
 
     liftIO (BS.readFile "demo/user_1.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid1
@@ -58,11 +61,12 @@ fillDemoEn = do
                         }
 
     pass2 <- liftIO $ saltPass "jjohnson"
-    uid2 <- insert $ User { userEmail = "jjohnson@xmail.edu"
-                          , userPassword = Just pass2
-                          , userName = Just "John Johnson"
-                          , userAdmin = False
-                          }
+    let user2 = User { userEmail = "jjohnson@xmail.edu"
+                     , userPassword = Just pass2
+                     , userName = Just "John Johnson"
+                     , userAdmin = False
+                     }
+    uid2 <- insert user2
 
     liftIO (BS.readFile "demo/user_2.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid2
@@ -72,11 +76,12 @@ fillDemoEn = do
                         }
 
     pass3 <- liftIO $ saltPass "jmaulsby"
-    uid3 <- insert $ User { userEmail = "jmaulsby@xmail.edu"
-                          , userPassword = Just pass3
-                          , userName = Just "Julian Maulsby"
-                          , userAdmin = False
-                          }
+    let user3 = User { userEmail = "jmaulsby@xmail.edu"
+                     , userPassword = Just pass3
+                     , userName = Just "Julian Maulsby"
+                     , userAdmin = False
+                     }
+    uid3 <- insert user3
 
     liftIO (BS.readFile "demo/user_3.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid3
@@ -86,11 +91,12 @@ fillDemoEn = do
                         }
 
     pass4 <- liftIO $ saltPass "vschoen"
-    uid4 <- insert $ User { userEmail = "vschoen@xmail.edu"
-                          , userPassword = Just pass4
-                          , userName = Just "Valentina Schoen"
-                          , userAdmin = False
-                          }
+    let user4 = User { userEmail = "vschoen@xmail.edu"
+                     , userPassword = Just pass4
+                     , userName = Just "Valentina Schoen"
+                     , userAdmin = False
+                     }
+    uid4 <- insert user4
 
     liftIO (BS.readFile "demo/user_4.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid4
@@ -99,25 +105,50 @@ fillDemoEn = do
                         , userPhotoAttribution = Just freepik
                         }
 
+    let logoFacebook :: Text
+        logoFacebook = "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg"
+    let logoInstagram :: Text
+        logoInstagram = "https://upload.wikimedia.org/wikipedia/commons/9/96/Instagram.svg"
+
     cid1 <- insert $ Card { cardUser = uid1
                           , cardIssued = addUTCTime ((-30) * day) now
                           , cardQr = ""
                           }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Birthday"
-                   , infoValue = "11/22/1996"
+                   , infoValue = [shamlet|<time class="day" datetime="1996-11-22">11/22/1996|]
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Email"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user1}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user1}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Phone"
-                   , infoValue = "098755432"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+098755432">
+                                           <i.small.tiny-margin>call
+                                           +098755432
+                                         |]
                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Facebook"
-                   , infoValue = "https://facebook.com/1234123"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://facebook.com/1234123">
+                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           facebook
+                                         |]
                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Instagram"
-                   , infoValue = "https://instagram.com/234234234"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://instagram.com/234234234">
+                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           instagram
+                                         |]
                    }
 
     cid2 <- insert $ Card { cardUser = uid2
@@ -126,19 +157,39 @@ fillDemoEn = do
                           }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Birthday"
-                   , infoValue = "10/21/1995"
+                   , infoValue = [shamlet|<time class="day" datetime="1995-10-21">10/21/1995|]
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Email"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user2}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user2}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Phone"
-                   , infoValue = "+9098755432"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+9098755432">
+                                           <i.small.tiny-margin>call
+                                           +9098755432
+                                         |]
                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Facebook"
-                   , infoValue = "https://facebook.com/000120"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://facebook.com/000120">
+                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           facebook
+                                         |]
                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Instagram"
-                   , infoValue = "https://instagram.com/234234"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://instagram.com/234234">
+                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           instagram
+                                         |]
                    }
 
     cid3 <- insert $ Card { cardUser = uid3
@@ -147,19 +198,39 @@ fillDemoEn = do
                           }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Birthday"
-                   , infoValue = "09/20/1994"
+                   , infoValue = [shamlet|<time class="day" datetime="1994-09-20">09/20/1994|]
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Email"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user3}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user3}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Phone"
-                   , infoValue = "+14098755432"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+14098755432">
+                                           <i.small.tiny-margin>call
+                                           +14098755432
+                                         |]
                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Facebook"
-                   , infoValue = "https://facebook.com/985287782"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://facebook.com/985287782">
+                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           facebook
+                                         |]
                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Instagram"
-                   , infoValue = "https://instagram.com/09876666"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://instagram.com/09876666">
+                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           instagram
+                                         |]
                    }
 
     cid4 <- insert $ Card { cardUser = uid4
@@ -168,19 +239,39 @@ fillDemoEn = do
                           }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Birthday"
-                   , infoValue = "08/19/1993"
+                   , infoValue = [shamlet|<time class="day" datetime="1993-08-19">08/19/1993|]
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Email"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user4}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user4}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Phone"
-                   , infoValue = "+454655657"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+454655657">
+                                           <i.small.tiny-margin>call
+                                           +454655657
+                                         |]
                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Facebook"
-                   , infoValue = "https://facebook.com/23898"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://facebook.com/23898">
+                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           facebook
+                                         |]
                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Instagram"
-                   , infoValue = "https://instagram.com/12431265"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://instagram.com/12431265">
+                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           instagram
+                                         |]
                    }
 
     eid11 <- insert $ Event { eventTime = addUTCTime hour now

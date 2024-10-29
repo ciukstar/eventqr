@@ -8,6 +8,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Reader (ReaderT)
 
 import qualified Data.ByteString as BS
+import Data.Text(Text)
 
 import Database.Persist (PersistStoreWrite (insert, insert_))
 import Database.Persist.SqlBackend (SqlBackend)
@@ -20,7 +21,8 @@ import Model
       )
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
-    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate), Info (Info, infoCard, infoName, infoValue)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , Info (Info, infoCard, infoName, infoValue)
     )
     
 import Text.Hamlet (shamlet)
@@ -45,11 +47,12 @@ fillDemoRu = do
     
 
     pass1 <- liftIO $ saltPass "bulanovalm"
-    uid1 <- insert $ User { userEmail = "bulanovalm@mail.ru"
-                          , userPassword = Just pass1
-                          , userName = Just "Буланова Любовь Михайловна"
-                          , userAdmin = True
-                          }
+    let user1 = User { userEmail = "bulanovalm@mail.ru"
+                     , userPassword = Just pass1
+                     , userName = Just "Буланова Любовь Михайловна"
+                     , userAdmin = True
+                     }
+    uid1 <- insert user1
 
     liftIO (BS.readFile "demo/user_1.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid1
@@ -59,11 +62,12 @@ fillDemoRu = do
                         }
 
     pass2 <- liftIO $ saltPass "petrovia"
-    uid2 <- insert $ User { userEmail = "petrovia@mail.ru"
-                          , userPassword = Just pass2
-                          , userName = Just "Петров Иван Александрович"
-                          , userAdmin = False
-                          }
+    let user2 = User { userEmail = "petrovia@mail.ru"
+                     , userPassword = Just pass2
+                     , userName = Just "Петров Иван Александрович"
+                     , userAdmin = False
+                     }
+    uid2 <- insert user2
 
     liftIO (BS.readFile "demo/user_2.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid2
@@ -73,11 +77,12 @@ fillDemoRu = do
                         }
 
     pass3 <- liftIO $ saltPass "smirnovav"
-    uid3 <- insert $ User { userEmail = "smirnovav@mail.ru"
-                          , userPassword = Just pass3
-                          , userName = Just "Смирнов Андрей Васильевич"
-                          , userAdmin = False
-                          }
+    let user3 = User { userEmail = "smirnovav@mail.ru"
+                     , userPassword = Just pass3
+                     , userName = Just "Смирнов Андрей Васильевич"
+                     , userAdmin = False
+                     }
+    uid3 <- insert user3
 
     liftIO (BS.readFile "demo/user_3.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid3
@@ -87,11 +92,12 @@ fillDemoRu = do
                         }
 
     pass4 <- liftIO $ saltPass "sergeevaav"
-    uid4 <- insert $ User { userEmail = "sergeevaav@mail.ru"
-                          , userPassword = Just pass4
-                          , userName = Just "Сергеева Александра Владимировна"
-                          , userAdmin = False
-                          }
+    let user4 = User { userEmail = "sergeevaav@mail.ru"
+                     , userPassword = Just pass4
+                     , userName = Just "Сергеева Александра Владимировна"
+                     , userAdmin = False
+                     }
+    uid4 <- insert user4
 
     liftIO (BS.readFile "demo/user_4.avif") >>= \bs ->
       insert_ UserPhoto { userPhotoUser = uid4
@@ -100,25 +106,50 @@ fillDemoRu = do
                         , userPhotoAttribution = Just freepik
                         }
 
+    let logoVK :: Text
+        logoVK = "https://upload.wikimedia.org/wikipedia/commons/2/21/VK.com-logo.svg"
+    let logoOk :: Text
+        logoOk = "https://upload.wikimedia.org/wikipedia/commons/0/0c/Odnoklassniki.svg"
+
     cid1 <- insert $ Card { cardUser = uid1
                           , cardIssued = addUTCTime ((-30) * day) now
                           , cardQr = ""
                           }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Дата рождения"
-                   , infoValue = "22.11.1996"
+                   , infoValue = [shamlet|<time class="day" datetime="1996-11-22">22.11.1996|]
+                   }
+    insert_ $ Info { infoCard = cid1
+                   , infoName = "Электронная почта"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user1}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user1}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Телефон"
-                   , infoValue = "098755432"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+098755432">
+                                           <i.small.tiny-margin>call
+                                           +098755432
+                                         |]
                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "ВКонтакте"
-                   , infoValue = "https://vk.ru/1234123"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://vk.ru/1234123">
+                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           VK
+                                         |]
                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Одноклассники"
-                   , infoValue = "https://ok.ru/234234234"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://ok.ru/234234234">
+                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           Ok
+                                         |]
                    }
 
     cid2 <- insert $ Card { cardUser = uid2
@@ -127,19 +158,39 @@ fillDemoRu = do
                           }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Дата рождения"
-                   , infoValue = "21.10.1995"
+                   , infoValue = [shamlet|<time class="day" datetime="1995-10-21">21.10.1995|]
+                   }
+    insert_ $ Info { infoCard = cid2
+                   , infoName = "Электронная почта"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user2}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user2}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Телефон"
-                   , infoValue = "+9098755432"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+9098755432">
+                                           <i.small.tiny-margin>call
+                                           +9098755432
+                                         |]
                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "ВКонтакте"
-                   , infoValue = "https://vk.ru/000120"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://vk.ru/000120">
+                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           VK
+                                         |]
                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Одноклассники"
-                   , infoValue = "https://ok.ru/234234"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://ok.ru/234234">
+                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           Ok
+                                         |]
                    }
 
     cid3 <- insert $ Card { cardUser = uid3
@@ -148,19 +199,39 @@ fillDemoRu = do
                           }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Дата рождения"
-                   , infoValue = "20.09.1994"
+                   , infoValue = [shamlet|<time class="day" datetime="1994-09-20">20.09.1994|]
+                   }
+    insert_ $ Info { infoCard = cid3
+                   , infoName = "Электронная почта"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user3}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user3}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Телефон"
-                   , infoValue = "+14098755432"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+14098755432">
+                                           <i.small.tiny-margin>call
+                                           +14098755432
+                                         |]
                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "ВКонтакте"
-                   , infoValue = "https://vk.ru/985287782"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://vk.ru/985287782">
+                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           VK
+                                         |]
                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Одноклассники"
-                   , infoValue = "https://ok.ru/09876666"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://ok.ru/09876666">
+                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           Ok
+                                         |]
                    }
 
     cid4 <- insert $ Card { cardUser = uid4
@@ -169,19 +240,39 @@ fillDemoRu = do
                           }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Дата рождения"
-                   , infoValue = "19.08.1993"
+                   , infoValue = [shamlet|<time class="day" datetime="1993-08-19">19.08.1993|]
+                   }
+    insert_ $ Info { infoCard = cid4
+                   , infoName = "Электронная почта"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="mailto:#{userEmail user4}">
+                                           <i.small.tiny-margin>mail
+                                           #{userEmail user4}
+                                         |]
                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Телефон"
-                   , infoValue = "+454655657"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="tel:+454655657">
+                                           <i.small.tiny-margin>call
+                                           +454655657
+                                         |]
                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "ВКонтакте"
-                   , infoValue = "https://vk.ru/23898"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://vk.ru/23898">
+                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           VK
+                                         |]
                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Одноклассники"
-                   , infoValue = "https://ok.ru/12431265"
+                   , infoValue = [shamlet|
+                                         <a class="link" href="https://ok.ru/12431265">
+                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           Ok
+                                         |]
                    }
 
     eid11 <- insert $ Event { eventTime = addUTCTime hour now
