@@ -2,11 +2,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Handler.Calendar
   ( getCalendarR, getEventsR, getEventR
   , getEventAttendeesR, getEventAttendeeR
+  , getEventScannerR, getEventRegistrationR, postEventRegistrationR
   ) where
+
+import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(second))
 import Data.Map (Map, fromListWith)
@@ -17,25 +21,26 @@ import Data.Time.Calendar
     , DayPeriod (periodFirstDay, dayPeriod), Day
     )
 import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
+import Data.Time.Clock (getCurrentTime)
 import Data.Time.LocalTime
     ( LocalTime (LocalTime, localDay), localTimeToUTC, utcToLocalTime
     , TimeOfDay (TimeOfDay)
     )
 
-
 import Database.Esqueleto.Experimental
-    ( SqlExpr, select, selectOne, from, table, where_, val
+    ( Value (unValue), SqlExpr, select, selectOne, from, table, where_, val
     , (^.), (==.), (:&) ((:&)), (>=.), (<.)
-    , innerJoin, on, subSelectCount, Value (unValue), asc, orderBy
+    , innerJoin, on, subSelectCount, asc, orderBy
     )
-import Database.Persist (Entity (Entity), entityVal)
-import Database.Persist.Sql (fromSqlKey)
+import Database.Persist (Entity (Entity), entityKey, entityVal, insert_)
+import Database.Persist.Sql (fromSqlKey, toSqlKey)
 
 import Foundation
-    ( App (appSettings), Handler, widgetTopbar, widgetSnackbar
+    ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
     , Route
-      ( EventAttendeesR, ScannerR, CalendarR, EventsR, EventR, HomeR
-      , EventAttendeeR, DataR
+      ( EventAttendeesR, CalendarR, EventsR, EventR
+      , EventScannerR, EventRegistrationR
+      , EventAttendeeR, HomeR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -45,18 +50,21 @@ import Foundation
       , MsgNoEventsForThisDayYet, MsgAttendees, MsgDetails, MsgPhoto
       , MsgClose, MsgNoEventsForThisMonth, MsgTotalEventsForThisMonth
       , MsgQrCode, MsgTotalAttendees, MsgRegistrationDate, MsgCardholder
-      , MsgCardNumber, MsgCard, MsgNumberOfAttendees
+      , MsgCardNumber, MsgCard, MsgNumberOfAttendees, MsgRegistrationForEvent
+      , MsgScanner, MsgRegistration, MsgUserSuccessfullyRegisteredForEvent
+      , MsgScanAgain, MsgRegister, MsgCancel, MsgInvalidFormData
+      , MsgConfirmUserRegistrationForEventPlease
       )
     )
     
 import Model
     ( EventId, Event(Event, eventTime)
-    , Attendee (Attendee)
-    , Card, User (User)
+    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , CardId, Card, User (User)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, AttendeeId, InfoCard, InfoId
-      ), AttendeeId, Info (Info)
+      ), AttendeeId, Info (Info), msgSuccess, msgError
     )
 
 import Settings (widgetFile, AppSettings (appTimeZone))
@@ -65,9 +73,14 @@ import Text.Hamlet (Html)
 
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, YesodRequest (reqGetParams)
-    , getRequest, getMessageRender, getYesod, getMessages
+    , getRequest, getMessageRender, getYesod, getMessages, whamlet, addMessageI
+    , redirect
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Yesod.Form.Types (FormResult(FormSuccess), FieldView (fvInput))
+import Yesod.Form.Functions (mreq, generateFormPost, runFormPost)
+import Yesod.Form.Fields (hiddenField, intField)
+import Yesod.Form.Input (runInputGet, ireq)
 
 
 getEventAttendeeR :: Day -> EventId -> AttendeeId -> Handler Html
@@ -116,6 +129,74 @@ getEventAttendeesR day eid = do
         idOverlay <- newIdent
         
         $(widgetFile "calendar/events/attendees/attendees")
+
+
+postEventRegistrationR :: Day -> EventId -> Handler Html
+postEventRegistrationR day eid = do
+
+    ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
+
+    case fr of
+      FormSuccess (eid',cid') -> do
+          now <- liftIO getCurrentTime
+          runDB $ insert_ Attendee { attendeeEvent = eid'
+                                   , attendeeCard = cid'
+                                   , attendeeRegDate = now
+                                   }
+          addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
+          redirect $ EventR day eid
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ EventRegistrationR day eid
+
+
+getEventRegistrationR :: Day -> EventId -> Handler Html
+getEventRegistrationR day eid = do
+
+    cid <- toSqlKey <$> runInputGet (ireq intField "cid")
+
+    card <- runDB $ selectOne $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardId ==. val cid
+        return (x,u)
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+
+    (fw,et) <- generateFormPost $ formRegistration event (fst <$> card)
+
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgRegistration
+        idOverlay <- newIdent
+        $(widgetFile "calendar/events/registration/registration")
+
+
+formRegistration :: Maybe (Entity Event) -> Maybe (Entity Card) -> Form (EventId, CardId)
+formRegistration event card extra = do
+    (eidR,eidV) <- mreq hiddenField "" (entityKey <$> event)
+    (cidR,cidV) <- mreq hiddenField "" (entityKey <$> card)
+    let r = (,) <$> eidR <*> cidR
+    let w = [whamlet|^{extra} ^{fvInput eidV} ^{fvInput cidV}|]
+    return (r,w)
+
+
+getEventScannerR :: Day -> EventId -> Handler Html
+getEventScannerR day eid = do
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+    
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgScanner 
+        idOverlay <- newIdent
+        $(widgetFile "calendar/events/scanner/scanner")
 
 
 getEventR :: Day -> EventId -> Handler Html

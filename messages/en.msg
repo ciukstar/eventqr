@@ -25,7 +25,7 @@ QrCode: Qr Code
 Attendee: Attendee
 Attendees: Attendees
 Subscribers: Subscribers
-UserSuccessfullyegisteredForEvent: User has successfully registered for the event
+UserSuccessfullyRegisteredForEvent: User successfully registered for the event
 ScanAgain: Scan again
 ConfirmUserRegistrationForEventPlease: Please confirm user registration for the event
 Registration: Registration

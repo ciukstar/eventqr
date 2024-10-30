@@ -31,7 +31,8 @@
           #{descr}
 
     <p ##{idActionQrScan}>
-      <a.button.margin href=@{ScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+      <a.button.margin href=@{DataR $ DataEventCalendarScannerR month day eid} ##{idButtonQrScan}
+                       title=_{MsgScanQrCodeAndLinkToEvent}>
         <i>qr_code_scanner
         <span>_{MsgScanQrCode}
 

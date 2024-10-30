@@ -209,18 +209,19 @@ instance Yesod App where
 
     isAuthorized HomeR _ = setUltDestCurrent >> return Authorized
     isAuthorized (UpcomingEventR _) _ = return Authorized
+    isAuthorized (UpcomingEventScannerR _) _ = return Authorized
     isAuthorized (UpcomingEventAttendeesR _) _ = return Authorized
     isAuthorized (UpcomingEventAttendeeR _ _) _ = return Authorized
-    isAuthorized (EventRegistrationR _) _ = return Authorized
-    isAuthorized AttendeeRegistrationR _ = return Authorized
-
-    isAuthorized (ScannerR _) _ = return Authorized
+    isAuthorized (UpcomingEventRegistrationR _) _ = return Authorized
     isAuthorized ScanQrR _ = return Authorized
+    isAuthorized AttendeeRegistrationR _ = return Authorized
         
     
     isAuthorized (CalendarR _) _ = return Authorized
     isAuthorized (EventsR _) _ = return Authorized
     isAuthorized (EventR _ _) _ = return Authorized
+    isAuthorized (EventScannerR _ _) _ = return Authorized
+    isAuthorized (EventRegistrationR _ _) _ = return Authorized
     isAuthorized (EventAttendeesR _ _) _ = return Authorized
     isAuthorized (EventAttendeeR {}) _ = return Authorized
     
@@ -261,6 +262,9 @@ instance Yesod App where
     isAuthorized (DataR (DataEventR _)) _ = isAdmin
     isAuthorized (DataR (DataEventEditR _)) _ = isAdmin
     isAuthorized (DataR (DataEventDeleR _)) _ = isAdmin
+    isAuthorized (DataR (DataEventScannerR _)) _ = isAdmin
+    isAuthorized (DataR (DataEventRegistrationR _)) _ = isAdmin
+    
     
     isAuthorized (DataR (DataEventAttendeesR _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeR _ _)) _ = isAdmin
@@ -273,6 +277,9 @@ instance Yesod App where
     isAuthorized (DataR (DataEventCalendarEventNewR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventEditR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventDeleR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarScannerR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarRegistrationR {})) _ = isAdmin
+    
     
     isAuthorized (DataR (DataEventCalendarEventAttendeesR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventAttendeeR {})) _ = isAdmin

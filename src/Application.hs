@@ -52,15 +52,18 @@ import Handler.Common (getFaviconR, getRobotsR)
 import Handler.Docs ( getDocsR )
 
 import Handler.Home
-    ( getHomeR, getFetchR, getUpcomingEventR, getEventRegistrationR
-    , postEventRegistrationR, getUpcomingEventAttendeesR, getUpcomingEventAttendeeR
+    ( getHomeR, getFetchR, getUpcomingEventR
+    , getUpcomingEventScannerR
+    , getUpcomingEventRegistrationR, postUpcomingEventRegistrationR
+    , getUpcomingEventAttendeesR, getUpcomingEventAttendeeR
+    , getScanQrR
     , getAttendeeRegistrationR, postAttendeeRegistrationR
     )
 
-import Handler.Scanner (getScannerR, getScanQrR)
 import Handler.Calendar
     ( getCalendarR, getEventsR, getEventR, getEventAttendeesR
     , getEventAttendeeR
+    , getEventScannerR, getEventRegistrationR, postEventRegistrationR
     )
 
 import Handler.Catalogue
@@ -71,12 +74,16 @@ import Handler.Catalogue
   , getDataEventCalendarR
   , getDataEventCalendarEventsR, postDataEventCalendarEventsR
   , getDataEventCalendarEventR, postDataEventCalendarEventR
+  , getDataEventScannerR
+  , getDataEventRegistrationR, postDataEventRegistrationR
   , getDataEventCalendarEventAttendeesR
   , getDataEventCalendarEventAttendeeR
   , postDataEventCalendarEventAttendeeDeleR
   , getDataEventCalendarEventNewR
   , getDataEventCalendarEventEditR
   , postDataEventCalendarEventDeleR
+  , getDataEventCalendarScannerR
+  , getDataEventCalendarRegistrationR, postDataEventCalendarRegistrationR
   )
 
 import Handler.Users

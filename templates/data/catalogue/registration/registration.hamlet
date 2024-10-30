@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (UpcomingEventR eid,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ DataEventR eid,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
 
 <main.responsive>
 
@@ -30,17 +30,17 @@
           #{descr}
 
 
-      <form method=post action=@{UpcomingEventRegistrationR eid} enctype=#{et}>
+      <form method=post action=@{DataR $ DataEventRegistrationR eid} enctype=#{et}>
         ^{fw}
         <div.form-actions>
             
           <button.margin type=submit>
             _{MsgRegister}
           
-          <a.link href=@{UpcomingEventScannerR eid}>
+          <a.link href=@{DataR $ DataEventScannerR eid}>
             _{MsgScanAgain}
           
-          <a.link href=@{UpcomingEventR eid}>
+          <a.link href=@{DataR $ DataEventR eid}>
             _{MsgCancel}
      
     $of _

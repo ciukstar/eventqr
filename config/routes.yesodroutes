@@ -2,21 +2,23 @@
 -- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
 
 
-/events/#Day/#EventId/attendees/#AttendeeId EventAttendeeR  GET
-/events/#Day/#EventId/attendees             EventAttendeesR GET
-/events/#Day/#EventId                       EventR          GET
-/events/#Day                                EventsR         GET
+/events/#Day/#EventId/attendees/#AttendeeId EventAttendeeR     GET
+/events/#Day/#EventId/attendees             EventAttendeesR    GET
+/events/#Day/#EventId/register              EventRegistrationR GET POST
+/events/#Day/#EventId/scanner               EventScannerR      GET
+/events/#Day/#EventId                       EventR             GET
+/events/#Day                                EventsR            GET
 
 /calendar/#Month CalendarR GET
 
 /scanner/attendee/register AttendeeRegistrationR GET POST
-/scanner/#EventId          ScannerR              GET
 /scanner                   ScanQrR               GET
 
-/upcoming/#EventId/register              EventRegistrationR      GET POST
-/upcoming/#EventId/attendees/#AttendeeId UpcomingEventAttendeeR  GET
-/upcoming/#EventId/attendees             UpcomingEventAttendeesR GET
-/upcoming/#EventId                       UpcomingEventR          GET
+/upcoming/#EventId/attendees/#AttendeeId UpcomingEventAttendeeR     GET
+/upcoming/#EventId/attendees             UpcomingEventAttendeesR    GET
+/upcoming/#EventId/register              UpcomingEventRegistrationR GET POST
+/upcoming/#EventId/scanner               UpcomingEventScannerR      GET
+/upcoming/#EventId                       UpcomingEventR             GET
 
 / HomeR GET
 
@@ -41,23 +43,28 @@
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId      DataEventCalendarEventAttendeeR      GET
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees                  DataEventCalendarEventAttendeesR     GET
     
-    /catalogue/#Month/calendar/#Day/events/#EventId/dele DataEventCalendarEventDeleR POST
-    /catalogue/#Month/calendar/#Day/events/#EventId/edit DataEventCalendarEventEditR GET
-    /catalogue/#Month/calendar/#Day/events/new/form      DataEventCalendarEventNewR  GET
-    /catalogue/#Month/calendar/#Day/events/#EventId      DataEventCalendarEventR     GET POST
-    /catalogue/#Month/calendar/#Day/events               DataEventCalendarEventsR    GET POST
-    /catalogue/#Month/calendar                           DataEventCalendarR          GET
+    
+    /catalogue/#Month/calendar/#Day/events/#EventId/register DataEventCalendarRegistrationR GET POST
+    /catalogue/#Month/calendar/#Day/events/#EventId/scanner  DataEventCalendarScannerR      GET
+    /catalogue/#Month/calendar/#Day/events/#EventId/dele     DataEventCalendarEventDeleR    POST
+    /catalogue/#Month/calendar/#Day/events/#EventId/edit     DataEventCalendarEventEditR    GET
+    /catalogue/#Month/calendar/#Day/events/new/form          DataEventCalendarEventNewR     GET
+    /catalogue/#Month/calendar/#Day/events/#EventId          DataEventCalendarEventR        GET POST
+    /catalogue/#Month/calendar/#Day/events                   DataEventCalendarEventsR       GET POST
+    /catalogue/#Month/calendar                               DataEventCalendarR             GET
 
     /catalogue/#EventId/attendees/#AttendeeId/dele DataEventAttendeeDeleR POST
     /catalogue/#EventId/attendees/new/form         DataEventAttendeeNewR  GET
     /catalogue/#EventId/attendees/#AttendeeId      DataEventAttendeeR     GET
     /catalogue/#EventId/attendees                  DataEventAttendeesR    GET POST
     
-    /catalogue/#EventId/dele      DataEventDeleR      POST
-    /catalogue/#EventId/edit      DataEventEditR      GET
-    /catalogue/new/form           DataEventNewR       GET
-    /catalogue/#EventId           DataEventR          GET POST
-    /catalogue                    DataEventsR         GET POST
+    /catalogue/#EventId/register  DataEventRegistrationR GET POST
+    /catalogue/#EventId/scanner   DataEventScannerR      GET
+    /catalogue/#EventId/dele      DataEventDeleR         POST
+    /catalogue/#EventId/edit      DataEventEditR         GET
+    /catalogue/new/form           DataEventNewR          GET
+    /catalogue/#EventId           DataEventR             GET POST
+    /catalogue                    DataEventsR            GET POST
     
     /qrcode/#CardId CardQrImageR GET
 

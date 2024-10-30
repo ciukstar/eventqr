@@ -9,12 +9,12 @@
 module Handler.Home
   ( getHomeR, getFetchR
   , getUpcomingEventR
-  , getEventRegistrationR
-  , postEventRegistrationR
+  , getUpcomingEventScannerR
+  , getUpcomingEventRegistrationR, postUpcomingEventRegistrationR
   , getUpcomingEventAttendeesR
   , getUpcomingEventAttendeeR
-  , getAttendeeRegistrationR
-  , postAttendeeRegistrationR
+  , getScanQrR
+  , getAttendeeRegistrationR, postAttendeeRegistrationR
   ) where
 
 import qualified Control.Lens as L ( (^?) )
@@ -35,11 +35,11 @@ import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
 
 import Foundation
-    ( Handler, Form, widgetSnackbar, widgetMainMenu, widgetTopbar
+    ( Handler, Form, widgetSnackbar, widgetMainMenu, widgetTopbar, widgetScanner
     , Route
-      ( ScanQrR, ScannerR, CalendarR, HomeR, UpcomingEventR, EventRegistrationR
-      , AttendeeRegistrationR, UpcomingEventAttendeesR, UpcomingEventAttendeeR
-      , DataR
+      ( CalendarR, HomeR, UpcomingEventR, UpcomingEventRegistrationR
+      , ScanQrR, AttendeeRegistrationR, UpcomingEventAttendeesR
+      , UpcomingEventAttendeeR, UpcomingEventScannerR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -48,10 +48,11 @@ import Foundation
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
-      , MsgDetails, MsgAttendees, MsgUserSuccessfullyegisteredForEvent
+      , MsgDetails, MsgAttendees, MsgUserSuccessfullyRegisteredForEvent
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
       , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
-      , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees
+      , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees, MsgScanner
+      , MsgRegistrationForEvent
       )
     )
 
@@ -104,10 +105,10 @@ postAttendeeRegistrationR = do
       FormSuccess (eid,cid) -> do
           now <- liftIO getCurrentTime
           runDB $ insert_ Attendee { attendeeEvent = eid
-                                     , attendeeCard = cid
-                                     , attendeeRegDate = now
-                                     }
-          addMessageI msgSuccess MsgUserSuccessfullyegisteredForEvent
+                                   , attendeeCard = cid
+                                   , attendeeRegDate = now
+                                   }
+          addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
           redirect HomeR
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -130,9 +131,7 @@ getAttendeeRegistrationR = do
     msgr <- getMessageRender
     defaultLayout $ do
         setTitleI MsgRegistration
-
         idOverlay <- newIdent
-
         $(widgetFile "upcoming/attendees/registration/registration")
 
 
@@ -198,8 +197,18 @@ $else
           }
 
 
-postEventRegistrationR :: EventId -> Handler Html
-postEventRegistrationR eid = do
+getScanQrR :: Handler Html
+getScanQrR = do
+    
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgScanner
+        idOverlay <- newIdent
+        $(widgetFile "scanner/scanner")
+
+
+postUpcomingEventRegistrationR :: EventId -> Handler Html
+postUpcomingEventRegistrationR eid = do
 
     ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
 
@@ -210,15 +219,15 @@ postEventRegistrationR eid = do
                                    , attendeeCard = cid'
                                    , attendeeRegDate = now
                                    }
-          addMessageI msgSuccess MsgUserSuccessfullyegisteredForEvent
-          redirect HomeR
+          addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
+          redirect $ UpcomingEventR eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ EventRegistrationR eid
+          redirect $ UpcomingEventRegistrationR eid
 
 
-getEventRegistrationR :: EventId -> Handler Html
-getEventRegistrationR eid = do
+getUpcomingEventRegistrationR :: EventId -> Handler Html
+getUpcomingEventRegistrationR eid = do
 
     cid <- toSqlKey <$> runInputGet (ireq intField "cid")
 
@@ -293,11 +302,23 @@ getUpcomingEventAttendeesR eid = do
     msgr <- getMessageRender
     defaultLayout $ do
         setTitleI MsgAttendees
-
         idOverlay <- newIdent
-
         $(widgetFile "upcoming/attendees/attendees")
 
+
+getUpcomingEventScannerR :: EventId -> Handler Html
+getUpcomingEventScannerR eid = do
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+    
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgScanner
+        idOverlay <- newIdent
+        $(widgetFile "upcoming/scanner/scanner")
 
 
 getUpcomingEventR :: EventId -> Handler Html
@@ -315,9 +336,10 @@ getUpcomingEventR eid = do
         return (x,attendees) )
 
     msgr <- getMessageRender
+    msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgEvent
-
+        
         idOverlay <- newIdent
         idActionQrScan <- newIdent
         idButtonQrScan <- newIdent
@@ -331,11 +353,17 @@ getHomeR = do
     now <- liftIO getCurrentTime
     let month = (\(y,m,_) -> YearMonth y m) . toGregorian . utctDay $ now
 
-    events <- runDB $ select $ do
+    upcoming <- (second unValue <$>) <$> runDB ( select $ do
         x <- from $ table @Event
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+        
         where_ $ x ^. EventTime >=. val now
         orderBy [asc (x ^. EventTime)]
-        return x
+        return (x, attendees) )
 
     msgr <- getMessageRender
     msgs <- getMessages

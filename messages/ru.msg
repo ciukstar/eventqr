@@ -25,7 +25,7 @@ QrCode: QR-код
 Attendee: Участник
 Attendees: Участники
 Subscribers: Подписчики
-UserSuccessfullyegisteredForEvent: Пользователь успешно зарегистрирован на мероприятие
+UserSuccessfullyRegisteredForEvent: Пользователь успешно зарегистрирован на мероприятие
 ScanAgain: Сканировать повторно
 ConfirmUserRegistrationForEventPlease: Пожалуйста, подтвердите регистрацию пользователя на мероприятие
 Registration: Регистрация

@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Handler.Catalogue
   ( getDataEventsR, getDataEventNewR, postDataEventsR
@@ -11,11 +12,15 @@ module Handler.Catalogue
   , getDataEventCalendarR
   , getDataEventCalendarEventsR, postDataEventCalendarEventsR
   , getDataEventCalendarEventR, postDataEventCalendarEventR
+  , getDataEventScannerR
+  , getDataEventRegistrationR, postDataEventRegistrationR
   , getDataEventCalendarEventAttendeesR
   , getDataEventCalendarEventAttendeeR
   , postDataEventCalendarEventAttendeeDeleR
   , getDataEventCalendarEventNewR, getDataEventCalendarEventEditR
   , postDataEventCalendarEventDeleR
+  , getDataEventCalendarScannerR
+  , getDataEventCalendarRegistrationR, postDataEventCalendarRegistrationR
   ) where
 
 
@@ -43,11 +48,13 @@ import Database.Esqueleto.Experimental
     , innerJoin, on, asc
     )
 
-import Database.Persist (Entity (Entity), delete, entityVal, replace, insert_)
+import Database.Persist
+    ( Entity (Entity, entityKey), delete, entityVal, replace, insert_)
+import Database.Persist.Sql (toSqlKey)
 
 import Foundation
-    ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar
-    , Route (DataR, ScannerR)
+    ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
+    , Route (DataR)
     , DataR
       ( DataEventR, DataEventAttendeesR, DataEventsR, UserPhotoR, CardQrImageR
       , DataEventNewR, DataEventEditR, DataEventDeleR, DataEventAttendeeNewR
@@ -56,6 +63,8 @@ import Foundation
       , DataEventCalendarEventAttendeesR, DataEventCalendarEventAttendeeR
       , DataEventCalendarEventAttendeeDeleR, DataEventCalendarEventNewR
       , DataEventCalendarEventEditR, DataEventCalendarEventDeleR
+      , DataEventScannerR, DataEventRegistrationR
+      , DataEventCalendarScannerR, DataEventCalendarRegistrationR
       )
     , AppMessage
       ( MsgEventsCatalogue, MsgEvent, MsgDetails, MsgScanQrCodeAndLinkToEvent
@@ -67,7 +76,9 @@ import Foundation
       , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgNoEventsForThisMonth, MsgPrevious, MsgNext, MsgTotalEventsForThisMonth
       , MsgNoEventsForThisDayYet, MsgEvents, MsgNoAttendeesForThisEventYet
-      , MsgNoEventsYet
+      , MsgNoEventsYet, MsgScanner, MsgRegistrationForEvent, MsgRegistration
+      , MsgUserSuccessfullyRegisteredForEvent, MsgScanAgain, MsgRegister
+      , MsgConfirmUserRegistrationForEventPlease
       )
     )
 
@@ -78,7 +89,7 @@ import Model
     , EventId, Event(Event, eventName, eventTime, eventDescr)
     , CardId, Card (Card)
     , User (User)
-    , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard)
+    , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, UserName, AttendeeId
@@ -96,9 +107,11 @@ import Yesod.Core
     )
 import Yesod.Form.Fields
     ( textField, textareaField, radioField, optionsPairs
-    , Option (optionInternalValue, optionExternalValue), OptionList (olOptions), timeField
+    , Option (optionInternalValue, optionExternalValue)
+    , OptionList (olOptions), timeField, hiddenField, intField
     )
 import Yesod.Form.Functions (generateFormPost, runFormPost, mreq)
+import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Form.Types
     ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
@@ -162,6 +175,65 @@ getDataEventCalendarEventAttendeesR month day eid = do
         setTitleI MsgAttendees 
         idOverlay <- newIdent
         $(widgetFile "data/catalogue/calendar/events/attendees/attendees")
+
+
+postDataEventCalendarRegistrationR :: Month -> Day -> EventId -> Handler Html
+postDataEventCalendarRegistrationR month day eid = do
+
+    ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
+
+    case fr of
+      FormSuccess (eid',cid') -> do
+          now <- liftIO getCurrentTime
+          runDB $ insert_ Attendee { attendeeEvent = eid'
+                                   , attendeeCard = cid'
+                                   , attendeeRegDate = now
+                                   }
+          addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
+          redirect $ DataR $ DataEventCalendarEventR month day eid
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ DataR $ DataEventCalendarRegistrationR month day eid
+
+
+getDataEventCalendarRegistrationR :: Month -> Day -> EventId -> Handler Html
+getDataEventCalendarRegistrationR month day eid = do
+
+    cid <- toSqlKey <$> runInputGet (ireq intField "cid")
+
+    card <- runDB $ selectOne $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardId ==. val cid
+        return (x,u)
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+
+    (fw,et) <- generateFormPost $ formRegistration event (fst <$> card)
+
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgRegistration 
+        idOverlay <- newIdent
+        $(widgetFile "data/catalogue/calendar/events/registration/registration")
+
+
+getDataEventCalendarScannerR :: Month -> Day -> EventId -> Handler Html
+getDataEventCalendarScannerR month day eid = do
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+    
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgScanner 
+        idOverlay <- newIdent
+        $(widgetFile "data/catalogue/calendar/events/scanner/scanner")
 
 
 postDataEventCalendarEventDeleR :: Month -> Day -> EventId -> Handler Html
@@ -518,6 +590,74 @@ getDataEventAttendeesR eid = do
         idOverlay <- newIdent
         
         $(widgetFile "data/catalogue/attendees/attendees")
+
+
+postDataEventRegistrationR :: EventId -> Handler Html
+postDataEventRegistrationR eid = do
+
+    ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
+
+    case fr of
+      FormSuccess (eid',cid') -> do
+          now <- liftIO getCurrentTime
+          runDB $ insert_ Attendee { attendeeEvent = eid'
+                                   , attendeeCard = cid'
+                                   , attendeeRegDate = now
+                                   }
+          addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
+          redirect $ DataR $ DataEventR eid
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ DataR $ DataEventRegistrationR eid
+
+
+getDataEventRegistrationR :: EventId -> Handler Html
+getDataEventRegistrationR eid = do
+
+    cid <- toSqlKey <$> runInputGet (ireq intField "cid")
+
+    card <- runDB $ selectOne $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardId ==. val cid
+        return (x,u)
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+
+    (fw,et) <- generateFormPost $ formRegistration event (fst <$> card)
+
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgRegistration 
+        idOverlay <- newIdent
+        $(widgetFile "data/catalogue/registration/registration")
+
+
+formRegistration :: Maybe (Entity Event) -> Maybe (Entity Card) -> Form (EventId, CardId)
+formRegistration event card extra = do
+    (eidR,eidV) <- mreq hiddenField "" (entityKey <$> event)
+    (cidR,cidV) <- mreq hiddenField "" (entityKey <$> card)
+    let r = (,) <$> eidR <*> cidR
+    let w = [whamlet|#{extra} ^{fvInput eidV} ^{fvInput cidV}|]
+    return (r,w)
+
+
+getDataEventScannerR :: EventId -> Handler Html
+getDataEventScannerR eid = do
+
+    event <- runDB $ selectOne $ do
+        x <- from $ table @Event
+        where_ $ x ^. EventId ==. val eid
+        return x
+    
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgScanner 
+        idOverlay <- newIdent
+        $(widgetFile "data/catalogue/scanner/scanner")
 
 
 postDataEventDeleR :: EventId -> Handler Html

@@ -7,6 +7,11 @@ main
     .intro
         margin-top: 2rem
 
+    table.stats
+        width: fit-content
+        align-self: center
+        line-height: 1
+
 ##{idButtonCloseDialogSearchEvents}
     position: absolute
     top: 0.5rem

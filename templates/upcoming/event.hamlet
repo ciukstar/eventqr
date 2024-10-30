@@ -37,10 +37,13 @@
           #{attendees}
 
     <p ##{idActionQrScan}>
-      <a.button.margin href=@{ScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+      <a.button.margin href=@{UpcomingEventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
         <i>qr_code_scanner
         <span>_{MsgScanQrCode}
 
       <label for=#{idButtonQrScan}>
         _{MsgScanQrCodeAndLinkToEvent}.
+
+        
+  ^{widgetSnackbar msgs}
         

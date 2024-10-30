@@ -1,7 +1,0 @@
-
-^{widgetTopbar (Just (HomeR,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
-
-<main.responsive>
-    
-  ^{widgetScanner AttendeeRegistrationR}
-
