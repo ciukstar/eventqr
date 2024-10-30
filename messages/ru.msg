@@ -1,3 +1,4 @@
+NoEventsFound: Мероприятий не найдено
 NumberOfAttendees: Количество участников
 UserHasNoCardsYet: У пользователя пока нет карточек
 NoFieldsForThisCardYet: Для этой карточки пока нет полей

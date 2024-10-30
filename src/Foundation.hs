@@ -215,6 +215,7 @@ instance Yesod App where
     isAuthorized (UpcomingEventRegistrationR _) _ = return Authorized
     isAuthorized ScanQrR _ = return Authorized
     isAuthorized AttendeeRegistrationR _ = return Authorized
+    isAuthorized EventsSearchR _ = return Authorized    
         
     
     isAuthorized (CalendarR _) _ = return Authorized

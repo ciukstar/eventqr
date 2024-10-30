@@ -12,6 +12,12 @@ main
         align-self: center
         line-height: 1
 
+##{idDialogUpcomingEvents}
+    .dialog-content
+        max-height: calc(100svh - 72px)
+        overflow-y: auto
+    
+
 ##{idButtonCloseDialogSearchEvents}
     position: absolute
     top: 0.5rem

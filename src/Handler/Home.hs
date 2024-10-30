@@ -15,6 +15,7 @@ module Handler.Home
   , getUpcomingEventAttendeeR
   , getScanQrR
   , getAttendeeRegistrationR, postAttendeeRegistrationR
+  , getEventsSearchR
   ) where
 
 import qualified Control.Lens as L ( (^?) )
@@ -28,8 +29,8 @@ import Data.Text (unpack)
 
 import Database.Esqueleto.Experimental
     ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
-    , (^.), (>=.), (==.), (:&) ((:&))
-    , innerJoin, on, orderBy, asc, subSelectCount
+    , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
+    , innerJoin, on, orderBy, asc, subSelectCount, like, upper_
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -39,7 +40,8 @@ import Foundation
     , Route
       ( CalendarR, HomeR, UpcomingEventR, UpcomingEventRegistrationR
       , ScanQrR, AttendeeRegistrationR, UpcomingEventAttendeesR
-      , UpcomingEventAttendeeR, UpcomingEventScannerR, DataR
+      , UpcomingEventAttendeeR, UpcomingEventScannerR
+      , EventsSearchR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -52,7 +54,7 @@ import Foundation
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
       , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
       , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees, MsgScanner
-      , MsgRegistrationForEvent
+      , MsgRegistrationForEvent, MsgNoEventsFound
       )
     )
 
@@ -65,7 +67,7 @@ import Model
     , Info (Info)
     , EntityField
       ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
-      , AttendeeId, InfoCard, InfoId
+      , AttendeeId, InfoCard, InfoId, EventName, EventDescr
       )
     )
 
@@ -75,6 +77,7 @@ import qualified Network.Wreq as WL (responseBody)
 import Settings (widgetFile)
 
 import Text.Hamlet (Html)
+import Text.Julius (rawJS)
 
 import Yesod.Core
     ( TypedContent, Yesod(defaultLayout), getMessages, selectRep, provideJson
@@ -82,10 +85,11 @@ import Yesod.Core
     , MonadHandler (liftHandler)
     )
 import Yesod.Core.Widget (setTitleI)
-import Yesod.Form.Input (runInputGet, ireq)
+import Yesod.Form.Input (runInputGet, ireq, iopt)
 import Yesod.Form.Fields
-    ( urlField, intField, hiddenField, radioField, optionsPairs
+    ( urlField, intField, hiddenField, radioField, textField, optionsPairs
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
+    , Textarea (Textarea)
     )
 import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
 import Data.Time.Calendar (toGregorian)
@@ -94,6 +98,31 @@ import Yesod.Persist.Core (YesodPersist(runDB))
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
+
+
+getEventsSearchR :: Handler TypedContent
+getEventsSearchR = do
+
+    query <- runInputGet $ iopt textField "q"
+    
+    events <- case query of
+      Nothing -> return []
+      Just q -> (second unValue <$>) <$> runDB ( select $ do
+          x <- from $ table @Event
+
+          let attendees :: SqlExpr (Value Int)
+              attendees = subSelectCount $ do
+                  a <- from $ table @Attendee
+                  where_ $ a ^. AttendeeEvent ==. x ^. EventId
+
+          where_ $ ( upper_ (x ^. EventName) `like` (%) ++. upper_ (val q) ++. (%) )
+              ||. ( upper_ (x ^. EventDescr) `like` (%) ++. upper_ (val (Textarea q)) ++. (%) )
+
+          return (x,attendees) )
+    
+    selectRep $ do
+        provideJson events
+    
 
 
 postAttendeeRegistrationR :: Handler Html
@@ -199,7 +228,7 @@ $else
 
 getScanQrR :: Handler Html
 getScanQrR = do
-    
+
     msgr <- getMessageRender
     defaultLayout $ do
         setTitleI MsgScanner
@@ -313,7 +342,7 @@ getUpcomingEventScannerR eid = do
         x <- from $ table @Event
         where_ $ x ^. EventId ==. val eid
         return x
-    
+
     msgr <- getMessageRender
     defaultLayout $ do
         setTitleI MsgScanner
@@ -331,7 +360,7 @@ getUpcomingEventR eid = do
             attendees = subSelectCount $ do
                 a <- from $ table @Attendee
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
-        
+
         where_ $ x ^. EventId ==. val eid
         return (x,attendees) )
 
@@ -339,7 +368,7 @@ getUpcomingEventR eid = do
     msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgEvent
-        
+
         idOverlay <- newIdent
         idActionQrScan <- newIdent
         idButtonQrScan <- newIdent
@@ -360,7 +389,7 @@ getHomeR = do
             attendees = subSelectCount $ do
                 a <- from $ table @Attendee
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
-        
+
         where_ $ x ^. EventTime >=. val now
         orderBy [asc (x ^. EventTime)]
         return (x, attendees) )

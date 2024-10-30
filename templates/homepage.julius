@@ -37,3 +37,93 @@ document.getElementById(#{idButtonCloseDialogSearchEvents}).addEventListener('cl
   document.getElementById(#{idOverlay}).classList.remove('active');
   document.getElementById(#{idDialogSearchEvents}).close();
 });
+
+
+const searchSheet = document.getElementById(#{idDialogSearchEvents});
+const listSearch = document.getElementById(#{idListSearchSearchEventsResult});
+
+document.getElementById(#{idInputSearchEvents}).addEventListener('input', debounce( function (e) {
+
+  if (!!e.target.value) {
+    
+    listSearch.replaceChildren(progress());
+
+    fetch(`@{EventsSearchR}?q=${e.target.value}`,{
+      headers: {'Accept': 'application/json'}
+    }).then(data => data.json()).then(function (events) {
+
+      if (events.length > 0) {
+        
+        listSearch.replaceChildren( ... events.map(([x,attendees]) => {
+          const item = document.createElement('a');
+          item.href = '#';
+          item.className = 'row padding wave';
+
+          const content = document.createElement('div');
+          content.className = 'max';
+
+          const headline = document.createElement('div');
+          headline.className = 'large-text';
+          headline.textContent = x.name;
+
+          const supporting = document.createElement('time');
+          supporting.className = 'full-datetime small-text';
+          supporting.datetime = x.time;
+          supporting.textContent = new Date(x.time).toLocaleDateString(
+            navigator.language,
+            { year: 'numeric',
+              month: 'short',
+              weekday: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric'
+            }
+          );
+
+          const thirdLine = document.createElement('div');
+          thirdLine.className = 'small-text';
+          thirdLine.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
+          
+          const end = document.createElement('i');
+          end.textContent = 'arrow_forward_ios';
+
+          const divider = document.createElement('hr');
+
+          content.appendChild(headline);
+          content.appendChild(supporting);
+          content.appendChild(thirdLine);
+          
+          item.appendChild(content);
+          item.appendChild(end);
+
+          item.addEventListener('click', e => {
+
+            searchSheet.close();
+            document.getElementById(#{idOverlay}).classList.remove('active');
+
+          });
+
+          return item;
+
+        }));
+        
+      } else {
+        
+        listSearch.replaceChildren((() => {
+          const msg = document.createElement('div');
+          msg.className = 'italic padding';
+          msg.textContent = #{msgr MsgNoEventsFound};
+          return msg;
+        })());
+        
+      }
+      
+    });
+    
+  } else {
+
+    listSearch.replaceChildren();
+
+  }
+  
+}, 500));

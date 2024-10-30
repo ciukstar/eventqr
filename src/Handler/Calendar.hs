@@ -214,6 +214,7 @@ getEventR day eid = do
         return (x,attendees) )
     
     msgr <- getMessageRender
+    msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgEvent
 
@@ -275,7 +276,7 @@ getCalendarR month = do
         return (x,attendees) )
 
     msgr <- getMessageRender
-    
+    msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgCalendar
 

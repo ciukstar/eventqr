@@ -16,7 +16,7 @@ Card
     qr Text
     issued UTCTime
 
-Event
+Event json
     time UTCTime
     name Text
     descr Textarea

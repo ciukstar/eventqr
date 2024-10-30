@@ -58,6 +58,7 @@ import Handler.Home
     , getUpcomingEventAttendeesR, getUpcomingEventAttendeeR
     , getScanQrR
     , getAttendeeRegistrationR, postAttendeeRegistrationR
+    , getEventsSearchR
     )
 
 import Handler.Calendar
@@ -86,12 +87,8 @@ import Handler.Catalogue
   , getDataEventCalendarRegistrationR, postDataEventCalendarRegistrationR
   )
 
-import Handler.Users
-    ( getUsersR, postUsersR
-    , getUserR, postUserR
-    , getUserNewR, getUserEditR, postUserDeleR
-    , getUserPhotoR
-    , getUserCardsR, postUserCardsR
+import Handler.Cards
+    ( getUserCardsR, postUserCardsR
     , getUserCardR, postUserCardR
     , getUserCardNewR
     , postUserCardsNewFieldR
@@ -99,6 +96,13 @@ import Handler.Users
     , postUserCardNewFieldR
     , postUserCardDeleR
     , getCardQrImageR
+    )
+
+import Handler.Users
+    ( getUsersR, postUsersR
+    , getUserR, postUserR
+    , getUserNewR, getUserEditR, postUserDeleR
+    , getUserPhotoR
     )
 
 import System.Environment.Blank (getEnv)

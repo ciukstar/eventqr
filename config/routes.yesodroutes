@@ -9,6 +9,8 @@
 /events/#Day/#EventId                       EventR             GET
 /events/#Day                                EventsR            GET
 
+/events EventsSearchR GET
+
 /calendar/#Month CalendarR GET
 
 /scanner/attendee/register AttendeeRegistrationR GET POST
@@ -26,7 +28,7 @@
 
 /fetch FetchR GET
 
-/restore PwdResetR  GET 
+/restore PwdResetR  GET
 /lang    LangR      POST
 
 /static StaticR Static appStatic
@@ -38,12 +40,12 @@
 
 /data DataR:
 
-    
+
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/dele DataEventCalendarEventAttendeeDeleR  POST
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId      DataEventCalendarEventAttendeeR      GET
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees                  DataEventCalendarEventAttendeesR     GET
-    
-    
+
+
     /catalogue/#Month/calendar/#Day/events/#EventId/register DataEventCalendarRegistrationR GET POST
     /catalogue/#Month/calendar/#Day/events/#EventId/scanner  DataEventCalendarScannerR      GET
     /catalogue/#Month/calendar/#Day/events/#EventId/dele     DataEventCalendarEventDeleR    POST
@@ -57,7 +59,7 @@
     /catalogue/#EventId/attendees/new/form         DataEventAttendeeNewR  GET
     /catalogue/#EventId/attendees/#AttendeeId      DataEventAttendeeR     GET
     /catalogue/#EventId/attendees                  DataEventAttendeesR    GET POST
-    
+
     /catalogue/#EventId/register  DataEventRegistrationR GET POST
     /catalogue/#EventId/scanner   DataEventScannerR      GET
     /catalogue/#EventId/dele      DataEventDeleR         POST
@@ -65,7 +67,7 @@
     /catalogue/new/form           DataEventNewR          GET
     /catalogue/#EventId           DataEventR             GET POST
     /catalogue                    DataEventsR            GET POST
-    
+
     /qrcode/#CardId CardQrImageR GET
 
     /users/#UserId/cards/#CardId/dele       UserCardDeleR      POST
@@ -75,7 +77,7 @@
     /users/#UserId/cards/new/field/form     UserCardsNewFieldR POST
     /users/#UserId/cards/#CardId            UserCardR          GET POST
     /users/#UserId/cards                    UserCardsR         GET POST
-    
+
     /users/#UserId/dele UserDeleR POST
     /users/#UserId/edit UserEditR GET
     /users/new/form     UserNewR  GET

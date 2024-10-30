@@ -51,3 +51,5 @@
           <span>
             <span.badge.border.secondary-border.secondary-text.bottom.right>
               <small>#{m}
+
+  ^{widgetSnackbar msgs}

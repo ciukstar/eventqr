@@ -32,6 +32,7 @@ import Data.Time.Calendar.Month (Month)
 import Data.Time.Clock
     ( UTCTime, NominalDiffTime, nominalDiffTimeToSeconds, secondsToNominalDiffTime)
 
+import Database.Esqueleto.Experimental (SqlString)
 import Database.Persist.Quasi ( lowerCaseSettings )
 
 import GHC.Float (Double, int2Double, truncateDouble)
@@ -74,6 +75,8 @@ instance HashDBUser User where
     setPasswordHash :: Text -> User -> User
     setPasswordHash h u = u { userPassword = Just h }
 
+
+instance SqlString Textarea
 
 
 overpass :: Text

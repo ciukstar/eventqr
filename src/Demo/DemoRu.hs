@@ -139,7 +139,7 @@ fillDemoRu = do
                    , infoName = "ВКонтакте"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://vk.ru/1234123">
-                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoVK} alt=vk loading=lazy>
                                            VK
                                          |]
                    }
@@ -147,7 +147,7 @@ fillDemoRu = do
                    , infoName = "Одноклассники"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://ok.ru/234234234">
-                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoOk} alt=ok loading=lazy>
                                            Ok
                                          |]
                    }
@@ -180,7 +180,7 @@ fillDemoRu = do
                    , infoName = "ВКонтакте"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://vk.ru/000120">
-                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoVK} alt=vk loading=lazy>
                                            VK
                                          |]
                    }
@@ -188,7 +188,7 @@ fillDemoRu = do
                    , infoName = "Одноклассники"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://ok.ru/234234">
-                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoOk} alt=ok loading=lazy>
                                            Ok
                                          |]
                    }
@@ -221,7 +221,7 @@ fillDemoRu = do
                    , infoName = "ВКонтакте"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://vk.ru/985287782">
-                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoVK} alt=vk loading=lazy>
                                            VK
                                          |]
                    }
@@ -229,7 +229,7 @@ fillDemoRu = do
                    , infoName = "Одноклассники"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://ok.ru/09876666">
-                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoOk} alt=ok loading=lazy>
                                            Ok
                                          |]
                    }
@@ -262,7 +262,7 @@ fillDemoRu = do
                    , infoName = "ВКонтакте"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://vk.ru/23898">
-                                           <img.tiny.tiny-margin src=#{logoVK} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoVK} alt=vk loading=lazy>
                                            VK
                                          |]
                    }
@@ -270,7 +270,7 @@ fillDemoRu = do
                    , infoName = "Одноклассники"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://ok.ru/12431265">
-                                           <img.tiny.tiny-margin src=#{logoOk} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoOk} alt=ok loading=lazy>
                                            Ok
                                          |]
                    }

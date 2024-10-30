@@ -52,22 +52,23 @@ $if not (null msgs)
     
     <button.transparent.circle ##{idButtonCloseDialogUpcomingEvents}>
       <i>close
-    
-  $forall (Entity eid (Event time name _), attendees) <- upcoming
-    <a.row.padding.surface-container.wave href=@{UpcomingEventR eid}>
-      <div.max>
-        <h6.small>
-          #{name}
-        <div>
-          $with dt <- show time
-            <time.full-datetime.small-text datetime=#{dt}>
-              #{dt}
-          <div.small-text>
-            _{MsgAttendees}: #{attendees}
-            
-      <i>arrow_forward_ios
+      
+  <div.dialog-content>
+    $forall (Entity eid (Event time name _), attendees) <- upcoming
+      <a.row.padding.surface-container.wave href=@{UpcomingEventR eid}>
+        <div.max>
+          <h6.small>
+            #{name}
+          <div>
+            $with dt <- show time
+              <time.full-datetime.small-text datetime=#{dt}>
+                #{dt}
+            <div.small-text>
+              _{MsgAttendees}: #{attendees}
 
-    <hr>
+        <i>arrow_forward_ios
+
+      <hr>
 
       
 <dialog.bottom.no-padding ##{idDialogSearchEvents}>
@@ -78,6 +79,6 @@ $if not (null msgs)
 
   <div ##{idListSearchSearchEventsResult}>
 
-  <div.field.large.prefix.round.fill.active>
+  <div.field.large.prefix.round.border.no-elevate.small-margin>
     <i.front>search
     <input type=search ##{idInputSearchEvents} placeholder=_{MsgSearchEvents}>

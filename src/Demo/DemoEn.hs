@@ -138,7 +138,7 @@ fillDemoEn = do
                    , infoName = "Facebook"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://facebook.com/1234123">
-                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoFacebook} alt=facebook loading=lazy>
                                            facebook
                                          |]
                    }
@@ -146,7 +146,7 @@ fillDemoEn = do
                    , infoName = "Instagram"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://instagram.com/234234234">
-                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoInstagram} alt=instagram loading=lazy>
                                            instagram
                                          |]
                    }
@@ -179,7 +179,7 @@ fillDemoEn = do
                    , infoName = "Facebook"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://facebook.com/000120">
-                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoFacebook} alt=facebook loading=lazy>
                                            facebook
                                          |]
                    }
@@ -187,7 +187,7 @@ fillDemoEn = do
                    , infoName = "Instagram"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://instagram.com/234234">
-                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoInstagram} alt=instagram loading=lazy>
                                            instagram
                                          |]
                    }
@@ -220,7 +220,7 @@ fillDemoEn = do
                    , infoName = "Facebook"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://facebook.com/985287782">
-                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoFacebook} alt=facebook loading=lazy>
                                            facebook
                                          |]
                    }
@@ -228,7 +228,7 @@ fillDemoEn = do
                    , infoName = "Instagram"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://instagram.com/09876666">
-                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoInstagram} alt=instagram loading=lazy>
                                            instagram
                                          |]
                    }
@@ -261,7 +261,7 @@ fillDemoEn = do
                    , infoName = "Facebook"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://facebook.com/23898">
-                                           <img.tiny.tiny-margin src=#{logoFacebook} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoFacebook} alt=facebook loading=lazy>
                                            facebook
                                          |]
                    }
@@ -269,7 +269,7 @@ fillDemoEn = do
                    , infoName = "Instagram"
                    , infoValue = [shamlet|
                                          <a class="link" href="https://instagram.com/12431265">
-                                           <img.tiny.tiny-margin src=#{logoInstagram} loading=lazy>
+                                           <img.tiny.tiny-margin src=#{logoInstagram} alt=instagram loading=lazy>
                                            instagram
                                          |]
                    }
