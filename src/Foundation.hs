@@ -78,6 +78,13 @@ type Form x = Html -> MForm (HandlerFor App) (FormResult x, Widget)
 type DB a = forall (m :: Type -> Type).
     (MonadUnliftIO m) => ReaderT SqlBackend m a
 
+widgetScanner :: Route App -> Widget
+widgetScanner callback = do
+    idFigureScanner <- newIdent
+    let idScannerVideo = "scannervideo" :: Text    
+    addScriptAttrs (StaticR js_scanner_js) [("type","module")]
+    $(widgetFile "widgets/scanner")
+
 
 widgetTopbar :: Maybe (Route App,[(Text,Text)]) -- ^ Back button
              -> Text                            -- ^ Title 

@@ -5,7 +5,7 @@
 
 <main.responsive.no-padding>
 
-  <div.tabs>
+  <div.tabs.min>
     <a href=@{UpcomingEventR eid}>
       _{MsgDetails}
       

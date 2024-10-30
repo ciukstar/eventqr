@@ -1,0 +1,8 @@
+
+##{idFigureScanner}
+    text-align: center
+      
+    ##{idScannerVideo}
+        display: block
+        margin: auto
+        aspect-ratio: 1

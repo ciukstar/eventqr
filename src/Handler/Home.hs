@@ -22,13 +22,14 @@ import Control.Monad.IO.Class (liftIO)
 
 import Data.Aeson (decode)
 import qualified Data.Aeson as A (Value)
+import Data.Bifunctor (Bifunctor(second))
 import qualified Data.List as L (find)
 import Data.Text (unpack)
 
 import Database.Esqueleto.Experimental
-    ( select, selectOne, from, table, where_, val, orderBy, asc
+    ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
     , (^.), (>=.), (==.), (:&) ((:&))
-    , innerJoin, on
+    , innerJoin, on, orderBy, asc, subSelectCount
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -42,14 +43,15 @@ import Foundation
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
-      ( MsgAppName, MsgEventsCalendar, MsgName, MsgTime
+      ( MsgAppName, MsgEventsCalendar, MsgName, MsgTime, MsgCard
       , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
       , MsgDetails, MsgAttendees, MsgUserSuccessfullyegisteredForEvent
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
-      , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate, MsgCardholder, MsgCardNumber, MsgCard
+      , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
+      , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees
       )
     )
 
@@ -58,19 +60,18 @@ import Model
     , EventId, Event (Event)
     , CardId, Card
     , User (User)
-    , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
+    , Info (Info)
     , EntityField
-      ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent, AttendeeId, InfoCard, InfoId
-      ), AttendeeId, Info (Info)
+      ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
+      , AttendeeId, InfoCard, InfoId
+      )
     )
 
 import Network.Wreq (get)
 import qualified Network.Wreq as WL (responseBody)
 
 import Settings (widgetFile)
-import Settings.StaticFiles
-    (
-    )
 
 import Text.Hamlet (Html)
 
@@ -302,10 +303,16 @@ getUpcomingEventAttendeesR eid = do
 getUpcomingEventR :: EventId -> Handler Html
 getUpcomingEventR eid = do
 
-    event <- runDB $ selectOne $ do
+    event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+        
         where_ $ x ^. EventId ==. val eid
-        return x
+        return (x,attendees) )
 
     msgr <- getMessageRender
     defaultLayout $ do

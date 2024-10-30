@@ -14,7 +14,7 @@ import Database.Esqueleto.Experimental
 import Database.Persist (Entity (Entity))
 
 import Foundation
-    ( Handler, widgetTopbar
+    ( Handler, widgetTopbar, widgetScanner
     , Route (HomeR, StaticR, EventRegistrationR, AttendeeRegistrationR)
     , AppMessage
       ( MsgScanner, MsgPointYourCameraToScan, MsgRegistrationForEvent
@@ -25,7 +25,7 @@ import Model (EventId, Event (Event), EntityField (EventId))
 
 import Settings (widgetFile)
 import Settings.StaticFiles
-    (js_scanner_js, img_qr_code_scanner_64dp_013048_FILL0_wght400_GRAD0_opsz48_svg)
+    (js_scanner_js)
 
 import Text.Hamlet (Html)
 
@@ -43,9 +43,6 @@ getScanQrR = do
     defaultLayout $ do
         setTitleI MsgScanner
         idOverlay <- newIdent
-        let idScannerVideo = "scannervideo" :: Text
-        
-        addScriptAttrs (StaticR js_scanner_js) [("type","module")]
         $(widgetFile "scanner/qr")
 
 
@@ -61,9 +58,6 @@ getScannerR eid = do
     defaultLayout $ do
         setTitleI MsgScanner
         idOverlay <- newIdent
-        let idScannerVideo = "scannervideo" :: Text
-        
-        addScriptAttrs (StaticR js_scanner_js) [("type","module")]
         $(widgetFile "scanner/scanner")
         
 
