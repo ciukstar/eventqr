@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (EventR day eid,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (CalendarEventR month day eid,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
 
 <main.responsive>
 
@@ -14,5 +14,5 @@
           <time.full-datetime datetime=#{dt}>
             #{dt}
 
-  ^{widgetScanner $ EventRegistrationR day eid}
+  ^{widgetScanner $ CalendarEventRegistrationR month day eid}
 

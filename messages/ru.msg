@@ -1,3 +1,14 @@
+EmailAddress: Адрес электронной почты
+Message: Сообщение
+MessageSubject: Тема
+Header: Заголовок
+SendEmail: Отправить электронное письмо
+NotificationToAttendee: Оповещение участнику
+SendNotification: Отправить оповещение
+Send: Отправить
+ShowUserQrCode: Показать QR-код пользователя
+NotifyUser: Уведомить пользователя
+NotifyUserAboutUpcomingEvent: Уведомить пользователя о предстоящем событии 
 NoEventsFound: Мероприятий не найдено
 NumberOfAttendees: Количество участников
 UserHasNoCardsYet: У пользователя пока нет карточек
@@ -45,6 +56,7 @@ PersonalUserCards: Персональные карты пользователя
 UpcomingEvents: Предстоящие события
 ScanQrCode: Сканировать QR-код
 ScanQrCodeAndLinkToEvent: Сканировать QR-код посетителя и связать его с мероприятием
+ScanQrCodeAndLinkToThisEvent: Сканировать QR-код посетителя и связать его с этим мероприятием
 EventsCalendar: Календарь событий
 Time: Время
 Events: События

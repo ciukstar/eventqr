@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (EventAttendeesR day eid,[])) (msgr MsgCard) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (CalendarEventAttendeesR month day eid,[])) (msgr MsgCard) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
 

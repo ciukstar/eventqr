@@ -1,13 +1,13 @@
 
-^{widgetTopbar (Just (EventsR day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (CalendarEventsR month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a.active href=@{EventR day eid}>
+    <a.active href=@{CalendarEventR month day eid}>
       _{MsgDetails}
       
-    <a href=@{EventAttendeesR day eid}>
+    <a href=@{CalendarEventAttendeesR month day eid}>
       _{MsgAttendees}
     
   <div.padding.page.active>
@@ -36,7 +36,7 @@
           #{attendees}
 
     <p ##{idActionQrScan}>
-      <a.button.margin href=@{EventScannerR day eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+      <a.button.margin href=@{CalendarEventScannerR month day eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
         <i>qr_code_scanner
         <span>_{MsgScanQrCode}
 

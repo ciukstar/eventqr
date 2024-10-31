@@ -3,7 +3,7 @@
 
 <main.responsive.no-padding>
 
-  <div.tabs>
+  <div.tabs.min>
     <a.active href=@{DataR $ DataEventR eid}>
       _{MsgDetails}
       
@@ -36,7 +36,7 @@
         <span>_{MsgScanQrCode}
 
       <label for=#{idButtonQrScan}>
-        _{MsgScanQrCodeAndLinkToEvent}.
+        _{MsgScanQrCodeAndLinkToThisEvent}.
 
   ^{widgetSnackbar msgs}
 

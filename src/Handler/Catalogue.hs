@@ -21,6 +21,7 @@ module Handler.Catalogue
   , postDataEventCalendarEventDeleR
   , getDataEventCalendarScannerR
   , getDataEventCalendarRegistrationR, postDataEventCalendarRegistrationR
+  , postDataEventAttendeeNotifyR
   ) where
 
 
@@ -65,6 +66,7 @@ import Foundation
       , DataEventCalendarEventEditR, DataEventCalendarEventDeleR
       , DataEventScannerR, DataEventRegistrationR
       , DataEventCalendarScannerR, DataEventCalendarRegistrationR
+      , DataEventAttendeeNotifyR
       )
     , AppMessage
       ( MsgEventsCatalogue, MsgEvent, MsgDetails, MsgScanQrCodeAndLinkToEvent
@@ -78,17 +80,20 @@ import Foundation
       , MsgNoEventsForThisDayYet, MsgEvents, MsgNoAttendeesForThisEventYet
       , MsgNoEventsYet, MsgScanner, MsgRegistrationForEvent, MsgRegistration
       , MsgUserSuccessfullyRegisteredForEvent, MsgScanAgain, MsgRegister
-      , MsgConfirmUserRegistrationForEventPlease
+      , MsgConfirmUserRegistrationForEventPlease, MsgNotifyUserAboutUpcomingEvent
+      , MsgScanQrCodeAndLinkToThisEvent, MsgNotifyUser, MsgShowUserQrCode
+      , MsgNotificationToAttendee, MsgSend, MsgSendNotification, MsgSendEmail
+      , MsgHeader, MsgMessage, MsgEmail, MsgEmailAddress
       )
     )
 
-import Material3 (daytimeLocalField, md3textareaWidget, md3widget)
+import Material3 (daytimeLocalField, md3textareaWidget, md3widget, md3checkboxWidget)
 
 import Model
     ( msgSuccess, msgError
     , EventId, Event(Event, eventName, eventTime, eventDescr)
     , CardId, Card (Card)
-    , User (User)
+    , User (User, userEmail)
     , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
@@ -99,24 +104,27 @@ import Model
 import Settings (widgetFile, AppSettings (appTimeZone))
 
 import Text.Hamlet (Html)
+import Text.Julius (julius, RawJS (rawJS))
 
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , whamlet, redirect, addMessageI, SomeMessage (SomeMessage), getYesod
-    , MonadHandler (liftHandler), handlerToWidget, getRequest, YesodRequest (reqGetParams)
+    , MonadHandler (liftHandler), handlerToWidget, YesodRequest (reqGetParams)
+    , getRequest, toHtml, ToWidget (toWidget)
     )
 import Yesod.Form.Fields
     ( textField, textareaField, radioField, optionsPairs
-    , Option (optionInternalValue, optionExternalValue)
-    , OptionList (olOptions), timeField, hiddenField, intField
+    , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
+    , timeField, hiddenField, intField, htmlField, checkBoxField, emailField
     )
-import Yesod.Form.Functions (generateFormPost, runFormPost, mreq)
+import Yesod.Form.Functions (generateFormPost, runFormPost, mreq, mopt)
 import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Form.Types
     ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Data.Text (Text)
 
 
 postDataEventCalendarEventAttendeeDeleR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
@@ -436,9 +444,9 @@ postDataEventAttendeeDeleR eid aid = do
           redirect $ DataR $ DataEventAttendeeR eid aid
 
 
-getDataEventAttendeeR :: EventId -> AttendeeId -> Handler Html
-getDataEventAttendeeR eid aid = do
-
+postDataEventAttendeeNotifyR :: EventId -> AttendeeId -> Handler Html
+postDataEventAttendeeNotifyR eid aid = do
+    
     attendee <- runDB $ selectOne $ do
         x :& e :& c :& u <- from $ table @Attendee
             `innerJoin` table @Event `on` (\(x :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
@@ -448,6 +456,42 @@ getDataEventAttendeeR eid aid = do
         return (x,(e,(c,u)))
 
     (fw0,et0) <- generateFormPost formAttendeeRemove
+    ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
+
+    case fr1 of
+      FormSuccess ((subject, message),((True,Just email), True)) -> undefined
+      _otherwise -> do    
+          msgr <- getMessageRender
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgAttendees
+
+              idOverlay <- newIdent
+              idDialogDelete <- newIdent
+              idButtonShowDialogQrCode <- newIdent
+              idDialogQrCode <- newIdent
+              idButtonCloseDialogQrCode <- newIdent
+
+              idButtonShowDialogNotify <- newIdent
+              idDialogNotifyAttendee <- newIdent
+              idFormNotifyAttendee <- newIdent
+
+              $(widgetFile "data/catalogue/attendees/attendee")
+
+
+getDataEventAttendeeR :: EventId -> AttendeeId -> Handler Html
+getDataEventAttendeeR eid aid = do
+    
+    attendee <- runDB $ selectOne $ do
+        x :& e :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Event `on` (\(x :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
+            `innerJoin` table @Card `on` (\(x :& _ :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @User `on` (\(_ :& _ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. AttendeeId ==. val aid
+        return (x,(e,(c,u)))
+
+    (fw0,et0) <- generateFormPost formAttendeeRemove
+    (fw1,et1) <- generateFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
     
     msgr <- getMessageRender
     msgs <- getMessages
@@ -459,8 +503,71 @@ getDataEventAttendeeR eid aid = do
         idButtonShowDialogQrCode <- newIdent
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
+
+        idButtonShowDialogNotify <- newIdent
+        idDialogNotifyAttendee <- newIdent
+        idFormNotifyAttendee <- newIdent
         
         $(widgetFile "data/catalogue/attendees/attendee")
+
+
+formAttendeeNotify :: Maybe (Entity Event, Entity User) -> Form ((Text, Html),((Bool,Maybe Text),Bool))
+formAttendeeNotify event extra = do
+    (subjectR, subjectV) <- mreq textField FieldSettings
+        { fsLabel = SomeMessage MsgHeader 
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (eventName . entityVal . fst <$> event)
+        
+    (messageR, messageV) <- mreq htmlField FieldSettings
+        { fsLabel = SomeMessage MsgMessage
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (toHtml . eventDescr . entityVal . fst <$> event)
+        
+    (sendEmailR, sendEmailV) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgSendEmail
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (pure False)
+        
+    (emailR, emailV) <- mopt emailField FieldSettings
+        { fsLabel = SomeMessage MsgEmail 
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (pure . userEmail . entityVal . snd <$> event)
+        
+    (sendNotifR, sendNotifV) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgSendNotification
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (pure True)
+
+    let open = case sendEmailR of
+          FormSuccess True -> True
+          _otherwise -> False
+
+    let r = (,) <$> ((,) <$> subjectR <*> messageR) <*> ((,) <$> ((,) <$> sendEmailR <*> emailR) <*> sendNotifR)
+    let w = do
+            toWidget [julius|
+                   document.getElementById(#{fvId sendEmailV}).addEventListener('change', function (e) {
+                     if (e.target.checked) {
+                       document.getElementById(`details#{rawJS $ fvId sendEmailV}`).setAttribute('open','');
+                     } else {
+                       document.getElementById(`details#{rawJS $ fvId sendEmailV}`).removeAttribute('open');
+                     }
+                   });
+                   |]
+            [whamlet|
+                    ^{extra}
+                    ^{md3widget subjectV}
+                    ^{md3textareaWidget messageV}
+                      
+                    ^{md3checkboxWidget sendNotifV}
+                    <br>
+                    ^{md3checkboxWidget sendEmailV}
+                    
+                    <details :open:open #details#{fvId sendEmailV}>
+                      <summary>_{MsgEmailAddress}
+                      ^{md3widget emailV}
+                    |]
+
+    return (r,w)
 
 
 formAttendeeRemove :: Form ()

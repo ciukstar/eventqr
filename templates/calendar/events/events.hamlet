@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (CalendarR (dayPeriod day),[])) (msgr MsgEvents) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (CalendarR month,[])) (msgr MsgEvents) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
 
@@ -10,7 +10,7 @@
         _{MsgNoEventsForThisDayYet}.
   $else
     $forall (Entity eid (Event time name _), attendees) <- events
-      <a.row.padding.wave href=@{EventR day eid}>
+      <a.row.padding.wave href=@{CalendarEventR month day eid}>
         <div.max>
           <h6.small>
             #{name}

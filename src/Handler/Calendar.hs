@@ -5,9 +5,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Handler.Calendar
-  ( getCalendarR, getEventsR, getEventR
-  , getEventAttendeesR, getEventAttendeeR
-  , getEventScannerR, getEventRegistrationR, postEventRegistrationR
+  ( getCalendarR, getCalendarEventsR, getCalendarEventR
+  , getCalendarEventAttendeesR, getCalendarEventAttendeeR
+  , getCalendarEventScannerR
+  , getCalendarEventRegistrationR, postCalendarEventRegistrationR
   ) where
 
 import Control.Monad.IO.Class (liftIO)
@@ -18,7 +19,7 @@ import qualified Data.List as L (length)
 import qualified Data.Map as M (lookup, foldr)
 import Data.Time.Calendar
     ( toGregorian, weekFirstDay, DayOfWeek (Monday), addDays
-    , DayPeriod (periodFirstDay, dayPeriod), Day
+    , DayPeriod (periodFirstDay), Day
     )
 import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
 import Data.Time.Clock (getCurrentTime)
@@ -38,9 +39,9 @@ import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Foundation
     ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
     , Route
-      ( EventAttendeesR, CalendarR, EventsR, EventR
-      , EventScannerR, EventRegistrationR
-      , EventAttendeeR, HomeR, DataR
+      ( CalendarEventAttendeesR, CalendarR, CalendarEventsR, CalendarEventR
+      , CalendarEventScannerR, CalendarEventRegistrationR
+      , CalendarEventAttendeeR, HomeR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -83,8 +84,8 @@ import Yesod.Form.Fields (hiddenField, intField)
 import Yesod.Form.Input (runInputGet, ireq)
 
 
-getEventAttendeeR :: Day -> EventId -> AttendeeId -> Handler Html
-getEventAttendeeR day eid aid = do
+getCalendarEventAttendeeR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
+getCalendarEventAttendeeR month day eid aid = do
 
     card <- runDB $ selectOne $ do
         x :& c :& u <- from $ table @Attendee
@@ -112,8 +113,8 @@ getEventAttendeeR day eid aid = do
         $(widgetFile "calendar/events/attendees/card")
 
 
-getEventAttendeesR :: Day -> EventId -> Handler Html
-getEventAttendeesR day eid = do
+getCalendarEventAttendeesR :: Month -> Day -> EventId -> Handler Html
+getCalendarEventAttendeesR month day eid = do
 
     attendees <- runDB $ select $ do
         x :& c :& u <- from $ table @Attendee
@@ -125,14 +126,13 @@ getEventAttendeesR day eid = do
     msgr <- getMessageRender
     defaultLayout $ do
         setTitleI MsgAttendees 
-
         idOverlay <- newIdent
         
         $(widgetFile "calendar/events/attendees/attendees")
 
 
-postEventRegistrationR :: Day -> EventId -> Handler Html
-postEventRegistrationR day eid = do
+postCalendarEventRegistrationR :: Month -> Day -> EventId -> Handler Html
+postCalendarEventRegistrationR month day eid = do
 
     ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
 
@@ -144,14 +144,14 @@ postEventRegistrationR day eid = do
                                    , attendeeRegDate = now
                                    }
           addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
-          redirect $ EventR day eid
+          redirect $ CalendarEventR month day eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ EventRegistrationR day eid
+          redirect $ CalendarEventRegistrationR month day eid
 
 
-getEventRegistrationR :: Day -> EventId -> Handler Html
-getEventRegistrationR day eid = do
+getCalendarEventRegistrationR :: Month -> Day -> EventId -> Handler Html
+getCalendarEventRegistrationR month day eid = do
 
     cid <- toSqlKey <$> runInputGet (ireq intField "cid")
 
@@ -184,8 +184,8 @@ formRegistration event card extra = do
     return (r,w)
 
 
-getEventScannerR :: Day -> EventId -> Handler Html
-getEventScannerR day eid = do
+getCalendarEventScannerR :: Month -> Day -> EventId -> Handler Html
+getCalendarEventScannerR month day eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
@@ -199,8 +199,8 @@ getEventScannerR day eid = do
         $(widgetFile "calendar/events/scanner/scanner")
 
 
-getEventR :: Day -> EventId -> Handler Html
-getEventR day eid = do
+getCalendarEventR :: Month -> Day -> EventId -> Handler Html
+getCalendarEventR month day eid = do
 
     event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
@@ -225,8 +225,8 @@ getEventR day eid = do
         $(widgetFile "calendar/events/event")
 
 
-getEventsR :: Day -> Handler Html
-getEventsR day = do
+getCalendarEventsR :: Month -> Day -> Handler Html
+getCalendarEventsR month day = do
     
     tz <- appTimeZone . appSettings <$> getYesod
 

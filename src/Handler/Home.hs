@@ -8,14 +8,14 @@
 
 module Handler.Home
   ( getHomeR, getFetchR
-  , getUpcomingEventR
-  , getUpcomingEventScannerR
-  , getUpcomingEventRegistrationR, postUpcomingEventRegistrationR
-  , getUpcomingEventAttendeesR
-  , getUpcomingEventAttendeeR
+  , getEventR
+  , getEventScannerR
+  , getEventRegistrationR, postEventRegistrationR
+  , getEventAttendeesR
+  , getEventAttendeeR
   , getScanQrR
   , getAttendeeRegistrationR, postAttendeeRegistrationR
-  , getEventsSearchR
+  , getApiEventsR
   ) where
 
 import qualified Control.Lens as L ( (^?) )
@@ -26,11 +26,14 @@ import qualified Data.Aeson as A (Value)
 import Data.Bifunctor (Bifunctor(second))
 import qualified Data.List as L (find)
 import Data.Text (unpack)
+import Data.Time.Calendar (toGregorian)
+import Data.Time.Calendar.Month (pattern YearMonth)
+import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
 
 import Database.Esqueleto.Experimental
     ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
     , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
-    , innerJoin, on, orderBy, asc, subSelectCount, like, upper_
+    , innerJoin, on, orderBy, asc, subSelectCount, like, upper_, limit
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -38,10 +41,10 @@ import Database.Persist.Sql (toSqlKey, fromSqlKey)
 import Foundation
     ( Handler, Form, widgetSnackbar, widgetMainMenu, widgetTopbar, widgetScanner
     , Route
-      ( CalendarR, HomeR, UpcomingEventR, UpcomingEventRegistrationR
-      , ScanQrR, AttendeeRegistrationR, UpcomingEventAttendeesR
-      , UpcomingEventAttendeeR, UpcomingEventScannerR
-      , EventsSearchR, DataR
+      ( CalendarR, HomeR, EventR, EventRegistrationR
+      , ScanQrR, AttendeeRegistrationR, EventAttendeesR
+      , EventAttendeeR, EventScannerR
+      , ApiEventsR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -91,38 +94,33 @@ import Yesod.Form.Fields
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
     , Textarea (Textarea)
     )
-import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
-import Data.Time.Calendar (toGregorian)
-import Data.Time.Calendar.Month (pattern YearMonth)
-import Yesod.Persist.Core (YesodPersist(runDB))
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
+import Yesod.Persist.Core (YesodPersist(runDB))
 
 
-getEventsSearchR :: Handler TypedContent
-getEventsSearchR = do
+getApiEventsR :: Handler TypedContent
+getApiEventsR = do
 
     query <- runInputGet $ iopt textField "q"
-    
-    events <- case query of
-      Nothing -> return []
-      Just q -> (second unValue <$>) <$> runDB ( select $ do
-          x <- from $ table @Event
 
-          let attendees :: SqlExpr (Value Int)
-              attendees = subSelectCount $ do
-                  a <- from $ table @Attendee
-                  where_ $ a ^. AttendeeEvent ==. x ^. EventId
+    events <- (second unValue <$>) <$> runDB ( select $ do
+        x <- from $ table @Event
 
-          where_ $ ( upper_ (x ^. EventName) `like` (%) ++. upper_ (val q) ++. (%) )
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+                
+        case query of
+          Just q -> where_ $ ( upper_ (x ^. EventName) `like` (%) ++. upper_ (val q) ++. (%) )
               ||. ( upper_ (x ^. EventDescr) `like` (%) ++. upper_ (val (Textarea q)) ++. (%) )
+          Nothing -> limit 100
 
-          return (x,attendees) )
-    
-    selectRep $ do
-        provideJson events
-    
+        return (x,attendees) )
+
+    selectRep $ provideJson events
 
 
 postAttendeeRegistrationR :: Handler Html
@@ -236,8 +234,8 @@ getScanQrR = do
         $(widgetFile "scanner/scanner")
 
 
-postUpcomingEventRegistrationR :: EventId -> Handler Html
-postUpcomingEventRegistrationR eid = do
+postEventRegistrationR :: EventId -> Handler Html
+postEventRegistrationR eid = do
 
     ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
 
@@ -249,14 +247,14 @@ postUpcomingEventRegistrationR eid = do
                                    , attendeeRegDate = now
                                    }
           addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
-          redirect $ UpcomingEventR eid
+          redirect $ EventR eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ UpcomingEventRegistrationR eid
+          redirect $ EventRegistrationR eid
 
 
-getUpcomingEventRegistrationR :: EventId -> Handler Html
-getUpcomingEventRegistrationR eid = do
+getEventRegistrationR :: EventId -> Handler Html
+getEventRegistrationR eid = do
 
     cid <- toSqlKey <$> runInputGet (ireq intField "cid")
 
@@ -289,8 +287,8 @@ formRegistration event card extra = do
     return (r,w)
 
 
-getUpcomingEventAttendeeR :: EventId -> AttendeeId -> Handler Html
-getUpcomingEventAttendeeR eid aid = do
+getEventAttendeeR :: EventId -> AttendeeId -> Handler Html
+getEventAttendeeR eid aid = do
 
     card <- runDB $ selectOne $ do
         x :& c :& u <- from $ table @Attendee
@@ -318,8 +316,8 @@ getUpcomingEventAttendeeR eid aid = do
         $(widgetFile "upcoming/attendees/card")
 
 
-getUpcomingEventAttendeesR :: EventId -> Handler Html
-getUpcomingEventAttendeesR eid = do
+getEventAttendeesR :: EventId -> Handler Html
+getEventAttendeesR eid = do
 
     attendees <- runDB $ select $ do
         x :& c :& u <- from $ table @Attendee
@@ -335,8 +333,8 @@ getUpcomingEventAttendeesR eid = do
         $(widgetFile "upcoming/attendees/attendees")
 
 
-getUpcomingEventScannerR :: EventId -> Handler Html
-getUpcomingEventScannerR eid = do
+getEventScannerR :: EventId -> Handler Html
+getEventScannerR eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
@@ -350,8 +348,8 @@ getUpcomingEventScannerR eid = do
         $(widgetFile "upcoming/scanner/scanner")
 
 
-getUpcomingEventR :: EventId -> Handler Html
-getUpcomingEventR eid = do
+getEventR :: EventId -> Handler Html
+getEventR eid = do
 
     event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
@@ -392,6 +390,18 @@ getHomeR = do
 
         where_ $ x ^. EventTime >=. val now
         orderBy [asc (x ^. EventTime)]
+        return (x, attendees) )
+
+    events <- (second unValue <$>) <$> runDB ( select $ do
+        x <- from $ table @Event
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+
+        orderBy [asc (x ^. EventTime)]
+        limit 100
         return (x, attendees) )
 
     msgr <- getMessageRender

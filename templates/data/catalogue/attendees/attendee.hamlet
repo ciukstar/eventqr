@@ -28,9 +28,13 @@
       <p.small-text>
         #{descr}
 
-    <button.border.transparent ##{idButtonShowDialogQrCode}>
+    <button.border.transparent ##{idButtonShowDialogQrCode} title=_{MsgShowUserQrCode}>
       <i>qr_code
       <span>_{MsgQrCode}
+
+    <button.border.transparent ##{idButtonShowDialogNotify} title=_{MsgNotifyUserAboutUpcomingEvent}>
+      <i>campaign
+      <span>_{MsgNotifyUser}
 
     <dialog ##{idDialogQrCode}>
       <h5>_{MsgQrCode}
@@ -57,3 +61,22 @@
       ^{fw0}
       <button.primary type=submit>
         _{MsgDele}
+
+
+<dialog ##{idDialogNotifyAttendee}>
+  <h5.small>
+    _{MsgSendNotification}
+    
+  <div>
+  
+    <form method=post action=@{DataR $ DataEventAttendeeNotifyR eid aid} enctype=#{et1} ##{idFormNotifyAttendee}>
+      ^{fw1}
+      
+  <nav.right-align.no-space>
+    <button.transparent.link data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogNotifyAttendee}').close()">
+      _{MsgCancel}
+
+    <button.primary type=submit form=#{idFormNotifyAttendee}>
+      <i>send
+      <span>_{MsgSend}

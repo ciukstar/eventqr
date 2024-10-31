@@ -3,7 +3,7 @@
 
 <main.responsive.no-padding>
 
-  <div.tabs>
+  <div.tabs.min>
     <a href=@{DataR $ DataEventR eid}>
       _{MsgDetails}
       
@@ -18,7 +18,7 @@
           _{MsgNoAttendeesForThisEventYet}.
     $else
       $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _)) <- attendees
-        <a.row.padding.surface-container.wave href=@{DataR $ DataEventAttendeeR eid aid}>
+        <a.row.padding.wave href=@{DataR $ DataEventAttendeeR eid aid}>
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 

@@ -22,7 +22,7 @@
         $with (y,m,d) <- toGregorian day
           $if (==) month (YearMonth y m)
             $maybe xs <- M.lookup day events
-              <a.cell.tertiary-container href=@?{(EventsR day,stati)} rel=nofollow>
+              <a.cell.tertiary-container href=@?{(CalendarEventsR month day,stati)} rel=nofollow>
                 <time.day-of-month datetime=#{show day}>
                   <small>#{d}
                 <div>
@@ -32,7 +32,7 @@
                     <div.badge.border.secondary-border.secondary-text.bottom.right>
                       <small>#{sum $ snd <$> xs}
             $nothing
-              <a.cell.secondary-container href=@?{(EventsR day,stati)} rel=nofollow>
+              <a.cell.secondary-container href=@?{(CalendarEventsR month day,stati)} rel=nofollow>
                 <time.day-of-month datetime=#{show day}>
                   <small>#{d}
           $else

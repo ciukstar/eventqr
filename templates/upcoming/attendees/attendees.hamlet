@@ -6,10 +6,10 @@
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a href=@{UpcomingEventR eid}>
+    <a href=@{EventR eid}>
       _{MsgDetails}
       
-    <a.active href=@{UpcomingEventAttendeesR eid}>
+    <a.active href=@{EventAttendeesR eid}>
       _{MsgAttendees}
     
   <div.page.active>
@@ -27,11 +27,11 @@
 
         <div.row.padding.no-margin>
 
-          <a href=@{UpcomingEventAttendeeR eid aid}>
+          <a href=@{EventAttendeeR eid aid}>
             <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
           <div.max>
-            <a.link.large-text href=@{UpcomingEventAttendeeR eid aid}>
+            <a.link.large-text href=@{EventAttendeeR eid aid}>
               $maybe name <- uname
                 #{name}
               $nothing

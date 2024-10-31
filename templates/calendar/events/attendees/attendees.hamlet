@@ -1,15 +1,15 @@
 
 <div.overlay ##{idOverlay}>
 
-^{widgetTopbar (Just (EventsR day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (CalendarEventsR month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a href=@{EventR day eid}>
+    <a href=@{CalendarEventR month day eid}>
       _{MsgDetails}
       
-    <a.active href=@{EventAttendeesR day eid}>
+    <a.active href=@{CalendarEventAttendeesR month day eid}>
       _{MsgAttendees}
     
   <div.page.active>
@@ -27,11 +27,11 @@
 
         <div.row.padding.no-margin>
 
-          <a href=@{EventAttendeeR day eid aid}>
+          <a href=@{CalendarEventAttendeeR month day eid aid}>
             <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
           <div.max>
-            <a.link.large-text href=@{EventAttendeeR day eid aid}>
+            <a.link.large-text href=@{CalendarEventAttendeeR month day eid aid}>
               $maybe name <- uname
                 #{name}
               $nothing

@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (EventR day eid,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (CalendarEventR month day eid,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
 
 <main.responsive>
 
@@ -30,17 +30,17 @@
           #{descr}
 
 
-      <form method=post action=@{EventRegistrationR day eid} enctype=#{et}>
+      <form method=post action=@{CalendarEventRegistrationR month day eid} enctype=#{et}>
         ^{fw}
         <div.form-actions>
             
           <button.margin type=submit>
             _{MsgRegister}
           
-          <a.link href=@{EventScannerR day eid}>
+          <a.link href=@{CalendarEventScannerR month day eid}>
             _{MsgScanAgain}
           
-          <a.link href=@{EventR day eid}>
+          <a.link href=@{CalendarEventR month day eid}>
             _{MsgCancel}
      
     $of _

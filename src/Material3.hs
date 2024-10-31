@@ -7,6 +7,7 @@ module Material3
   ( md3widget
   , md3textareaWidget
   , md3selectWidget
+  , md3checkboxWidget
   , daytimeLocalField
   ) where
 
@@ -26,6 +27,14 @@ import Yesod.Form.Types
     ( Field (fieldView)
     , FieldView (fvErrors, fvInput, fvLabel, fvRequired)
     )
+
+
+md3checkboxWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()
+md3checkboxWidget v = [whamlet|
+  <label.checkbox>
+    ^{fvInput v}
+    <span>#{fvLabel v}
+|]
 
     
 md3textareaWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()

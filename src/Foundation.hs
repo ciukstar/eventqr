@@ -40,6 +40,7 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Form.I18n.English (englishFormMessage)
 import Yesod.Form.I18n.Russian (russianFormMessage)
+import Text.Julius (juliusFile)
 
 
 -- | The foundation datatype for your application. This can be a good place to
@@ -206,25 +207,27 @@ instance Yesod App where
         -> Handler AuthResult
     -- Routes not requiring authentication.
     isAuthorized (AuthR _) _ = return Authorized
+    isAuthorized ServiceWorkerR _ = return Authorized
 
     isAuthorized HomeR _ = setUltDestCurrent >> return Authorized
-    isAuthorized (UpcomingEventR _) _ = return Authorized
-    isAuthorized (UpcomingEventScannerR _) _ = return Authorized
-    isAuthorized (UpcomingEventAttendeesR _) _ = return Authorized
-    isAuthorized (UpcomingEventAttendeeR _ _) _ = return Authorized
-    isAuthorized (UpcomingEventRegistrationR _) _ = return Authorized
+    isAuthorized (EventR _) _ = return Authorized
+    isAuthorized (EventScannerR _) _ = return Authorized
+    isAuthorized (EventAttendeesR _) _ = return Authorized
+    isAuthorized (EventAttendeeR _ _) _ = return Authorized
+    isAuthorized (EventRegistrationR _) _ = return Authorized
     isAuthorized ScanQrR _ = return Authorized
     isAuthorized AttendeeRegistrationR _ = return Authorized
-    isAuthorized EventsSearchR _ = return Authorized    
+    
+    isAuthorized ApiEventsR _ = return Authorized    
         
     
     isAuthorized (CalendarR _) _ = return Authorized
-    isAuthorized (EventsR _) _ = return Authorized
-    isAuthorized (EventR _ _) _ = return Authorized
-    isAuthorized (EventScannerR _ _) _ = return Authorized
-    isAuthorized (EventRegistrationR _ _) _ = return Authorized
-    isAuthorized (EventAttendeesR _ _) _ = return Authorized
-    isAuthorized (EventAttendeeR {}) _ = return Authorized
+    isAuthorized (CalendarEventsR _ _) _ = return Authorized
+    isAuthorized (CalendarEventR {}) _ = return Authorized
+    isAuthorized (CalendarEventScannerR {}) _ = return Authorized
+    isAuthorized (CalendarEventRegistrationR {}) _ = return Authorized
+    isAuthorized (CalendarEventAttendeesR {}) _ = return Authorized
+    isAuthorized (CalendarEventAttendeeR {}) _ = return Authorized
     
     isAuthorized DocsR _ = setUltDestCurrent >> return Authorized
     
@@ -254,8 +257,6 @@ instance Yesod App where
     isAuthorized (DataR (UserCardNewFieldR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardDeleR _ _)) _ = isAdmin
     
-    
-
     isAuthorized (DataR (CardQrImageR _)) _ = return Authorized
 
     isAuthorized (DataR DataEventsR) _ = setUltDestCurrent >> isAdmin
@@ -271,6 +272,8 @@ instance Yesod App where
     isAuthorized (DataR (DataEventAttendeeR _ _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeNewR _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeDeleR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventAttendeeNotifyR _ _)) _ = isAdmin
+    
 
     isAuthorized (DataR (DataEventCalendarR _)) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventsR _ _)) _ = isAdmin
@@ -280,8 +283,7 @@ instance Yesod App where
     isAuthorized (DataR (DataEventCalendarEventDeleR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarScannerR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarRegistrationR {})) _ = isAdmin
-    
-    
+        
     isAuthorized (DataR (DataEventCalendarEventAttendeesR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventAttendeeR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventAttendeeDeleR {})) _ = isAdmin
@@ -363,6 +365,13 @@ getPwdResetR = do
     defaultLayout $ do
         setTitleI MsgRestoreLogin
         $(widgetFile "auth/restore")
+
+
+getServiceWorkerR :: Handler TypedContent
+getServiceWorkerR = do
+    rndr <- getUrlRenderParams
+    -- msgr <- getMessageRender
+    return $ TypedContent typeJavascript $ toContent $ $(juliusFile "static/js/sw.julius") rndr
 
 
 -- How to run database actions.

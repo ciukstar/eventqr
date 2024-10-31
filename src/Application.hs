@@ -52,19 +52,20 @@ import Handler.Common (getFaviconR, getRobotsR)
 import Handler.Docs ( getDocsR )
 
 import Handler.Home
-    ( getHomeR, getFetchR, getUpcomingEventR
-    , getUpcomingEventScannerR
-    , getUpcomingEventRegistrationR, postUpcomingEventRegistrationR
-    , getUpcomingEventAttendeesR, getUpcomingEventAttendeeR
+    ( getHomeR, getFetchR, getEventR
+    , getEventScannerR
+    , getEventRegistrationR, postEventRegistrationR
+    , getEventAttendeesR, getEventAttendeeR
     , getScanQrR
     , getAttendeeRegistrationR, postAttendeeRegistrationR
-    , getEventsSearchR
+    , getApiEventsR
     )
 
 import Handler.Calendar
-    ( getCalendarR, getEventsR, getEventR, getEventAttendeesR
-    , getEventAttendeeR
-    , getEventScannerR, getEventRegistrationR, postEventRegistrationR
+    ( getCalendarR, getCalendarEventsR, getCalendarEventR, getCalendarEventAttendeesR
+    , getCalendarEventAttendeeR
+    , getCalendarEventScannerR
+    , getCalendarEventRegistrationR, postCalendarEventRegistrationR
     )
 
 import Handler.Catalogue
@@ -85,6 +86,7 @@ import Handler.Catalogue
   , postDataEventCalendarEventDeleR
   , getDataEventCalendarScannerR
   , getDataEventCalendarRegistrationR, postDataEventCalendarRegistrationR
+  , postDataEventAttendeeNotifyR
   )
 
 import Handler.Cards
@@ -170,7 +172,6 @@ makeApplication foundation = do
         ( withHeader ("Service-Worker-Allowed","/")
           . gzip def { gzipFiles = GzipCompress }
         ) appPlain
-    -- return $ logWare $ defaultMiddlewaresNoLogging appPlain
 
 withHeader :: Header -> Middleware
 withHeader h app req res = app req $ res . addH h
@@ -178,6 +179,7 @@ withHeader h app req res = app req $ res . addH h
 
 addH :: Header -> W.Response -> W.Response
 addH h = mapResponseHeaders (h :)
+
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation =

@@ -3,6 +3,7 @@
     text-align: center
       
     ##{idScannerVideo}
+        object-fit: cover
         display: block
-        margin: auto
-        aspect-ratio: 1
+        margin: 1rem auto
+        border-radius: 1rem

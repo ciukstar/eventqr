@@ -4,10 +4,10 @@
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a.active href=@{UpcomingEventR eid}>
+    <a.active href=@{EventR eid}>
       _{MsgDetails}
       
-    <a href=@{UpcomingEventAttendeesR eid}>
+    <a href=@{EventAttendeesR eid}>
       _{MsgAttendees}
     
   <div.padding.page.active>
@@ -37,7 +37,7 @@
           #{attendees}
 
     <p ##{idActionQrScan}>
-      <a.button.margin href=@{UpcomingEventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+      <a.button.margin href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
         <i>qr_code_scanner
         <span>_{MsgScanQrCode}
 

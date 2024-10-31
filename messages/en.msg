@@ -1,3 +1,14 @@
+EmailAddress: Email address
+Message: Message
+MessageSubject: Subject
+Header: Header
+SendEmail: Send Email
+NotificationToAttendee: Notification to attendee
+SendNotification: Send notification
+Send: Send
+ShowUserQrCode: Show user QR code
+NotifyUser: Notify user
+NotifyUserAboutUpcomingEvent: Notify user about upcoming event
 NoEventsFound: No events found
 NumberOfAttendees: Number of attendees
 UserHasNoCardsYet: The user has no cards yet
@@ -45,6 +56,7 @@ PersonalUserCards: Personal user cards
 UpcomingEvents: Upcoming events
 ScanQrCode: Scan QR code
 ScanQrCodeAndLinkToEvent: Scan the visitor's QR code and link it to the event
+ScanQrCodeAndLinkToThisEvent: Scan the visitor's QR code and link it to this event
 EventsCalendar: Events calendar
 Time: Time
 Events: Events

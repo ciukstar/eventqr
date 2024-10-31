@@ -1,7 +1,7 @@
 
 <figure ##{idFigureScanner}>
 
-  <video ##{idScannerVideo} width=250 height=250 
+  <video ##{idScannerVideo} width=203 height=203
          poster=@{StaticR img_qr_code_scanner_64dp_013048_FILL0_wght400_GRAD0_opsz48_svg}>
 
   <figcaption>

@@ -2,25 +2,25 @@
 -- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
 
 
-/events/#Day/#EventId/attendees/#AttendeeId EventAttendeeR     GET
-/events/#Day/#EventId/attendees             EventAttendeesR    GET
-/events/#Day/#EventId/register              EventRegistrationR GET POST
-/events/#Day/#EventId/scanner               EventScannerR      GET
-/events/#Day/#EventId                       EventR             GET
-/events/#Day                                EventsR            GET
-
-/events EventsSearchR GET
+/calendar/#Month/#Day/events/#EventId/attendees/#AttendeeId CalendarEventAttendeeR     GET
+/calendar/#Month/#Day/events/#EventId/attendees             CalendarEventAttendeesR    GET
+/calendar/#Month/#Day/events/#EventId/register              CalendarEventRegistrationR GET POST
+/calendar/#Month/#Day/events/#EventId/scanner               CalendarEventScannerR      GET
+/calendar/#Month/#Day/events/#EventId                       CalendarEventR             GET
+/calendar/#Month/#Day/events                                CalendarEventsR            GET
 
 /calendar/#Month CalendarR GET
 
 /scanner/attendee/register AttendeeRegistrationR GET POST
 /scanner                   ScanQrR               GET
 
-/upcoming/#EventId/attendees/#AttendeeId UpcomingEventAttendeeR     GET
-/upcoming/#EventId/attendees             UpcomingEventAttendeesR    GET
-/upcoming/#EventId/register              UpcomingEventRegistrationR GET POST
-/upcoming/#EventId/scanner               UpcomingEventScannerR      GET
-/upcoming/#EventId                       UpcomingEventR             GET
+/events/#EventId/attendees/#AttendeeId EventAttendeeR     GET
+/events/#EventId/attendees             EventAttendeesR    GET
+/events/#EventId/register              EventRegistrationR GET POST
+/events/#EventId/scanner               EventScannerR      GET
+/events/#EventId                       EventR             GET
+
+/api/events ApiEventsR GET
 
 / HomeR GET
 
@@ -31,11 +31,13 @@
 /restore PwdResetR  GET
 /lang    LangR      POST
 
+
 /static StaticR Static appStatic
 /auth   AuthR   Auth   getAuth
 
-/favicon.ico FaviconR GET
-/robots.txt RobotsR GET
+/sw.js       ServiceWorkerR GET
+/favicon.ico FaviconR       GET
+/robots.txt  RobotsR        GET
 
 
 /data DataR:
@@ -55,10 +57,11 @@
     /catalogue/#Month/calendar/#Day/events                   DataEventCalendarEventsR       GET POST
     /catalogue/#Month/calendar                               DataEventCalendarR             GET
 
-    /catalogue/#EventId/attendees/#AttendeeId/dele DataEventAttendeeDeleR POST
-    /catalogue/#EventId/attendees/new/form         DataEventAttendeeNewR  GET
-    /catalogue/#EventId/attendees/#AttendeeId      DataEventAttendeeR     GET
-    /catalogue/#EventId/attendees                  DataEventAttendeesR    GET POST
+    /catalogue/#EventId/attendees/#AttendeeId/notify DataEventAttendeeNotifyR POST
+    /catalogue/#EventId/attendees/#AttendeeId/dele   DataEventAttendeeDeleR   POST
+    /catalogue/#EventId/attendees/new/form           DataEventAttendeeNewR    GET
+    /catalogue/#EventId/attendees/#AttendeeId        DataEventAttendeeR       GET
+    /catalogue/#EventId/attendees                    DataEventAttendeesR      GET POST
 
     /catalogue/#EventId/register  DataEventRegistrationR GET POST
     /catalogue/#EventId/scanner   DataEventScannerR      GET
