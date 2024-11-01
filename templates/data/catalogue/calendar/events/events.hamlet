@@ -11,10 +11,10 @@
   $else
     $forall Entity eid (Event time name _) <- events
       <a.row.padding.wave href=@{DataR $ DataEventCalendarEventR month day eid}>
-        <div.max>
-          <h6.small>
+        <div.content.max>
+          <h6.headline.large-text>
             #{name}
-          <div>
+          <div.supporting-text.small-text>
             $with dt <- show time
               <time.full-datetime datetime=#{dt}>
                 #{dt}

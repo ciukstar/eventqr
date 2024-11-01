@@ -17,9 +17,26 @@ main
         max-height: calc(100svh - (40px + 2 * 16px))
         overflow-y: auto
 
+        a.row
+            .content
+                display: inline-grid
+            .headline
+                white-space: nowrap
+                overflow: hidden
+                text-overflow: ellipsis
+        
+
 ##{idListSearchSearchEventsResult}
     max-height: calc(100svh - (24px + 2 * 16px) - (56px + 2 * 8px))
     overflow-y: auto
+
+    a.row
+        .content
+            display: inline-grid
+        .headline
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
     
 
 ##{idButtonCloseDialogSearchEvents}

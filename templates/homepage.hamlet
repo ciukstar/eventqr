@@ -56,14 +56,15 @@ $if not (null msgs)
   <div.dialog-content>
     $forall (Entity eid (Event time name _), attendees) <- upcoming
       <a.row.padding.surface-container.wave href=@{EventR eid}>
-        <div.max>
-          <h6.small>
+        <div.content.max>
+        
+          <h6.headline.large-text>
             #{name}
-          <div>
-            $with dt <- show time
-              <time.full-datetime.small-text datetime=#{dt}>
-                #{dt}
-            <div.small-text>
+            
+          $with dt <- show time
+            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+              #{dt}
+            <div.supporting-text.small-text>
               _{MsgAttendees}: #{attendees}
 
         <i>arrow_forward_ios
@@ -80,14 +81,14 @@ $if not (null msgs)
   <div ##{idListSearchSearchEventsResult}>
     $forall (Entity eid (Event time name _), attendees) <- events
       <a.row.padding.surface-container.wave href=@{EventR eid}>
-        <div.max>
-          <h6.small>
+        <div.content.max>
+          <h6.headline.large-text>
             #{name}
             
           $with dt <- show time
-            <time.full-datetime.small-text datetime=#{dt}>
+            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
               #{dt}
-          <div.small-text>
+          <div.supporting-text.small-text>
             _{MsgAttendees}: #{attendees}
 
         <i>arrow_forward_ios

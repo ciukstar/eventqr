@@ -7,14 +7,14 @@
 
       <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
         
-      <div.max>
-        <h6.small>
+      <div.content.max>
+        <h6.headline.large-text>
           $maybe name <- uname
             #{name}
           $nothing
             #{email}
    
-        <div>
+        <div.supporting-text.small-text>
           $if admin
             <span.upper>_{MsgAdministrator}
           $else

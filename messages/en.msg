@@ -101,6 +101,7 @@ Remarks: Remarks
 StateMachineDiagram: State machine diagram
 BasicEntities: Basic entities
 NotAuthorized: Not authorized
+SignInToAccessPlease: Please sign in to access this page
 LoginToAccessPlease: Please login to access this page
 Statistics: Statistics
 Owner: Owner
@@ -171,7 +172,7 @@ NoData: No data
 NothingToShow: Nothing to show
 EmptyDataSet: Empty dataset
 AccessDeniedAdminsOnly: Only administrators have access to this page. Please log in with an administrator account
-LoginPlease: Please log in to access this page
+LoginPlease: Please log in
 Users: Users
 Email: E-mail
 ResetPassword: Reset password

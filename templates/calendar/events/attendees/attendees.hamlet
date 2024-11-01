@@ -30,15 +30,15 @@
           <a href=@{CalendarEventAttendeeR month day eid aid}>
             <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
-          <div.max>
-            <a.link.large-text href=@{CalendarEventAttendeeR month day eid aid}>
+          <div.content.max>
+            <a.headline.link.large-text href=@{CalendarEventAttendeeR month day eid aid}>
               $maybe name <- uname
                 #{name}
               $nothing
                 #{email}
-            <div.small-text>
+            <div.supporting-text.small-text>
               _{MsgRegistrationDate}
-            <div>
+            <div.supporting-text.small-text>
               $with dt <- show rdate
                 <time.full-datetime datetime=#{dt}>
                   #{dt}

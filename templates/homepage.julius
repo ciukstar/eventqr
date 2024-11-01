@@ -58,14 +58,14 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
         item.className = 'row padding surface-container wave';
 
         const content = document.createElement('div');
-        content.className = 'max';
+        content.className = 'content max';
 
         const headline = document.createElement('h6');
-        headline.className = 'small';
+        headline.className = 'headline large-text';
         headline.textContent = x.name;
 
         const supporting = document.createElement('time');
-        supporting.className = 'full-datetime small-text';
+        supporting.className = 'full-datetime supporting-text small-text';
         supporting.datetime = x.time;
         supporting.textContent = new Date(x.time).toLocaleDateString(
           navigator.language,
@@ -79,7 +79,7 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
         );
 
         const thirdLine = document.createElement('div');
-        thirdLine.className = 'small-text';
+        thirdLine.className = 'supporting-text small-text';
         thirdLine.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
 
         const end = document.createElement('i');

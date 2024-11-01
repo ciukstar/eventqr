@@ -22,12 +22,14 @@
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
-          <div.max>
-            $maybe name <- uname
-              <h6.small>#{name}
-            $nothing
-              <h6.small>#{email}
-            <div>
+          <div.content.max>
+            <h6.headline.large-text>
+              $maybe name <- uname
+                #{name}
+              $nothing
+                #{email}
+  
+            <div.supporting-text.small-text>
               $with dt <- show rdate
                 <time.full-datetime datetime=#{dt}>
                   #{dt}

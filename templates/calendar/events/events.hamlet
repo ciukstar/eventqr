@@ -11,14 +11,14 @@
   $else
     $forall (Entity eid (Event time name _), attendees) <- events
       <a.row.padding.wave href=@{CalendarEventR month day eid}>
-        <div.max>
-          <h6.small>
+        <div.content.max>
+          <h6.headline.large-text>
             #{name}
-          <div.small-text>
+          <div.supporting-text.small-text>
             $with dt <- show time
               <time.full-datetime datetime=#{dt}>
                 #{dt}
-          <div.small-text>
+          <div.supporting-text.small-text>
             _{MsgAttendees}: #{attendees}
 
         <i>arrow_forward_ios

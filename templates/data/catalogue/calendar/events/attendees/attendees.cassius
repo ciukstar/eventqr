@@ -1,6 +1,14 @@
 
 main
 
+    a.row
+        .content
+            display: inline-grid
+        .headline
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
+
     .page
         dialog
         

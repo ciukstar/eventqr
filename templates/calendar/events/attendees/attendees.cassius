@@ -6,3 +6,12 @@ main
         
             figure
                 text-align: center
+
+        div.row
+          .content
+              display: inline-grid
+          a.headline
+              display: inline-block
+              white-space: nowrap
+              overflow: hidden
+              text-overflow: ellipsis

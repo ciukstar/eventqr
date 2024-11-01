@@ -3,7 +3,7 @@
 
 <main.responsive>
 
-  <h5.small.margin.padding>
+  <h6.small.margin>
     #{msg}.
   
   <a.button href=@{AuthR LoginR} role=button>
@@ -11,5 +11,7 @@
 
   <p>_{MsgOr}
 
-  <a.button.border.transparent href=@{HomeR} role=button>
+  <a.link href=@{HomeR}>
     _{MsgBackToHomepage}
+    
+  ^{widgetSnackbar msgs}

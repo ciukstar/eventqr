@@ -341,6 +341,7 @@ instance Yesod App where
         provideRep $ defaultLayout $ do
             setTitleI MsgPermissionDenied
             msgr <- getMessageRender
+            msgs <- getMessages
             idOverlay <- newIdent
             $(widgetFile "error/permission-denied")
         provideRep $ do
@@ -439,7 +440,7 @@ isAdmin = do
     case user of
         Just (Entity _ (User _ _ _ True)) -> return Authorized
         Just (Entity _ (User _ _ _ False)) -> unauthorizedI MsgAccessDeniedAdminsOnly
-        Nothing -> unauthorizedI MsgLoginPlease
+        Nothing -> unauthorizedI MsgSignInToAccessPlease
 
 
 isAdministrator :: Handler Bool
