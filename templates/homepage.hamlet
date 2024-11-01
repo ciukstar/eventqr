@@ -83,12 +83,12 @@ $if not (null msgs)
         <div.max>
           <h6.small>
             #{name}
-          <div>
-            $with dt <- show time
-              <time.full-datetime.small-text datetime=#{dt}>
-                #{dt}
-            <div.small-text>
-              _{MsgAttendees}: #{attendees}
+            
+          $with dt <- show time
+            <time.full-datetime.small-text datetime=#{dt}>
+              #{dt}
+          <div.small-text>
+            _{MsgAttendees}: #{attendees}
 
         <i>arrow_forward_ios
 

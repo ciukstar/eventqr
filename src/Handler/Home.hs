@@ -33,7 +33,7 @@ import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
 import Database.Esqueleto.Experimental
     ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
     , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
-    , innerJoin, on, orderBy, asc, subSelectCount, like, upper_, limit
+    , innerJoin, on, orderBy, asc, subSelectCount, like, upper_, limit, lower_
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -114,8 +114,8 @@ getApiEventsR = do
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
                 
         case query of
-          Just q -> where_ $ ( upper_ (x ^. EventName) `like` (%) ++. upper_ (val q) ++. (%) )
-              ||. ( upper_ (x ^. EventDescr) `like` (%) ++. upper_ (val (Textarea q)) ++. (%) )
+          Just q -> where_ $ ( lower_ (x ^. EventName) `like` ((%) ++. lower_ (val q) ++. (%)) )
+              ||. ( lower_ (x ^. EventDescr) `like` ((%) ++. lower_ (val (Textarea q)) ++. (%)) )
           Nothing -> limit 100
 
         return (x,attendees) )

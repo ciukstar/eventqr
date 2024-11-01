@@ -45,8 +45,8 @@ const listSearch = document.getElementById(#{idListSearchSearchEventsResult});
 document.getElementById(#{idInputSearchEvents}).addEventListener('input', debounce( function (e) {
 
   listSearch.replaceChildren(progress());
-
-  fetch(`@{ApiEventsR}?q=${e.target.value}`,{
+  
+  fetch(new URL(`@{ApiEventsR}?q=${e.target.value}`).href,{
     headers: {'Accept': 'application/json'}
   }).then(data => data.json()).then(function (events) {
 
@@ -55,13 +55,13 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
       listSearch.replaceChildren( ... events.flatMap(([x,attendees]) => {
         const item = document.createElement('a');
         item.href = `/events/${x.id}`;
-        item.className = 'row padding wave';
+        item.className = 'row padding surface-container wave';
 
         const content = document.createElement('div');
         content.className = 'max';
 
-        const headline = document.createElement('div');
-        headline.className = 'large-text';
+        const headline = document.createElement('h6');
+        headline.className = 'small';
         headline.textContent = x.name;
 
         const supporting = document.createElement('time');

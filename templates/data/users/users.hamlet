@@ -3,15 +3,16 @@
 
 <main.responsive.no-padding>
   $forall Entity uid (User email _ uname admin) <- users
-    <a.row.padding.surface-container.wave href=@{DataR $ UserR uid}>
+    <a.row.padding.wave href=@{DataR $ UserR uid}>
 
       <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
         
       <div.max>
-        $maybe name <- uname
-          <h6.small>#{name}
-        $nothing
-          <h6.small>#{email}
+        <h6.small>
+          $maybe name <- uname
+            #{name}
+          $nothing
+            #{email}
    
         <div>
           $if admin
