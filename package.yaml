@@ -59,12 +59,10 @@ dependencies:
 - blaze-markup
 - blaze-html
 - JuicyPixels
-- lucid-svg
-- diagrams-qrcode
 - qrcode-core
 - qrcode-juicypixels
-- diagrams-svg
-- diagrams-lib
+- web-push
+- http-types
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

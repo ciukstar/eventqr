@@ -26,12 +26,19 @@ module Handler.Catalogue
 
 
 import Control.Applicative ((<|>))
+import Control.Lens ((.~), (?~))
+import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 
+import Data.Aeson (object, (.=), Value (String))
+import Data.Either (isRight)
+import qualified Data.List as L (find, length)
 import Data.Map (Map, fromListWith)
 import qualified Data.Map as M (lookup, foldr)
-import Data.Maybe (fromMaybe)
-import qualified Data.List as L (find, length)
+import Data.Maybe (fromMaybe, isJust)
+import Data.Function ((&))
+import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import Data.Time.Calendar
     ( Day, addDays, toGregorian, weekFirstDay, DayOfWeek (Monday)
     , DayPeriod (periodFirstDay)
@@ -54,8 +61,8 @@ import Database.Persist
 import Database.Persist.Sql (toSqlKey)
 
 import Foundation
-    ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
-    , Route (DataR)
+    ( App (appSettings, appHttpManager), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
+    , Route (DataR, StaticR, EventR, EventPosterR)
     , DataR
       ( DataEventR, DataEventAttendeesR, DataEventsR, UserPhotoR, CardQrImageR
       , DataEventNewR, DataEventEditR, DataEventDeleR, DataEventAttendeeNewR
@@ -82,8 +89,8 @@ import Foundation
       , MsgUserSuccessfullyRegisteredForEvent, MsgScanAgain, MsgRegister
       , MsgConfirmUserRegistrationForEventPlease, MsgNotifyUserAboutUpcomingEvent
       , MsgScanQrCodeAndLinkToThisEvent, MsgNotifyUser, MsgShowUserQrCode
-      , MsgNotificationToAttendee, MsgSend, MsgSendNotification, MsgSendEmail
-      , MsgHeader, MsgMessage, MsgEmail, MsgEmailAddress
+      , MsgSend, MsgSendNotification, MsgSendEmail, MsgHeader, MsgMessage, MsgEmail
+      , MsgEmailAddress, MsgNotificationSentToSubscribersN, MsgSendPushNotification, MsgItLooksLikeUserNotSubscribed, MsgItLooksLikeUserNotSubscribedToPushNotifications
       )
     )
 
@@ -95,22 +102,34 @@ import Model
     , CardId, Card (Card)
     , User (User, userEmail)
     , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
+    , PushSubscription (PushSubscription)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
-      , UserId, UserName, AttendeeId
+      , UserId, UserName, AttendeeId, PushSubscriptionUser
       )
     )
+    
+import Network.HTTP.Types.URI (extractPath)
 
-import Settings (widgetFile, AppSettings (appTimeZone))
+import Settings (widgetFile, AppSettings (appTimeZone, appVAPIDKeys))
+import Settings.StaticFiles (img_logo_svg)
 
+import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Hamlet (Html)
 import Text.Julius (julius, RawJS (rawJS))
 
+import Web.WebPush
+    ( sendPushNotification, mkPushNotification, pushMessage, pushSenderEmail
+    , pushExpireInSeconds, pushTopic, pushUrgency, PushTopic (PushTopic)
+    , PushUrgency (PushUrgencyHigh)
+    )
+
+import Yesod.Auth (maybeAuth)
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , whamlet, redirect, addMessageI, SomeMessage (SomeMessage), getYesod
     , MonadHandler (liftHandler), handlerToWidget, YesodRequest (reqGetParams)
-    , getRequest, toHtml, ToWidget (toWidget)
+    , getRequest, toHtml, ToWidget (toWidget), getUrlRender
     )
 import Yesod.Form.Fields
     ( textField, textareaField, radioField, optionsPairs
@@ -124,7 +143,6 @@ import Yesod.Form.Types
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
-import Data.Text (Text)
 
 
 postDataEventCalendarEventAttendeeDeleR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
@@ -458,9 +476,46 @@ postDataEventAttendeeNotifyR eid aid = do
     (fw0,et0) <- generateFormPost formAttendeeRemove
     ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
 
+    rndr <- getUrlRender
     case fr1 of
-      FormSuccess ((subject, message),((True,Just email), True)) -> undefined
-      _otherwise -> do    
+      FormSuccess ((subject, message),((True, True),(True,Just email))) -> undefined
+      FormSuccess ((subject, message),((True,True), (False,_))) -> do
+          vapidKeys <- appVAPIDKeys . appSettings <$> getYesod
+          
+          user <- maybeAuth
+          case (vapidKeys,user) of
+            (Just vapid,Just publisher) -> do
+                
+                subscriptions <- runDB $ select $ do
+                    x <- from $ table @PushSubscription
+                    return x
+
+                let expath = decodeUtf8 . extractPath . encodeUtf8 . rndr
+                manager <- appHttpManager <$> getYesod
+
+                let topic = "EventQrNotification"
+
+                results <- forM subscriptions $ \(Entity _ (PushSubscription _ endpoint p256dh auth)) -> do                    
+                    let notification = mkPushNotification endpoint p256dh auth
+                            & pushMessage .~ object
+                                [ "title" .= subject
+                                , "icon" .= expath (StaticR img_logo_svg)
+                                , "image" .= expath (EventPosterR eid)
+                                , "body" .= renderHtml message
+                                , "messageType" .= topic
+                                , "eventHref" .= expath (EventR eid)
+                                ]
+                            & pushSenderEmail .~ userEmail (entityVal publisher)
+                            & pushExpireInSeconds .~ 30 * 60
+                            & pushTopic ?~ PushTopic topic
+                            & pushUrgency ?~ PushUrgencyHigh
+
+                    sendPushNotification vapid manager notification
+
+                addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
+                redirect $ DataR $ DataEventAttendeeR eid aid
+          
+      _otherwise -> do
           msgr <- getMessageRender
           msgs <- getMessages
           defaultLayout $ do
@@ -511,7 +566,8 @@ getDataEventAttendeeR eid aid = do
         $(widgetFile "data/catalogue/attendees/attendee")
 
 
-formAttendeeNotify :: Maybe (Entity Event, Entity User) -> Form ((Text, Html),((Bool,Maybe Text),Bool))
+formAttendeeNotify :: Maybe (Entity Event, Entity User)
+                   -> Form ((Text, Html),((Bool,Bool),(Bool,Maybe Text)))
 formAttendeeNotify event extra = do
     (subjectR, subjectV) <- mreq textField FieldSettings
         { fsLabel = SomeMessage MsgHeader 
@@ -522,6 +578,24 @@ formAttendeeNotify event extra = do
         { fsLabel = SomeMessage MsgMessage
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (toHtml . eventDescr . entityVal . fst <$> event)
+
+    subscribed <- case event of
+      Nothing -> return False
+      Just (_,Entity uid _) -> liftHandler $ (isJust <$>) $ runDB $ selectOne $ do
+          x <- from $ table @PushSubscription
+          where_ $ x ^. PushSubscriptionUser ==. val uid
+          return x
+        
+    (pushNotifR, pushNotifV) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgSendPushNotification
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = [("disabled","") | not subscribed]
+        } (pure subscribed)
+        
+    (sendNotifR, sendNotifV) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgSendNotification
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (pure True)
         
     (sendEmailR, sendEmailV) <- mreq checkBoxField FieldSettings
         { fsLabel = SomeMessage MsgSendEmail
@@ -532,17 +606,13 @@ formAttendeeNotify event extra = do
         { fsLabel = SomeMessage MsgEmail 
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (pure . userEmail . entityVal . snd <$> event)
-        
-    (sendNotifR, sendNotifV) <- mreq checkBoxField FieldSettings
-        { fsLabel = SomeMessage MsgSendNotification
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
-        } (pure True)
 
     let open = case sendEmailR of
           FormSuccess True -> True
           _otherwise -> False
 
-    let r = (,) <$> ((,) <$> subjectR <*> messageR) <*> ((,) <$> ((,) <$> sendEmailR <*> emailR) <*> sendNotifR)
+    let r = (,) <$> ((,) <$> subjectR <*> messageR)
+            <*> ((,) <$> ((,) <$> pushNotifR <*> sendNotifR) <*> ((,) <$> sendEmailR <*> emailR))
     let w = do
             toWidget [julius|
                    document.getElementById(#{fvId sendEmailV}).addEventListener('change', function (e) {
@@ -558,6 +628,12 @@ formAttendeeNotify event extra = do
                     ^{md3widget subjectV}
                     ^{md3textareaWidget messageV}
                       
+                    ^{md3checkboxWidget pushNotifV}
+                    $if not subscribed
+                      <br>
+                      <label.error-text for=#{fvId pushNotifV} style="display:inline-block;line-height:1">
+                        _{MsgItLooksLikeUserNotSubscribedToPushNotifications}
+                    <br>
                     ^{md3checkboxWidget sendNotifV}
                     <br>
                     ^{md3checkboxWidget sendEmailV}

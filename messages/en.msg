@@ -1,3 +1,20 @@
+Overview: Overview
+UseCaseDiagram: Use Case Diagram
+ReadMessage: Read
+DismissNotification: Dismiss
+EnableCameraPlease: Please enable the camera in your browser settings
+CameraWasTurnedOff: It looks like the camera was turned off
+EnableNotificationsPlease: Please enable notifications in your browser settings
+NotificationsHaveBeenDisabled: It looks like notifications have been disabled
+UnsubscribeSuccessful: Unsubscribe was successful
+SubscriptionSuccessful: Subscription successful
+VapidNotInitializedProperly: VAPID was not initialized properly
+SubscribeToPushNotifications: Subscribe to push notifications
+AnotherAccountAccessProhibited: Access to another user's account is prohibited
+ItLooksLikeUserNotSubscribedToPushNotifications: It looks like the user is not subscribed to push notifications
+ItLooksLikeUserNotSubscribed: It looks like the user is not subscribed
+SendPushNotification: Send push notification
+NotificationSentToSubscribersN n@Int: Notification sent to #{show n} subscribers
 EmailAddress: Email address
 Message: Message
 MessageSubject: Subject
@@ -184,7 +201,8 @@ SignIn: Sign in
 Home: Home
 AppName: EventQr
 
-Doc001 appname@Text href@Text: The web application <a class="link" href=#{href} target=_blank>#{appname}</a> registers users for events.
+Doc000: Event and Attendance Management
+Doc001 appname@Text href@Text: <a class="link" href=#{href} target=_blank>#{appname}</a> allows managers to register events, notify users about upcoming events and track attendance.
 Doc002 href@Text: <a class="link" href=#{href} target=_blank>Project repository</a> on GitHub.
 Doc003 href@Text: Please note that the application currently running is a demo application. Any actions are allowed and encouraged. <a class="link" href=#{href} target=_blank>Report issues</a> on GitHub.
 Doc005: Integration with external APIs

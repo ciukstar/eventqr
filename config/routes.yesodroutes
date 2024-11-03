@@ -18,6 +18,7 @@
 /events/#EventId/attendees             EventAttendeesR    GET
 /events/#EventId/register              EventRegistrationR GET POST
 /events/#EventId/scanner               EventScannerR      GET
+/events/#EventId/poster                EventPosterR       GET
 /events/#EventId                       EventR             GET
 
 /api/events ApiEventsR GET
@@ -46,7 +47,6 @@
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/dele DataEventCalendarEventAttendeeDeleR  POST
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId      DataEventCalendarEventAttendeeR      GET
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees                  DataEventCalendarEventAttendeesR     GET
-
 
     /catalogue/#Month/calendar/#Day/events/#EventId/register DataEventCalendarRegistrationR GET POST
     /catalogue/#Month/calendar/#Day/events/#EventId/scanner  DataEventCalendarScannerR      GET
@@ -86,5 +86,11 @@
     /users/new/form     UserNewR  GET
     /users/#UserId      UserR     GET POST
     /users              UsersR    GET POST
+    
+    /users/#UserId/subscriptions UserSubscriptionsR POST
+    
+    /users/#UserId/settings UserSettingsR GET
+    /users/#UserId/photo    UserPhotoR    GET
 
-    /users/#UserId/photo UserPhotoR GET
+     
+    

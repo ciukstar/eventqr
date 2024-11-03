@@ -8,8 +8,7 @@
 
 module Handler.Home
   ( getHomeR, getFetchR
-  , getEventR
-  , getEventScannerR
+  , getEventR, getEventPosterR, getEventScannerR
   , getEventRegistrationR, postEventRegistrationR
   , getEventAttendeesR
   , getEventAttendeeR
@@ -33,13 +32,13 @@ import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
 import Database.Esqueleto.Experimental
     ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
     , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
-    , innerJoin, on, orderBy, asc, subSelectCount, like, upper_, limit, lower_
+    , innerJoin, on, orderBy, asc, subSelectCount, like, limit, lower_
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
 
 import Foundation
-    ( Handler, Form, widgetSnackbar, widgetMainMenu, widgetTopbar, widgetScanner
+    ( Handler, Form, widgetSnackbar, widgetTopbar, widgetScanner
     , Route
       ( CalendarR, HomeR, EventR, EventRegistrationR
       , ScanQrR, AttendeeRegistrationR, EventAttendeesR
@@ -70,8 +69,8 @@ import Model
     , Info (Info)
     , EntityField
       ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
-      , AttendeeId, InfoCard, InfoId, EventName, EventDescr
-      )
+      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent
+      ), Poster (Poster)
     )
 
 import Network.Wreq (get)
@@ -83,9 +82,9 @@ import Text.Hamlet (Html)
 import Text.Julius (rawJS)
 
 import Yesod.Core
-    ( TypedContent, Yesod(defaultLayout), getMessages, selectRep, provideJson
+    ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep, provideJson
     , getMessageRender, newIdent, whamlet, addMessageI, redirect, handlerToWidget
-    , MonadHandler (liftHandler)
+    , MonadHandler (liftHandler), notFound, ToContent (toContent)
     )
 import Yesod.Core.Widget (setTitleI)
 import Yesod.Form.Input (runInputGet, ireq, iopt)
@@ -98,6 +97,7 @@ import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Data.Text.Encoding (encodeUtf8)
 
 
 getApiEventsR :: Handler TypedContent
@@ -422,9 +422,19 @@ getHomeR = do
         idInputSearchEvents <- newIdent
 
         idButtonQrScanner <- newIdent
-        idDialogMainMenu <- newIdent
 
         $(widgetFile "homepage")
+
+
+getEventPosterR :: EventId -> Handler TypedContent
+getEventPosterR eid = do
+    photo <- runDB $ selectOne $ do
+        x <- from $ table @Poster
+        where_ $ x ^. PosterEvent ==. val eid
+        return x
+    case photo of
+      Just (Entity _ (Poster _ mime bs _)) -> return $ TypedContent (encodeUtf8 mime) $ toContent bs
+      Nothing -> notFound
 
 
 getFetchR :: Handler TypedContent

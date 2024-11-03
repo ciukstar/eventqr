@@ -39,10 +39,6 @@ $if not (null msgs)
   <a ##{idButtonQrScanner} href=@{ScanQrR} title=_{MsgScanQrCode}>
     <i>qr_code_scanner
     <span>_{MsgScan}
-    
-
-
-^{widgetMainMenu idOverlay idDialogMainMenu}
 
 
 <dialog.bottom.no-padding ##{idDialogUpcomingEvents}>

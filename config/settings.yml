@@ -43,5 +43,7 @@ connection-pool:
 
 time-zone: "_env:YESOD_TIME_ZONE:'+00:00'"
 
+vapid-triplet: "_env:YESOD_VAPID_TRIPLET:'(privateNumber,publicCoordX,publicCoordY)'"
+
 copyright: Insert copyright statement here
 #analytics: UA-YOURCODE

@@ -1,3 +1,20 @@
+Overview: Обзор
+UseCaseDiagram: Диаграмма вариантов использования
+ReadMessage: Прочитать
+DismissNotification: Закрыть
+EnableCameraPlease: Пожалуйста, включите камеру в настройках вашего браузера
+CameraWasTurnedOff: Похоже, камера была выключена
+EnableNotificationsPlease: Пожалуйста, включите уведомления в настройках вашего браузера
+NotificationsHaveBeenDisabled: Похоже, уведомления отключены
+UnsubscribeSuccessful: Отписка прошла успешно
+SubscriptionSuccessful: Подписка прошла успешно
+VapidNotInitializedProperly: VAPID не был инициализирован должным образом
+SubscribeToPushNotifications: Подписаться на push-уведомления
+AnotherAccountAccessProhibited: Доступ к учетной записи другого пользователя запрещен
+ItLooksLikeUserNotSubscribedToPushNotifications: Похоже, пользователь не подписан на push-уведомления
+ItLooksLikeUserNotSubscribed: Похоже, пользователь не подписан
+SendPushNotification: Отправить push-уведомление
+NotificationSentToSubscribersN n: Уведомление отправлено #{show n} подписчикам
 EmailAddress: Адрес электронной почты
 Message: Сообщение
 MessageSubject: Тема
@@ -184,7 +201,8 @@ SignIn: Войти
 Home: Главная
 AppName: EventQr
 
-Doc001 appname href: Веб-приложение <a class="link" href=#{href} target=_blank>#{appname}</a> регистрирует пользователей на события.
+Doc000: Управление мероприятиями и посещаемостью
+Doc001 appname href: <a class="link" href=#{href} target=_blank>#{appname}</a> позволяет менеджерам регистрировать мероприятия, уведомлять пользователей о предстоящих мероприятиях и отслеживать посещаемость.
 Doc002 href: <a class="link" href=#{href} target=_blank>Репозиторий проекта</a> на GitHub.
 Doc003 href: Обратите внимание, что приложение, работающее в данный момент, является демонстрационным. Любые действия разрешены и поощряются. <a class="link" href=#{href} target=_blank>Сообщайте об ошибках</a> на GitHub.
 Doc005: Интеграция с внешними API

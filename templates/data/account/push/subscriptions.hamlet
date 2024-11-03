@@ -1,0 +1,10 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgSettings) idOverlay Nothing Nothing}
+
+<main.responsive>
+
+  <form method=post action=@{DataR $ UserSubscriptionsR uid} enctype=#{et} ##{idFormSubscription}>
+    ^{fw}
+
+      
+  ^{widgetSnackbar msgs}

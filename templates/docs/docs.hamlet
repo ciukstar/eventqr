@@ -3,9 +3,19 @@
 
 <main.responsive>
 
-  <h2.small>_{MsgAppName}
-  <p>
-    #{t $ MsgDoc001 (m MsgAppName) (r HomeR)}
+  <section>
+    <h2.small>_{MsgAppName}
+    <p>
+      _{MsgDoc000}
+
+      <h3.small>
+        _{MsgOverview}
+      <p.md-typescale-body-large>
+        #{t $ MsgDoc001 (m MsgAppName) (r HomeR)}
+
+  <section>
+    <h3.small>_{MsgUseCaseDiagram}
+    <img src=@{StaticR img_EventQr_UCD_svg} alt=_{MsgUseCaseDiagram} loading=lazy>
 
   <section>
     <h3.small>_{MsgEntityRelationshipDiagram}

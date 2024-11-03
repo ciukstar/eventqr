@@ -35,7 +35,8 @@ import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
                                     widgetFileReload)
 import Data.Time.LocalTime (TimeZone, utc)
-import Text.Read (readMaybe)
+import Text.Read (readMaybe, read)
+import Web.WebPush (VAPIDKeysMinDetails (VAPIDKeysMinDetails), VAPIDKeys, readVAPIDKeys)
 
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
@@ -74,8 +75,10 @@ data AppSettings = AppSettings
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
     
-    , appTimeZone              :: TimeZone
+    , appTimeZone    :: TimeZone
     -- ^ Time Zone
+    , appVAPIDKeys   :: Maybe VAPIDKeys
+    -- ^ VAPID keys
 
     , appAuthDummyLogin         :: Bool
     -- ^ Indicate if auth dummy login should be enabled.
@@ -118,11 +121,16 @@ instance FromJSON AppSettings where
         appCopyright              <- o .:  "copyright"
         appAnalytics              <- o .:? "analytics"
                                      
-        appTimeZone               <- fromMaybe utc . readMaybe <$> o .: "time-zone"
+        appTimeZone  <- fromMaybe utc . readMaybe <$> o .: "time-zone"
+                        
+        appVAPIDKeys <- ((readVAPIDKeys . (\(a,b,c) -> VAPIDKeysMinDetails a b c) <$>) . readMaybe =<<) <$> o .:? "vapid-triplet"
 
-        appAuthDummyLogin         <- o .:? "auth-dummy-login"      .!= dev
+        appAuthDummyLogin <- o .:? "auth-dummy-login"      .!= dev
 
         return AppSettings {..}
+
+      
+
 
 -- | Settings for 'widgetFile', such as which template languages to support and
 -- default Hamlet settings.

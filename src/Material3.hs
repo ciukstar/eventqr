@@ -8,6 +8,7 @@ module Material3
   , md3textareaWidget
   , md3selectWidget
   , md3checkboxWidget
+  , md3switchWidget
   , daytimeLocalField
   ) where
 
@@ -27,6 +28,23 @@ import Yesod.Form.Types
     ( Field (fieldView)
     , FieldView (fvErrors, fvInput, fvLabel, fvRequired)
     )
+
+
+md3switchWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()
+md3switchWidget v = [whamlet|
+  <div.field.middle-align :isJust (fvErrors v):.invalid>
+    <nav>          
+      <label.switch>
+        ^{fvInput v}
+        <span style="padding-left:1rem">
+          #{fvLabel v}
+
+      $maybe err <- fvErrors v
+        <span.error>#{err}
+|]
+
+
+
 
 
 md3checkboxWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()

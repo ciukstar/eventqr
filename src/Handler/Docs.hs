@@ -14,13 +14,13 @@ import Foundation
     , Route (HomeR, StaticR)
     , AppMessage
       ( MsgAppName, MsgDocumentation, MsgIssueTracking, MsgSourceCode
-      , MsgEntityRelationshipDiagram
-      , MsgDoc001, MsgDoc002, MsgDoc003
+      , MsgOverview, MsgUseCaseDiagram, MsgEntityRelationshipDiagram
+      , MsgDoc000, MsgDoc001, MsgDoc002, MsgDoc003
       )
     )
     
 import Settings (widgetFile)
-import Settings.StaticFiles (img_EventQr_ERD_svg)
+import Settings.StaticFiles (img_EventQr_UCD_svg, img_EventQr_ERD_svg)
 
 import Text.Blaze.Html (preEscapedToHtml)
 import Text.Hamlet (Html)

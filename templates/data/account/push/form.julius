@@ -1,0 +1,47 @@
+
+
+document.getElementById(#{fvId view}).addEventListener('change', function (e) {
+
+  if (e.target.checked) {
+    Notification.requestPermission().then(function (permission) {
+      
+      if (permission === 'granted') {
+        
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.pushManager.getSubscription().then(function (subscription) {
+
+            if (subscription) {
+
+              const s = subscription.toJSON();
+              document.getElementById(#{fvId endpointV}).value = s.endpoint;
+              document.getElementById(#{fvId p256dhV}).value = s.keys.p256dh;
+              document.getElementById(#{fvId authV}).value = s.keys.auth;
+              e.target.form.submit();
+
+            } else {
+
+              registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: new Uint8Array(#{toJSON applicationServerKey})
+              }).then((subscription) => {
+                const s = subscription.toJSON();
+                document.getElementById(#{fvId endpointV}).value = s.endpoint;
+                document.getElementById(#{fvId p256dhV}).value = s.keys.p256dh;
+                document.getElementById(#{fvId authV}).value = s.keys.auth;
+                e.target.form.submit();
+              });
+
+            }
+
+          });
+        });
+
+      }
+    });
+
+  } else {
+
+    e.target.form.submit();
+
+  }
+});

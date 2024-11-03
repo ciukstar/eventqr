@@ -79,9 +79,12 @@ type Form x = Html -> MForm (HandlerFor App) (FormResult x, Widget)
 type DB a = forall (m :: Type -> Type).
     (MonadUnliftIO m) => ReaderT SqlBackend m a
 
+
 widgetScanner :: Route App -> Widget
 widgetScanner callback = do
+    msgr <- getMessageRender
     idFigureScanner <- newIdent
+    idFigcaptionLabelSanner <- newIdent
     let idScannerVideo = "scannervideo" :: Text    
     addScriptAttrs (StaticR js_scanner_js) [("type","module")]
     $(widgetFile "widgets/scanner")
@@ -211,6 +214,7 @@ instance Yesod App where
 
     isAuthorized HomeR _ = setUltDestCurrent >> return Authorized
     isAuthorized (EventR _) _ = return Authorized
+    isAuthorized (EventPosterR _) _ = return Authorized
     isAuthorized (EventScannerR _) _ = return Authorized
     isAuthorized (EventAttendeesR _) _ = return Authorized
     isAuthorized (EventAttendeeR _ _) _ = return Authorized
@@ -218,8 +222,7 @@ instance Yesod App where
     isAuthorized ScanQrR _ = return Authorized
     isAuthorized AttendeeRegistrationR _ = return Authorized
     
-    isAuthorized ApiEventsR _ = return Authorized    
-        
+    isAuthorized ApiEventsR _ = return Authorized        
     
     isAuthorized (CalendarR _) _ = return Authorized
     isAuthorized (CalendarEventsR _ _) _ = return Authorized
@@ -248,7 +251,9 @@ instance Yesod App where
     isAuthorized (DataR (UserR _)) _ = isAdmin
     isAuthorized (DataR UsersR) _ = setUltDestCurrent >> isAdmin
     isAuthorized (DataR (UserPhotoR _)) _ = return Authorized
-
+    isAuthorized (DataR (UserSettingsR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (UserSubscriptionsR uid)) _ = isAuthenticatedSelf uid
+    
     isAuthorized (DataR (UserCardsR _)) _ = isAdmin
     isAuthorized (DataR (UserCardR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardsNewFieldR _)) _ = isAdmin
@@ -371,7 +376,9 @@ getPwdResetR = do
 getServiceWorkerR :: Handler TypedContent
 getServiceWorkerR = do
     rndr <- getUrlRenderParams
-    -- msgr <- getMessageRender
+    msgr <- getMessageRender
+    actionDismissNotifcation <- newIdent
+    actionReadNotifcation <- newIdent
     return $ TypedContent typeJavascript $ toContent $ $(juliusFile "static/js/sw.julius") rndr
 
 
@@ -432,6 +439,15 @@ formLogin route = do
     idInputUsername <- newIdent
     idInputPassword <- newIdent
     $(widgetFile "auth/form")
+
+
+isAuthenticatedSelf :: UserId -> Handler AuthResult
+isAuthenticatedSelf uid = do
+    muid <- maybeAuthId
+    case muid of
+        Just uid' | uid == uid' -> return Authorized
+                  | otherwise -> unauthorizedI MsgAnotherAccountAccessProhibited
+        Nothing -> unauthorizedI MsgLoginPlease
 
 
 isAdmin :: Handler AuthResult

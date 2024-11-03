@@ -53,7 +53,7 @@ import Handler.Docs ( getDocsR )
 
 import Handler.Home
     ( getHomeR, getFetchR, getEventR
-    , getEventScannerR
+    , getEventPosterR, getEventScannerR
     , getEventRegistrationR, postEventRegistrationR
     , getEventAttendeesR, getEventAttendeeR
     , getScanQrR
@@ -104,7 +104,8 @@ import Handler.Users
     ( getUsersR, postUsersR
     , getUserR, postUserR
     , getUserNewR, getUserEditR, postUserDeleR
-    , getUserPhotoR
+    , getUserPhotoR, getUserSettingsR
+    , postUserSubscriptionsR
     )
 
 import System.Environment.Blank (getEnv)

@@ -5,6 +5,6 @@
          poster=@{StaticR img_qr_code_scanner_64dp_013048_FILL0_wght400_GRAD0_opsz48_svg}>
 
   <figcaption>
-    <label for=#{idScannerVideo}>
+    <label for=#{idScannerVideo} ##{idFigcaptionLabelSanner}>
       _{MsgPointYourCameraToScan}.
 

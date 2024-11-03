@@ -1,0 +1,64 @@
+
+self.addEventListener('push', (e) => {
+
+  const message = e.data.json();
+  
+  const promise = self.registration.showNotification(message.title, {
+    requireInteraction: true,
+    tag: message.messageType,
+    renotify: true,
+    icon: message.icon,
+    body: message.body,
+    image: message.image,
+    data: message,
+    actions: [ { action: #{actionDismissNotifcation}, title: #{msgr MsgDismissNotification} },
+               { action: #{actionReadNotifcation}, title: #{msgr MsgReadMessage} }
+             ]
+  });
+
+  e.waitUntil(promise);
+  
+});
+
+
+self.addEventListener('notificationclick', function (e) {
+  
+  if (e.action === #{actionReadNotifcation}) {
+    
+    e.notification.close();
+
+    const promise = self.clients.matchAll(
+      { type: 'window', includeUncontrolled: true }
+    ).then((clients) => {
+      return [clients.filter((client) => client.url === e.notification.data.eventHref), clients];
+    }).then(([targets, clients]) => {
+
+      if (targets.length > 0) {
+
+        targets[0].focus().then((client) => {
+          return client.navigate(e.notification.data.eventHref);
+        });
+
+      } else if (clients.length > 0) {
+
+        clients[0].focus().then((client) => {
+          return client.navigate(e.notification.data.eventHref);
+        });
+
+      } else {
+        
+        return self.clients.openWindow(e.notification.data.eventHref);
+        
+      }
+      
+    });
+    
+    e.waitUntil(promise);
+    
+  } else  {
+
+    e.notification.close();
+    
+  }
+  
+});

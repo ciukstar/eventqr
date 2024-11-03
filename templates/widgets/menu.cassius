@@ -1,8 +1,9 @@
 
  ##{idOverlay}
-     z-index: 1
+     z-index: 101
 
 ##{idDialogMainMenu}
+    z-index: 102
     header
         nav
             flex: 1

@@ -1,0 +1,25 @@
+
+
+navigator.permissions.query({ name: 'notifications' }).then(function (permission) {
+  if (permission.state === 'denied') {
+    document.getElementById(#{idFormSubscription}).appendChild((() => {
+      const warning = document.createElement('p');      
+      warning.className = 'error-text margin';
+
+      warning.appendChild((() => {
+        const icon = document.createElement('i');
+        icon.textContent = 'warning';
+        return icon;
+      })());
+
+      warning.appendChild((() => {
+        const msg = document.createElement('span');
+        msg.className = 'padding'
+        msg.textContent = #{msgr MsgNotificationsHaveBeenDisabled} + '. ' + #{msgr MsgEnableNotificationsPlease} + '.';
+        return msg;
+      })());
+      
+      return warning;
+    })());
+  }
+});

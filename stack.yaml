@@ -44,9 +44,8 @@ packages:
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
 extra-deps:
-- git: https://github.com/prowdsponsor/diagrams-qrcode
-  commit: 7c278eb11aa609f1330fb2b419c429e3c396c510
-- lucid-svg-0.7.2.0@sha256:ac145997d5d6976d5c77e09992b5b204d7ddb7edba3002801927ed2acc69692b,1091
+- git: https://github.com/sarthakbagaria/web-push.git
+  commit: f52808bd5cf1c9a730d1b5a1569642787a413944
 
 # Override default flag values for project packages and extra-deps
 # flags: {}

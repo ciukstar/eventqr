@@ -1,4 +1,7 @@
+
+
 navigator.serviceWorker.register('@{ServiceWorkerR}', { scope: '/' });
+
 
 function snackbar (message, className = '', timeout = 6000) {
   const snackbar = document.createElement('div');

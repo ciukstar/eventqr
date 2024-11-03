@@ -1,6 +1,17 @@
+
+[In english](https://github.com/ciukstar/eventqr/blob/master/README.md)
+
 # EventQr
 
-Веб-приложение [EventQr](https://eventqr-i4rimw5qwq-de.a.run.app) регистрирует пользователей на события.
+Управление мероприятиями и посещаемостью
+
+## Обзор
+
+[EventQr](https://eventqrru-i4rimw5qwq-de.a.run.app) позволяет менеджерам регистрировать мероприятия, уведомлять пользователей о предстоящих мероприятиях и отслеживать посещаемость.
+
+
+*Диаграмма вариантов использования*
+![Entity Relationship Diagram](static/img/EventQr_UCD.svg)
 
 
 *Диаграмма взаимосвязи сущностей*
@@ -8,4 +19,4 @@
 
 ## Демо
 
-[Нажмите здесь, чтобы увидеть демо](https://eventqr-i4rimw5qwq-de.a.run.app)
+[Нажмите здесь, чтобы увидеть демо](https://eventqrru-i4rimw5qwq-de.a.run.app)

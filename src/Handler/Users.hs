@@ -11,11 +11,14 @@ module Handler.Users
   , postUserDeleR
   , getUserEditR
   , getUserNewR
+  , getUserSettingsR
+  , postUserSubscriptionsR
   ) where
 
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 
+import Data.Aeson (toJSON)
 import Data.Maybe (isJust)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
@@ -27,53 +30,64 @@ import Database.Esqueleto.Experimental
     )
     
 import Database.Persist
-    ( Entity (Entity), entityVal, insert, insert_, upsert)
+    ( Entity (Entity), entityVal, insert, insert_, upsert, upsertBy, delete, deleteBy)
 import qualified Database.Persist as P ((=.), delete)
 
 import Foundation
-    ( Handler, Form, widgetTopbar, widgetSnackbar
-    , Route (DataR, StaticR)
+    ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar
+    , Route (DataR, StaticR, HomeR)
     , DataR
       ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
-      , UserCardsR
+      , UserCardsR, UserSettingsR, UserSubscriptionsR
       )
     , AppMessage
       ( MsgUsers, MsgPhoto, MsgUser, MsgAdministrator, MsgEmail, MsgName
       , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel, MsgYes
       , MsgNo, MsgAttribution, MsgPassword, MsgSave, MsgAlreadyExists
-      , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted
-      , MsgDetails, MsgCards
-      , MsgChangePassword
-      , MsgRecordEdited
+      , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgSettings
+      , MsgDetails, MsgCards, MsgChangePassword, MsgRecordEdited
+      , MsgSubscribeToPushNotifications, MsgVapidNotInitializedProperly
+      , MsgSubscriptionSuccessful, MsgNotificationsHaveBeenDisabled
+      , MsgEnableNotificationsPlease, MsgUnsubscribeSuccessful
       )
     )
+
+import Material3 (md3switchWidget)
     
 import Model
     ( msgSuccess, msgError
     , UserId, User(User, userName, userEmail, userPassword, userAdmin)
     , UserPhoto (UserPhoto)
+    , Unique (UniquePushSubscription)
+    , PushSubscription
+      ( PushSubscription, pushSubscriptionEndpoint, pushSubscriptionP256dh
+      , pushSubscriptionAuth
+      )
     , EntityField
       ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
-      , UserPhotoMime, UserName, UserAdmin
+      , UserPhotoMime, UserName, UserAdmin, PushSubscriptionUser
+      , PushSubscriptionEndpoint, PushSubscriptionP256dh, PushSubscriptionAuth
       )
     )
 
-import Settings (widgetFile)
+import Settings (widgetFile, AppSettings (appVAPIDKeys))
 import Settings.StaticFiles
     ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
 
 import Text.Hamlet (Html)
+
+import Web.WebPush (VAPIDKeys, vapidPublicKeyBytes)
 
 import Yesod.Auth.Email (saltPass)
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , FileInfo (fileContentType), SomeMessage (SomeMessage)
-    , MonadHandler (liftHandler), addMessageI, fileSourceByteString
+    , MonadHandler (liftHandler), addMessageI, fileSourceByteString, getYesod
     )
 import Yesod.Form.Fields
     ( emailField, textField, fileField, passwordField, htmlField
-    , checkBoxField
+    , checkBoxField, hiddenField
     )
 import Yesod.Form.Functions (generateFormPost, mreq, mopt, checkM, runFormPost)
 import Yesod.Form.Types
@@ -82,6 +96,97 @@ import Yesod.Form.Types
     , FieldView (fvErrors, fvInput, fvRequired, fvLabel, fvId )
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+
+
+postUserSubscriptionsR :: UserId -> Handler Html
+postUserSubscriptionsR uid = do
+
+    vapid <- appVAPIDKeys . appSettings <$> getYesod
+
+    case vapid of
+      Nothing -> do
+          msgr <- getMessageRender
+          defaultLayout $ do
+              setTitleI MsgSettings 
+              idOverlay <- newIdent
+              $(widgetFile "data/account/novapid")
+              
+      Just vapidKeys -> do
+
+          subscription <- runDB $ selectOne $ do
+              x <- from $ table @PushSubscription
+              where_ $ x ^. PushSubscriptionUser ==. val uid
+              return x
+
+          ((fr,_),_) <- runFormPost $ formSubscribe vapidKeys uid subscription 
+
+          case fr of
+            FormSuccess (True, ps@(PushSubscription uid' endpoint' keyP256dh' keyAuth')) -> do
+                void $ runDB $ upsertBy (UniquePushSubscription endpoint') ps
+                    [ PushSubscriptionUser P.=. uid'
+                    , PushSubscriptionP256dh P.=. keyP256dh'
+                    , PushSubscriptionAuth P.=. keyAuth'
+                    ]
+                addMessageI msgSuccess MsgSubscriptionSuccessful
+                redirect $ DataR $ UserSettingsR uid
+                
+            FormSuccess (False, PushSubscription _ endpoint' _ _) -> do
+                void $ runDB $ deleteBy (UniquePushSubscription endpoint')
+                addMessageI msgSuccess MsgUnsubscribeSuccessful
+                redirect $ DataR $ UserSettingsR uid
+
+            _otherwise -> do           
+                addMessageI msgError MsgInvalidFormData
+                redirect $ DataR $ UserSettingsR uid
+
+
+getUserSettingsR :: UserId -> Handler Html
+getUserSettingsR uid = do
+
+    vapid <- appVAPIDKeys . appSettings <$> getYesod
+
+    case vapid of
+      Nothing -> do
+          msgr <- getMessageRender
+          defaultLayout $ do
+              setTitleI MsgSettings 
+              idOverlay <- newIdent
+              $(widgetFile "data/account/novapid")
+              
+      Just vapidKeys -> do
+
+          subscription <- runDB $ selectOne $ do
+              x <- from $ table @PushSubscription
+              where_ $ x ^. PushSubscriptionUser ==. val uid
+              return x
+
+          (fw,et) <- generateFormPost $ formSubscribe vapidKeys uid subscription
+
+          msgr <- getMessageRender
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgSettings
+              idOverlay <- newIdent
+              idFormSubscription <- newIdent
+              $(widgetFile "data/account/push/subscriptions")
+
+
+formSubscribe :: VAPIDKeys -> UserId -> Maybe (Entity PushSubscription) -> Form (Bool,PushSubscription)
+formSubscribe vapidKeys uid subscription extra = do
+
+    (res,view) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgSubscribeToPushNotifications
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } ( pure (isJust subscription) )
+
+    (endpointR,endpointV) <- mreq hiddenField "" (pushSubscriptionEndpoint . entityVal <$> subscription)
+    (p256dhR,p256dhV) <- mreq hiddenField "" (pushSubscriptionP256dh . entityVal <$> subscription)
+    (authR,authV) <- mreq hiddenField "" (pushSubscriptionAuth . entityVal <$> subscription)
+
+    let applicationServerKey = vapidPublicKeyBytes vapidKeys
+    let r = (,) <$> res <*> (PushSubscription uid <$> endpointR <*> p256dhR <*> authR)
+    let w = $(widgetFile "data/account/push/form")
+    return (r,w)
 
 
 postUserDeleR :: UserId -> Handler Html

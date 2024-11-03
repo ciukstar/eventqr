@@ -16,10 +16,24 @@ Card
     qr Text
     issued UTCTime
 
+Poster
+    event EventId OnDeleteCascade
+    mime Text
+    photo ByteString
+    attribution Html Maybe
+    UniquePoster event
+
 Event json
     time UTCTime
     name Text
     descr Textarea
+
+PushSubscription
+    user UserId OnDeleteCascade
+    endpoint Text
+    p256dh Text
+    auth Text
+    UniquePushSubscription endpoint
 
 
 UserPhoto
