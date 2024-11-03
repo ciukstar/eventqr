@@ -57,6 +57,12 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
         item.href = `/events/${x.id}`;
         item.className = 'row padding surface-container wave';
 
+        const start = document.createElement('img');
+        start.className = 'large round';
+        start.setAttribute('src',`/events/${x.id}/poster`);
+        start.setAttribute('loading','lazy');
+        start.setAttribute('alt',#{msgr MsgPoster});
+
         const content = document.createElement('div');
         content.className = 'content max';
 
@@ -89,6 +95,7 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
         content.appendChild(supporting);
         content.appendChild(thirdLine);
 
+        item.appendChild(start);
         item.appendChild(content);
         item.appendChild(end);
 

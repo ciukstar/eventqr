@@ -1,3 +1,5 @@
+UploadPoster: Загрузить постер
+Poster: Плакат
 Overview: Обзор
 UseCaseDiagram: Диаграмма вариантов использования
 ReadMessage: Прочитать

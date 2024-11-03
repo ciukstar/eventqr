@@ -11,6 +11,7 @@
   $else
     $forall (Entity eid (Event time name _), attendees) <- events
       <a.row.padding.wave href=@{CalendarEventR month day eid}>
+        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
           <h6.headline.large-text>
             #{name}

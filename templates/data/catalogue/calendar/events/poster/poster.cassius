@@ -1,0 +1,9 @@
+
+main
+    .page.active
+
+        display: flex
+        flex-direction: column
+
+        figure
+          text-align: center

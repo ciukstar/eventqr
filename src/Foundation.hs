@@ -271,8 +271,11 @@ instance Yesod App where
     isAuthorized (DataR (DataEventDeleR _)) _ = isAdmin
     isAuthorized (DataR (DataEventScannerR _)) _ = isAdmin
     isAuthorized (DataR (DataEventRegistrationR _)) _ = isAdmin
+
     
-    
+    isAuthorized (DataR (DataEventPosterDeleR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventPosterR _)) _ = isAdmin
+        
     isAuthorized (DataR (DataEventAttendeesR _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeR _ _)) _ = isAdmin
     isAuthorized (DataR (DataEventAttendeeNewR _)) _ = isAdmin
@@ -288,6 +291,9 @@ instance Yesod App where
     isAuthorized (DataR (DataEventCalendarEventDeleR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarScannerR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarRegistrationR {})) _ = isAdmin
+    
+    isAuthorized (DataR (DataEventCalendarEventPosterDeleR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventPosterR {})) _ = isAdmin
         
     isAuthorized (DataR (DataEventCalendarEventAttendeesR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventAttendeeR {})) _ = isAdmin

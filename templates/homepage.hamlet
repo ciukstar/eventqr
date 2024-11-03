@@ -52,6 +52,7 @@ $if not (null msgs)
   <div.dialog-content>
     $forall (Entity eid (Event time name _), attendees) <- upcoming
       <a.row.padding.surface-container.wave href=@{EventR eid}>
+        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
         
           <h6.headline.large-text>
@@ -77,6 +78,7 @@ $if not (null msgs)
   <div ##{idListSearchSearchEventsResult}>
     $forall (Entity eid (Event time name _), attendees) <- events
       <a.row.padding.surface-container.wave href=@{EventR eid}>
+        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
           <h6.headline.large-text>
             #{name}

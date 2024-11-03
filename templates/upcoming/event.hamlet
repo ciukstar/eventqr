@@ -13,6 +13,9 @@
   <div.padding.page.active>
 
     $maybe (Entity _ (Event time name descr),attendees) <- event
+      <figure>
+        <img src=@{EventPosterR eid} height=128 loading=lazy alt=_{MsgPoster}>
+      
       <dl>
         <dt.bold.large-text>
           _{MsgName}

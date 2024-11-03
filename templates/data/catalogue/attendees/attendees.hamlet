@@ -7,6 +7,9 @@
     <a href=@{DataR $ DataEventR eid}>
       _{MsgDetails}
       
+    <a href=@{DataR $ DataEventPosterR eid}>
+      _{MsgPoster}
+      
     <a.active href=@{DataR $ DataEventAttendeesR eid}>
       _{MsgAttendees}
     

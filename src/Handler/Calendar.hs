@@ -40,7 +40,7 @@ import Foundation
     ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
     , Route
       ( CalendarEventAttendeesR, CalendarR, CalendarEventsR, CalendarEventR
-      , CalendarEventScannerR, CalendarEventRegistrationR
+      , CalendarEventScannerR, CalendarEventRegistrationR, EventPosterR
       , CalendarEventAttendeeR, HomeR, DataR
       )
     , DataR (UserPhotoR, CardQrImageR)
@@ -54,7 +54,7 @@ import Foundation
       , MsgCardNumber, MsgCard, MsgNumberOfAttendees, MsgRegistrationForEvent
       , MsgScanner, MsgRegistration, MsgUserSuccessfullyRegisteredForEvent
       , MsgScanAgain, MsgRegister, MsgCancel, MsgInvalidFormData
-      , MsgConfirmUserRegistrationForEventPlease
+      , MsgConfirmUserRegistrationForEventPlease, MsgPoster
       )
     )
     

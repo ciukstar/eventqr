@@ -1,0 +1,47 @@
+
+$maybe _ <- poster
+  ^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR month day,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) Nothing}
+$nothing
+  ^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a href=@{DataR $ DataEventCalendarEventR month day eid}>
+      _{MsgDetails}
+      
+    <a.active href=@{DataR $ DataEventCalendarEventPosterR month day eid}>
+      _{MsgPoster}
+      
+    <a href=@{DataR $ DataEventCalendarEventAttendeesR month day eid}>
+      _{MsgAttendees}
+    
+  <div.padding.page.active>
+    $maybe Entity pid (Poster eid _ _ _) <- poster
+
+      <dialog ##{idDialogDelete}>
+        <h5>_{MsgConfirmPlease}
+        <div>_{MsgDeleteAreYouSure}
+        <nav.right-align.no-space>
+          <button.transparent.link data-ui=##{idOverlay}
+            onclick="document.getElementById('#{idDialogDelete}').close()">
+            _{MsgCancel}
+          <form method=post action=@{DataR $ DataEventCalendarEventPosterDeleR month day eid pid} enctype=#{et0}>
+            ^{fw0}
+            <button.primary type=submit>
+              _{MsgDele}
+
+    <figure>
+      <img src=@{EventPosterR eid} height=128 loading=lazy alt=_{MsgPoster} ##{idImgPoster}>
+
+    <form method=post action=@{DataR $ DataEventCalendarEventPosterR month day eid} enctype=#{et} style="text-align:center">
+      ^{fw}
+      <nav.right-align>
+        <button type=submit>
+          <span>_{MsgSave}
+      
+
+  ^{widgetSnackbar msgs}
+        

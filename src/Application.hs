@@ -87,6 +87,9 @@ import Handler.Catalogue
   , getDataEventCalendarScannerR
   , getDataEventCalendarRegistrationR, postDataEventCalendarRegistrationR
   , postDataEventAttendeeNotifyR
+  , getDataEventPosterR, postDataEventPosterR, postDataEventPosterDeleR
+  , getDataEventCalendarEventPosterR, postDataEventCalendarEventPosterR
+  , postDataEventCalendarEventPosterDeleR
   )
 
 import Handler.Cards

@@ -48,6 +48,9 @@
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId      DataEventCalendarEventAttendeeR      GET
     /catalogue/#Month/calendar/#Day/events/#EventId/attendees                  DataEventCalendarEventAttendeesR     GET
 
+    /catalogue/#Month/calendar/#Day/events/#EventId/posters/#PosterId/dele DataEventCalendarEventPosterDeleR POST
+    /catalogue/#Month/calendar/#Day/events/#EventId/posters                DataEventCalendarEventPosterR     GET POST
+
     /catalogue/#Month/calendar/#Day/events/#EventId/register DataEventCalendarRegistrationR GET POST
     /catalogue/#Month/calendar/#Day/events/#EventId/scanner  DataEventCalendarScannerR      GET
     /catalogue/#Month/calendar/#Day/events/#EventId/dele     DataEventCalendarEventDeleR    POST
@@ -63,13 +66,16 @@
     /catalogue/#EventId/attendees/#AttendeeId        DataEventAttendeeR       GET
     /catalogue/#EventId/attendees                    DataEventAttendeesR      GET POST
 
-    /catalogue/#EventId/register  DataEventRegistrationR GET POST
-    /catalogue/#EventId/scanner   DataEventScannerR      GET
-    /catalogue/#EventId/dele      DataEventDeleR         POST
-    /catalogue/#EventId/edit      DataEventEditR         GET
-    /catalogue/new/form           DataEventNewR          GET
-    /catalogue/#EventId           DataEventR             GET POST
-    /catalogue                    DataEventsR            GET POST
+    /catalogue/#EventId/posters/#PosterId/dele DataEventPosterDeleR POST
+    /catalogue/#EventId/posters                DataEventPosterR     GET POST
+    
+    /catalogue/#EventId/register DataEventRegistrationR GET POST
+    /catalogue/#EventId/scanner  DataEventScannerR      GET
+    /catalogue/#EventId/dele     DataEventDeleR         POST
+    /catalogue/#EventId/edit     DataEventEditR         GET
+    /catalogue/new/form          DataEventNewR          GET
+    /catalogue/#EventId          DataEventR             GET POST
+    /catalogue                   DataEventsR            GET POST
 
     /qrcode/#CardId CardQrImageR GET
 

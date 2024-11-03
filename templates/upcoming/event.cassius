@@ -1,9 +1,14 @@
 
 main
-    .page
+    .page.active
     
         display: flex
         flex-direction: column
+        
+        figure
+            text-align: center
+            img
+                border-radius: 1rem
 
         dl
             dt + dd

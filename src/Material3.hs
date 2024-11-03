@@ -9,6 +9,7 @@ module Material3
   , md3selectWidget
   , md3checkboxWidget
   , md3switchWidget
+  , md3fileWidget
   , daytimeLocalField
   ) where
 
@@ -30,6 +31,18 @@ import Yesod.Form.Types
     )
 
 
+md3fileWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()
+md3fileWidget v = [whamlet|
+  <button.transparent.border>
+    <i>upload_file
+    <span>#{fvLabel v}
+    ^{fvInput v}
+
+  $maybe err <- fvErrors v
+    <span.error-text>#{err}
+|]
+
+
 md3switchWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()
 md3switchWidget v = [whamlet|
   <div.field.middle-align :isJust (fvErrors v):.invalid>
@@ -42,9 +55,6 @@ md3switchWidget v = [whamlet|
       $maybe err <- fvErrors v
         <span.error>#{err}
 |]
-
-
-
 
 
 md3checkboxWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()

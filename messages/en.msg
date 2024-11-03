@@ -1,3 +1,5 @@
+UploadPoster: Upload poster
+Poster: Poster
 Overview: Overview
 UseCaseDiagram: Use Case Diagram
 ReadMessage: Read

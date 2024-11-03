@@ -25,6 +25,7 @@ import qualified Data.Aeson as A (Value)
 import Data.Bifunctor (Bifunctor(second))
 import qualified Data.List as L (find)
 import Data.Text (unpack)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Calendar (toGregorian)
 import Data.Time.Calendar.Month (pattern YearMonth)
 import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
@@ -43,7 +44,7 @@ import Foundation
       ( CalendarR, HomeR, EventR, EventRegistrationR
       , ScanQrR, AttendeeRegistrationR, EventAttendeesR
       , EventAttendeeR, EventScannerR
-      , ApiEventsR, DataR
+      , ApiEventsR, DataR, StaticR, EventPosterR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
@@ -56,7 +57,7 @@ import Foundation
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
       , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
       , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees, MsgScanner
-      , MsgRegistrationForEvent, MsgNoEventsFound
+      , MsgRegistrationForEvent, MsgNoEventsFound, MsgPoster
       )
     )
 
@@ -77,6 +78,7 @@ import Network.Wreq (get)
 import qualified Network.Wreq as WL (responseBody)
 
 import Settings (widgetFile)
+import Settings.StaticFiles (img_event_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
 
 import Text.Hamlet (Html)
 import Text.Julius (rawJS)
@@ -84,7 +86,7 @@ import Text.Julius (rawJS)
 import Yesod.Core
     ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep, provideJson
     , getMessageRender, newIdent, whamlet, addMessageI, redirect, handlerToWidget
-    , MonadHandler (liftHandler), notFound, ToContent (toContent)
+    , MonadHandler (liftHandler), ToContent (toContent)
     )
 import Yesod.Core.Widget (setTitleI)
 import Yesod.Form.Input (runInputGet, ireq, iopt)
@@ -97,7 +99,6 @@ import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
 import Yesod.Persist.Core (YesodPersist(runDB))
-import Data.Text.Encoding (encodeUtf8)
 
 
 getApiEventsR :: Handler TypedContent
@@ -407,7 +408,7 @@ getHomeR = do
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
-        setTitleI MsgAppName
+        setTitleI MsgAppName 
 
         idOverlay <- newIdent
         idMain <- newIdent
@@ -434,7 +435,7 @@ getEventPosterR eid = do
         return x
     case photo of
       Just (Entity _ (Poster _ mime bs _)) -> return $ TypedContent (encodeUtf8 mime) $ toContent bs
-      Nothing -> notFound
+      Nothing -> redirect $ StaticR img_event_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg
 
 
 getFetchR :: Handler TypedContent

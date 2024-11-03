@@ -22,7 +22,7 @@ import Model
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
     , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
-    , Info (Info, infoCard, infoName, infoValue)
+    , Info (Info, infoCard, infoName, infoValue), Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
     )
 
 import Text.Hamlet (shamlet)
@@ -278,26 +278,56 @@ fillDemoEn = do
                             , eventName = "Private party"
                             , eventDescr = "Only Disco"
                             }
+    liftIO (BS.readFile "demo/private_party_1.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid11
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
 
     eid12 <- insert $ Event { eventTime = addUTCTime (2 * hour) now
                             , eventName = "Wellness party"
                             , eventDescr = "Wellness party, then Disco"
                             }
+    liftIO (BS.readFile "demo/wellness_party_1.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid12
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
 
     eid2 <- insert $ Event { eventTime = addUTCTime (2 * day) now
                            , eventName = "Team-building event"
                            , eventDescr = "Team-building event, then Disco"
                            }
+    liftIO (BS.readFile "demo/team_building_event.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid2
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
 
     eid3 <- insert $ Event { eventTime = addUTCTime (3 * day) now
                            , eventName = "Shareholder meeting"
                            , eventDescr = "Shareholder meeting, then Disco"
                            }
+    liftIO (BS.readFile "demo/shareholder_meeting_1.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid3
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
 
     eid4 <- insert $ Event { eventTime = addUTCTime (4 * day) now
                            , eventName = "Board meeting"
                            , eventDescr = "Board meeting, then Disco"
                            }
+    liftIO (BS.readFile "demo/board_meeting_1.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid4
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
 
     insert_ $ Attendee { attendeeEvent = eid11
                        , attendeeCard = cid1
