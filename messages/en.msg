@@ -1,3 +1,4 @@
+NotificationSent: Notification sent
 UploadPoster: Upload poster
 Poster: Poster
 Overview: Overview

@@ -24,9 +24,11 @@ import ClassyPrelude.Yesod
 
 import Data.Bool (Bool)
 import Data.ByteString (ByteString)
+import Data.Eq (Eq)
 import Data.Fixed (Fixed (MkFixed))
 import Data.Function ((.))
 import Data.Maybe (Maybe (Just))
+import Data.Ord (Ord)
 import Data.Text (pack, unpack) 
 import Data.Time.Calendar.Month (Month)
 import Data.Time.Clock
@@ -34,6 +36,7 @@ import Data.Time.Clock
 
 import Database.Esqueleto.Experimental (SqlString)
 import Database.Persist.Quasi ( lowerCaseSettings )
+import Database.Persist.TH (derivePersistField)
 
 import GHC.Float (Double, int2Double, truncateDouble)
 import GHC.Integer (Integer)
@@ -43,12 +46,17 @@ import GHC.Real ((/), (^))
 import Prelude (truncate)
 
 import Text.Hamlet (Html)
-import Text.Show (show)
-import Text.Read (readMaybe)
+import Text.Show (Show, show)
+import Text.Read (Read, readMaybe)
 
 import Yesod.Auth.HashDB (HashDBUser (userPasswordHash, setPasswordHash))
 import Yesod.Core.Dispatch (PathPiece, toPathPiece, fromPathPiece)
 import Yesod.Form.Fields (Textarea)
+
+
+data NotificationStatus = NotificationStatusUnread | NotificationStatusRead
+    deriving (Show, Read, Eq, Ord)
+derivePersistField "NotificationStatus"
 
 
 instance PathPiece Month where

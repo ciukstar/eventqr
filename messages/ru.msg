@@ -1,3 +1,4 @@
+NotificationSent: Уведомление отправлено
 UploadPoster: Загрузить постер
 Poster: Плакат
 Overview: Обзор

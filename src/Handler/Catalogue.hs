@@ -29,19 +29,25 @@ module Handler.Catalogue
 
 
 import Control.Applicative ((<|>))
+import Control.Exception.Safe (tryAny)
+import Control.Exception (SomeException(SomeException), Exception (fromException))
 import Control.Lens ((.~), (?~))
+import qualified Control.Lens as L ((^.))
 import Control.Monad (forM, void)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Aeson (object, (.=))
+import qualified Data.ByteString.Base64.Lazy as B64L (encode)
 import Data.Either (isRight)
 import qualified Data.List as L (find, length)
 import Data.Map (Map, fromListWith)
 import qualified Data.Map as M (lookup, foldr)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Function ((&))
-import Data.Text (Text)
+import Data.Text (Text, unpack, pack)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import qualified Data.ByteString.Lazy as BSL (toStrict)
+import qualified Data.Text.Encoding as TE
 import Data.Time.Calendar
     ( Day, addDays, toGregorian, weekFirstDay, DayOfWeek (Monday)
     , DayPeriod (periodFirstDay)
@@ -97,7 +103,7 @@ import Foundation
       , MsgSend, MsgSendNotification, MsgSendEmail, MsgHeader, MsgMessage, MsgEmail
       , MsgEmailAddress, MsgNotificationSentToSubscribersN, MsgSendPushNotification
       , MsgItLooksLikeUserNotSubscribedToPushNotifications, MsgPoster, MsgUploadPoster
-      , MsgAttribution
+      , MsgAttribution, MsgNotificationSent
       )
     )
 
@@ -110,17 +116,27 @@ import Model
     , User (User, userEmail)
     , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
     , PushSubscription (PushSubscription)
+    , Poster (Poster, posterAttribution), PosterId, Unique (UniquePoster)
+    , Notification (Notification), NotificationStatus (NotificationStatusUnread)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
-      , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent, PosterAttribution
-      ), Poster (Poster, posterAttribution), PosterId, Unique (UniquePoster)
+      , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent
+      , PosterAttribution
+      )
     )
 
+import Network.Mail.Mime (renderMail', Mail (mailTo, mailHeaders, mailParts), Address (Address), emptyMail, Part (Part, partType, partEncoding, partDisposition, partContent, partHeaders), Encoding (None), Disposition (DefaultDisposition), PartContent (PartContent))
+import Network.Wreq (auth, postWith, defaults, oauth2Bearer)
+import qualified Network.Wreq.Lens as WL
+import Network.HTTP.Client
+    ( HttpException (HttpExceptionRequest)
+    , HttpExceptionContent (StatusCodeException)
+    )
 import Network.HTTP.Types.URI (extractPath)
 
 import Settings (widgetFile, AppSettings (appTimeZone, appVAPIDKeys))
 import Settings.StaticFiles (img_logo_svg)
-
+import Text.Printf (printf)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Hamlet (Html)
 import Text.Julius (julius, RawJS (rawJS))
@@ -128,7 +144,7 @@ import Text.Julius (julius, RawJS (rawJS))
 import Web.WebPush
     ( sendPushNotification, mkPushNotification, pushMessage, pushSenderEmail
     , pushExpireInSeconds, pushTopic, pushUrgency, PushTopic (PushTopic)
-    , PushUrgency (PushUrgencyHigh)
+    , PushUrgency (PushUrgencyHigh), VAPIDKeys, PushNotificationError
     )
 
 import Yesod.Auth (maybeAuth)
@@ -151,6 +167,7 @@ import Yesod.Form.Types
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+import qualified Data.Text.Lazy.Encoding as TLE
 
 
 postDataEventCalendarEventAttendeeDeleR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
@@ -561,41 +578,59 @@ postDataEventAttendeeNotifyR eid aid = do
     rndr <- getUrlRender
     case fr1 of
       FormSuccess ((subject, message),((True, True),(True,Just email))) -> undefined
+      
       FormSuccess ((subject, message),((True,True), (False,_))) -> do
           vapidKeys <- appVAPIDKeys . appSettings <$> getYesod
-
           user <- maybeAuth
-          case (vapidKeys,user) of
-            (Just vapid,Just publisher) -> do
-
-                subscriptions <- runDB $ select $ do
-                    x <- from $ table @PushSubscription
-                    return x
-
-                let expath = decodeUtf8 . extractPath . encodeUtf8 . rndr
-                manager <- appHttpManager <$> getYesod
-
-                let topic = "EventQrNotification"
-
-                results <- forM subscriptions $ \(Entity _ (PushSubscription _ endpoint p256dh auth)) -> do
-                    let notification = mkPushNotification endpoint p256dh auth
-                            & pushMessage .~ object
-                                [ "title" .= subject
-                                , "icon" .= expath (StaticR img_logo_svg)
-                                , "image" .= expath (EventPosterR eid)
-                                , "body" .= renderHtml message
-                                , "messageType" .= topic
-                                , "eventHref" .= expath (EventR eid)
-                                ]
-                            & pushSenderEmail .~ userEmail (entityVal publisher)
-                            & pushExpireInSeconds .~ 30 * 60
-                            & pushTopic ?~ PushTopic topic
-                            & pushUrgency ?~ PushUrgencyHigh
-
-                    sendPushNotification vapid manager notification
-
+          case (vapidKeys,user,attendee) of
+            (Just vapid,Just publisher@(Entity pid _),Just (_,(_,(_,Entity rid _)))) -> do
+                results <- pushNotifications vapid publisher eid subject message
+                now <- liftIO getCurrentTime
+                runDB $ insert_ $ Notification pid rid now subject message NotificationStatusUnread
                 addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
                 redirect $ DataR $ DataEventAttendeeR eid aid
+                
+      FormSuccess ((subject, message),((False, False),(True,Just email))) -> do
+          msgr <- getMessageRender
+          let atoken = undefined
+          let sendby = undefined
+
+          let mail = (emptyMail $ Address Nothing "noreply")
+                     { mailTo = [Address Nothing email]
+                     , mailHeaders = [("Subject", subject)]
+                     , mailParts = [[textPart, htmlPart]]
+                     }
+                where
+                  textPart = Part
+                      { partType = "text/plain; charset=utf-8"
+                      , partEncoding = None
+                      , partDisposition = DefaultDisposition
+                      , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
+                      , partHeaders = []
+                      }
+                  htmlPart = Part
+                      { partType = "text/html; charset=utf-8"
+                      , partEncoding = None
+                      , partDisposition = DefaultDisposition
+                      , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
+                      , partHeaders = []
+                      }
+
+          
+          raw <- liftIO $ TE.decodeUtf8 . BSL.toStrict . B64L.encode <$> renderMail' mail
+          let opts = defaults & auth ?~ oauth2Bearer (TE.encodeUtf8 atoken)
+          response <- liftIO $ tryAny $ postWith
+                  opts (gmailApi $ unpack sendby) (object ["raw" .= raw])
+
+          let result = case response of
+                Right _ok -> msgr MsgNotificationSent
+                Left e@(SomeException _) -> case fromException e of
+                  Just (HttpExceptionRequest _ (StatusCodeException r' _bs)) -> do
+                      pack $ show $ r' L.^. WL.responseBody
+                  _otherwise -> pack $ show e
+
+          addMessageI msgSuccess result
+          redirect $ DataR $ DataEventAttendeeR eid aid
 
       _otherwise -> do
           msgr <- getMessageRender
@@ -614,6 +649,42 @@ postDataEventAttendeeNotifyR eid aid = do
               idFormNotifyAttendee <- newIdent
 
               $(widgetFile "data/catalogue/attendees/attendee")
+
+
+gmailApi :: String -> String
+gmailApi = printf "https://gmail.googleapis.com/gmail/v1/users/%s/messages/send"
+
+
+pushNotifications :: VAPIDKeys -> Entity User -> EventId -> Text -> Html -> Handler [Either PushNotificationError ()]
+pushNotifications vapid publisher eid subject message = do
+
+    rndr <- getUrlRender
+
+    subscriptions <- runDB $ select $ do
+        x <- from $ table @PushSubscription
+        return x
+
+    let expath = decodeUtf8 . extractPath . encodeUtf8 . rndr
+    manager <- appHttpManager <$> getYesod
+
+    let topic = "EventQrNotification"
+
+    forM subscriptions $ \(Entity _ (PushSubscription _ endpoint p256dh auth)) -> do
+        let notification = mkPushNotification endpoint p256dh auth
+                & pushMessage .~ object
+                    [ "title" .= subject
+                    , "icon" .= expath (StaticR img_logo_svg)
+                    , "image" .= expath (EventPosterR eid)
+                    , "body" .= renderHtml message
+                    , "messageType" .= topic
+                    , "eventHref" .= expath (EventR eid)
+                    ]
+                & pushSenderEmail .~ userEmail (entityVal publisher)
+                & pushExpireInSeconds .~ 30 * 60
+                & pushTopic ?~ PushTopic topic
+                & pushUrgency ?~ PushUrgencyHigh
+
+        sendPushNotification vapid manager notification
 
 
 getDataEventAttendeeR :: EventId -> AttendeeId -> Handler Html
