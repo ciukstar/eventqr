@@ -46,6 +46,7 @@ import Data.Maybe (fromMaybe, isJust)
 import Data.Function ((&))
 import Data.Text (Text, unpack, pack)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import qualified Data.Text.Lazy.Encoding as TLE (encodeUtf8)
 import qualified Data.ByteString.Lazy as BSL (toStrict)
 import qualified Data.Text.Encoding as TE
 import Data.Time.Calendar
@@ -71,7 +72,8 @@ import qualified Database.Persist as P ((=.))
 import Database.Persist.Sql (toSqlKey)
 
 import Foundation
-    ( App (appSettings, appHttpManager), Handler, Form, widgetTopbar, widgetSnackbar, widgetScanner
+    ( App (appSettings, appHttpManager), Handler, Widget, Form
+    , widgetTopbar, widgetSnackbar, widgetScanner
     , Route (DataR, StaticR, EventR, EventPosterR)
     , DataR
       ( DataEventR, DataEventAttendeesR, DataEventsR, UserPhotoR, CardQrImageR
@@ -103,17 +105,18 @@ import Foundation
       , MsgSend, MsgSendNotification, MsgSendEmail, MsgHeader, MsgMessage, MsgEmail
       , MsgEmailAddress, MsgNotificationSentToSubscribersN, MsgSendPushNotification
       , MsgItLooksLikeUserNotSubscribedToPushNotifications, MsgPoster, MsgUploadPoster
-      , MsgAttribution, MsgNotificationSent, MsgUnableToObtainAccessToken, MsgRefreshTokenIsNotInitialized
+      , MsgAttribution, MsgNotificationSent, MsgUnableToObtainAccessToken
+      , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail, MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher, MsgUnknownMessageRecipient
       )
     )
 
 import Material3 (daytimeLocalField, md3textareaWidget, md3widget, md3checkboxWidget, md3fileWidget)
 
 import Model
-    ( msgSuccess, msgError
+    ( msgSuccess, msgError, gmailSendEnpoint
     , EventId, Event(Event, eventName, eventTime, eventDescr)
     , CardId, Card (Card)
-    , User (User, userEmail)
+    , UserId, User (User, userEmail)
     , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
     , PushSubscription (PushSubscription)
     , Poster (Poster, posterAttribution), PosterId, Unique (UniquePoster)
@@ -122,10 +125,14 @@ import Model
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent
       , PosterAttribution
-      ), gmailAccessToken, gmailSendEnpoint
+      )
     )
 
-import Network.Mail.Mime (renderMail', Mail (mailTo, mailHeaders, mailParts), Address (Address), emptyMail, Part (Part, partType, partEncoding, partDisposition, partContent, partHeaders), Encoding (None), Disposition (DefaultDisposition), PartContent (PartContent))
+import Network.Mail.Mime
+    (renderMail', Mail (mailTo, mailHeaders, mailParts), Address (Address), emptyMail
+    , Part (Part, partType, partEncoding, partDisposition, partContent, partHeaders)
+    , Encoding (None), Disposition (DefaultDisposition), PartContent (PartContent)
+    )
 import Network.Wreq (auth, postWith, defaults, oauth2Bearer)
 import qualified Network.Wreq.Lens as WL
 import Network.HTTP.Client
@@ -136,7 +143,7 @@ import Network.HTTP.Types.URI (extractPath)
 
 import Settings (widgetFile, AppSettings (appTimeZone, appVAPIDKeys))
 import Settings.StaticFiles (img_logo_svg)
-import Text.Printf (printf)
+
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Hamlet (Html)
 import Text.Julius (julius, RawJS (rawJS))
@@ -153,7 +160,7 @@ import Yesod.Core
     , whamlet, redirect, addMessageI, SomeMessage (SomeMessage), getYesod
     , MonadHandler (liftHandler), handlerToWidget, YesodRequest (reqGetParams)
     , getRequest, toHtml, ToWidget (toWidget), getUrlRender, FileInfo (fileContentType)
-    , fileSourceByteString, lookupSession
+    , fileSourceByteString
     )
 import Yesod.Form.Fields
     ( textField, textareaField, radioField, optionsPairs
@@ -165,9 +172,10 @@ import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Form.Types
     ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
+    , Enctype
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
-import qualified Data.Text.Lazy.Encoding as TLE
+
 import Handler.Tokens (getRefreshToken, fetchAccessToken)
 
 
@@ -562,6 +570,66 @@ postDataEventAttendeeDeleR eid aid = do
           redirect $ DataR $ DataEventAttendeeR eid aid
 
 
+getAccessToken :: Handler (Either AppMessage (Text,Text))
+getAccessToken = do
+    (rtoken,sender) <- getRefreshToken
+    case (rtoken,sender) of       
+      (Just rt, Just sendby) -> do
+          at <- fetchAccessToken rt
+          case at of
+            Nothing -> return $ Left MsgUnableToObtainAccessToken
+            Just atoken -> return $ Right (atoken,sendby)
+
+      (Nothing,_) -> return $ Left MsgRefreshTokenIsNotInitialized
+
+      (Just _,Nothing) -> return $ Left MsgUnknownAccountForSendingEmail
+    
+
+
+sendEmail :: Text -> Text -> Text -> Text -> Html -> Handler (Either Text ())
+sendEmail atoken sendby email subject message = do
+    let mail = (emptyMail $ Address Nothing "noreply")
+               { mailTo = [Address Nothing email]
+               , mailHeaders = [("Subject", subject)]
+               , mailParts = [[textPart, htmlPart]]
+               }
+          where
+            textPart = Part
+                { partType = "text/plain; charset=utf-8"
+                , partEncoding = None
+                , partDisposition = DefaultDisposition
+                , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
+                , partHeaders = []
+                }
+            htmlPart = Part
+                { partType = "text/html; charset=utf-8"
+                , partEncoding = None
+                , partDisposition = DefaultDisposition
+                , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
+                , partHeaders = []
+                }
+
+
+    raw <- liftIO $ TE.decodeUtf8 . BSL.toStrict . B64L.encode <$> renderMail' mail
+    let opts = defaults & auth ?~ oauth2Bearer (TE.encodeUtf8 atoken)
+    response <- liftIO $ tryAny $ postWith
+            opts (gmailSendEnpoint $ unpack sendby) (object ["raw" .= raw])
+
+    return $ case response of
+          Right _ok -> Right ()
+          Left e@(SomeException _) -> case fromException e of
+            Just (HttpExceptionRequest _ (StatusCodeException r' _bs)) -> do
+                Left $ pack $ show $ r' L.^. WL.responseBody
+            _otherwise -> do
+                Left $ pack $ show e
+
+
+logNotification :: UserId -> UserId -> Text -> Html -> Handler ()
+logNotification pid rid subject message = do
+    now <- liftIO getCurrentTime
+    runDB $ insert_ $ Notification pid rid now subject message NotificationStatusUnread
+
+
 postDataEventAttendeeNotifyR :: EventId -> AttendeeId -> Handler Html
 postDataEventAttendeeNotifyR eid aid = do
 
@@ -576,131 +644,23 @@ postDataEventAttendeeNotifyR eid aid = do
     (fw0,et0) <- generateFormPost formAttendeeRemove
     ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
 
-    rndr <- getUrlRender
+    msgr <- getMessageRender
+    
     case fr1 of
-      FormSuccess ((subject, message),((True, True),(True,Just email))) -> undefined
+      FormSuccess ((subject, message),((True, True),(True,Just email))) -> do
+          postMessage attendee subject message
+          postEmail email subject message
+          redirect $ DataR $ DataEventAttendeeR eid aid
       
       FormSuccess ((subject, message),((True,True), (False,_))) -> do
-          vapidKeys <- appVAPIDKeys . appSettings <$> getYesod
-          user <- maybeAuth
-          case (vapidKeys,user,attendee) of
-            (Just vapid,Just publisher@(Entity pid _),Just (_,(_,(_,Entity rid _)))) -> do
-                results <- pushNotifications vapid publisher eid subject message
-                now <- liftIO getCurrentTime
-                runDB $ insert_ $ Notification pid rid now subject message NotificationStatusUnread
-                addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
-                redirect $ DataR $ DataEventAttendeeR eid aid
+          postMessage attendee subject message
+          redirect $ DataR $ DataEventAttendeeR eid aid
                 
       FormSuccess ((subject, message),((False, False),(True,Just email))) -> do
-
-          (rtoken,sender) <- getRefreshToken
-          case (rtoken,sender) of                          
-            (Just rt, Just sendby) -> do
-                at <- fetchAccessToken rt
-                case at of
-                  Nothing -> do
-                      msgr <- getMessageRender
-                      addMessageI msgError MsgUnableToObtainAccessToken
-                      msgs <- getMessages
-                      defaultLayout $ do
-                          setTitleI MsgAttendee
-
-                          idOverlay <- newIdent
-                          idDialogDelete <- newIdent
-                          idButtonShowDialogQrCode <- newIdent
-                          idDialogQrCode <- newIdent
-                          idButtonCloseDialogQrCode <- newIdent
-
-                          idButtonShowDialogNotify <- newIdent
-                          idDialogNotifyAttendee <- newIdent
-                          idFormNotifyAttendee <- newIdent
-
-                          $(widgetFile "data/catalogue/attendees/attendee")
-                          
-                  Just atoken -> do
-
-                      msgr <- getMessageRender
-
-                      let mail = (emptyMail $ Address Nothing "noreply")
-                                 { mailTo = [Address Nothing email]
-                                 , mailHeaders = [("Subject", subject)]
-                                 , mailParts = [[textPart, htmlPart]]
-                                 }
-                            where
-                              textPart = Part
-                                  { partType = "text/plain; charset=utf-8"
-                                  , partEncoding = None
-                                  , partDisposition = DefaultDisposition
-                                  , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
-                                  , partHeaders = []
-                                  }
-                              htmlPart = Part
-                                  { partType = "text/html; charset=utf-8"
-                                  , partEncoding = None
-                                  , partDisposition = DefaultDisposition
-                                  , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
-                                  , partHeaders = []
-                                  }
-
-
-                      raw <- liftIO $ TE.decodeUtf8 . BSL.toStrict . B64L.encode <$> renderMail' mail
-                      let opts = defaults & auth ?~ oauth2Bearer (TE.encodeUtf8 atoken)
-                      response <- liftIO $ tryAny $ postWith
-                              opts (gmailSendEnpoint $ unpack sendby) (object ["raw" .= raw])
-
-                      result <- case response of
-                            Right _ok -> return $ msgr MsgNotificationSent
-                            Left e@(SomeException _) -> case fromException e of
-                              Just (HttpExceptionRequest _ (StatusCodeException r' _bs)) -> do
-                                  liftIO $ print r'
-                                  return $ pack $ show $ r' L.^. WL.responseBody
-                              _otherwise -> do
-                                  liftIO $ print e
-                                  return $ pack $ show e
-
-                      addMessageI msgSuccess result
-                      redirect $ DataR $ DataEventAttendeeR eid aid
-                          
-            (Nothing,_) -> do
-                msgr <- getMessageRender
-                addMessageI msgError MsgRefreshTokenIsNotInitialized
-                msgs <- getMessages
-                defaultLayout $ do
-                    setTitleI MsgAttendee
-
-                    idOverlay <- newIdent
-                    idDialogDelete <- newIdent
-                    idButtonShowDialogQrCode <- newIdent
-                    idDialogQrCode <- newIdent
-                    idButtonCloseDialogQrCode <- newIdent
-
-                    idButtonShowDialogNotify <- newIdent
-                    idDialogNotifyAttendee <- newIdent
-                    idFormNotifyAttendee <- newIdent
-
-                    $(widgetFile "data/catalogue/attendees/attendee")
-                          
-            (Nothing,Nothing) -> do
-                msgr <- getMessageRender
-                addMessageI msgError MsgRefreshTokenIsNotInitialized
-                msgs <- getMessages
-                defaultLayout $ do
-                    setTitleI MsgAttendee
-
-                    idOverlay <- newIdent
-                    idDialogDelete <- newIdent
-                    idButtonShowDialogQrCode <- newIdent
-                    idDialogQrCode <- newIdent
-                    idButtonCloseDialogQrCode <- newIdent
-
-                    idButtonShowDialogNotify <- newIdent
-                    idDialogNotifyAttendee <- newIdent
-                    idFormNotifyAttendee <- newIdent
-
-                    $(widgetFile "data/catalogue/attendees/attendee")
+          postEmail email subject message
+          redirect $ DataR $ DataEventAttendeeR eid aid
 
       _otherwise -> do
-          msgr <- getMessageRender
           msgs <- getMessages
           defaultLayout $ do
               setTitleI MsgAttendee
@@ -716,6 +676,46 @@ postDataEventAttendeeNotifyR eid aid = do
               idFormNotifyAttendee <- newIdent
 
               $(widgetFile "data/catalogue/attendees/attendee")
+  where
+
+      postMessage :: Maybe (Entity Attendee, (Entity Event, (Entity Card, Entity User)))
+                  -> Text -> Html -> Handler ()
+      postMessage attendee subject message = do
+          vapidKeys <- appVAPIDKeys . appSettings <$> getYesod
+          user <- maybeAuth
+          case (vapidKeys,user,attendee) of
+            (Just vapid,Just publisher@(Entity pid _),Just (_,(_,(_,Entity rid _)))) -> do
+                results <- pushNotifications vapid publisher eid subject message
+                logNotification pid rid subject message
+                addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
+                
+            (Nothing,_,_) -> do
+                addMessageI msgError MsgVapidNotInitializedProperly
+                
+            (_,Nothing,_) -> do
+                addMessageI msgError MsgUnknownMessagePublisher
+                
+            (_,_,Nothing) -> do
+                addMessageI msgError MsgUnknownMessageRecipient
+                
+      
+      postEmail :: Text -> Text -> Html
+                -> Handler ()
+      postEmail email subject message = do
+          msgr <- getMessageRender
+          at <- getAccessToken
+          case at of
+            Left msg -> do
+                addMessageI msgError msg
+                    
+            Right (atoken,sendby) -> do
+                result <- sendEmail atoken sendby email subject message
+                (status,msg) <- return $ case result of
+                                  Right () -> (msgSuccess, msgr MsgNotificationSent)
+                                  Left msg -> (msgError, msg)
+
+                addMessageI status msg
+              
 
 
 pushNotifications :: VAPIDKeys -> Entity User -> EventId -> Text -> Html -> Handler [Either PushNotificationError ()]

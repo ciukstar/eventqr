@@ -165,9 +165,9 @@ makeFoundation appSettings = do
         runMigration migrateAll
         demo <- liftIO $ getEnv "YESOD_DEMO_LANG"
         case demo of
-          Just "RU" -> fillDemoRu
-          Just _ -> fillDemoEn
-          Nothing -> fillDemoEn
+          Just "RU" -> fillDemoRu appSettings
+          Just _ -> fillDemoEn appSettings
+          Nothing -> fillDemoEn appSettings
           
     -- runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
 

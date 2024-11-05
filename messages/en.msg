@@ -1,3 +1,6 @@
+UnknownMessageRecipient: Unknown message recipient
+UnknownMessagePublisher: Unidentified message publisher
+UnknownAccountForSendingEmail: Unknown account for sending email
 RefreshTokenIsNotInitialized: The refresh token is not initialized
 UnableToObtainAccessToken: Unable to obtain access token
 Vapid: VAPID

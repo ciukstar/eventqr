@@ -15,8 +15,8 @@
     <form method=post action=@{DataR TokensR} enctype=#{et} ##{idFormTokensGmail}>
       ^{fw}
       
-    <form method=post action=@{DataR TokensGoogleapisClearR} enctype=#{etGmailClear} ##{idFormTokensGmailClear}>
-      ^{fwGmailClear}
+    <form method=post action=@{DataR TokensGoogleapisClearR} enctype=#{etClear} ##{idFormTokensGmailClear}>
+      ^{fwClear}
 
     <nav.right-align>
       <button.round.border type=submit form=#{idFormTokensGmailClear}>

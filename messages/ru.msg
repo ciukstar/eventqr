@@ -1,3 +1,6 @@
+UnknownMessageRecipient: Неизвестный получатель сообщения
+UnknownMessagePublisher: Неизвестный издатель сообщения
+UnknownAccountForSendingEmail: Неизвестная учетная запись для отправки электронной почты
 RefreshTokenIsNotInitialized: Токен обновления не инициализирован
 UnableToObtainAccessToken: Не удалось получить токен доступа
 Vapid: VAPID

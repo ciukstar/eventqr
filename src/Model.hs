@@ -14,6 +14,7 @@
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE QuasiQuotes                #-}
 
 module Model where
 
@@ -47,6 +48,7 @@ import Prelude (truncate)
 
 import Text.Hamlet (Html)
 import Text.Printf (printf)
+import Text.Shakespeare.Text (st)
 import Text.Show (Show, show)
 import Text.Read (Read, readMaybe)
 
@@ -93,11 +95,15 @@ instance HashDBUser User where
 instance SqlString Textarea
 
 
-secretVapid :: Text
-secretVapid = "vapid_min_details"
 
 apiInfoVapid :: Text
 apiInfoVapid = "VAPID"
+
+secretVapid :: Text
+secretVapid = "vapid_min_details"
+
+secretVolumeVapid :: Text
+secretVolumeVapid = [st|/vmd/#{secretVapid}|]
 
 
 gmailSendEnpoint :: String -> String
@@ -114,15 +120,15 @@ apiInfoGoogle :: Text
 apiInfoGoogle = "GOOGLE_API"
 
 
-gmailRefreshToken :: Text
-gmailRefreshToken = "eventqr_gmail_refresh_token"
+secretGmail :: Text
+secretGmail = "gmail_refresh_token"
+
+secretVolumeGmail :: Text
+secretVolumeGmail = [st|/grt/#{secretGmail}|]
 
 
 gmailSender :: Text
 gmailSender = "gmail_sender"
-
-secretVolumeGmail :: String
-secretVolumeGmail = "/eventqr/gmail_refresh_token"
 
 
 mediae :: [(Text,Text)]
@@ -138,7 +144,7 @@ msgError :: Text
 msgError = "error"
 
 keyThemeMode :: Text
-keyThemeMode = "booklib_theme_mode"
+keyThemeMode = "eventqr_theme_mode"
 
 paramTaskStatus :: Text
 paramTaskStatus = "status"

@@ -9,12 +9,14 @@ import Control.Monad.Trans.Reader (ReaderT)
 
 import qualified Data.ByteString as BS
 import Data.Text(Text)
+import Data.Time.Clock (getCurrentTime, addUTCTime)
 
 import Database.Persist (PersistStoreWrite (insert, insert_))
 import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
-    ( User (User, userEmail, userPassword, userAdmin, userName)
+    ( apiInfoVapid, apiInfoGoogle
+    , User (User, userEmail, userPassword, userAdmin, userName)
     , UserPhoto
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
       , userPhotoPhoto
@@ -22,17 +24,22 @@ import Model
     , Card (Card, cardUser, cardIssued, cardQr)
     , Event (Event, eventTime, eventName, eventDescr)
     , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
-    , Info (Info, infoCard, infoName, infoValue), Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
+    , Info (Info, infoCard, infoName, infoValue)
+    , Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
+    , Token (Token, tokenApi, tokenStore)
+    , Store (Store, storeToken, storeKey, storeVal)
+    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager)
     )
+    
+import Settings (AppSettings (appDevelopment))
     
 import Text.Hamlet (shamlet)
 
 import Yesod.Auth.Email (saltPass)
-import Data.Time.Clock (getCurrentTime, addUTCTime)
 
 
-fillDemoRu :: MonadIO m => ReaderT SqlBackend m ()
-fillDemoRu = do
+fillDemoRu :: MonadIO m => AppSettings -> ReaderT SqlBackend m ()
+fillDemoRu appSettings = do
 
     now <- liftIO getCurrentTime
 
@@ -44,6 +51,24 @@ fillDemoRu = do
                           <a href="https://www.freepik.com/" target=_blank>
                             Freepik
                           |]
+
+    if appDevelopment appSettings
+        then do
+        tid <- insert Token { tokenApi = apiInfoVapid
+                            , tokenStore = StoreTypeDatabase
+                            }
+        insert_ Store { storeToken = tid
+                      , storeKey = "VAPID triple"
+                      , storeVal = "(77365822285703042512872615574182905356295150688934735928983377057495846568016,89758693107958609666387142100268936888371385180946146470089126836526923460219,12181163207068819145591782690996401924629474419901482659430518799427544674224)"
+                      }
+        else do
+        insert_ Token { tokenApi = apiInfoGoogle
+                      , tokenStore = StoreTypeGoogleSecretManager
+                      }
+
+        insert_ Token { tokenApi = apiInfoVapid
+                      , tokenStore = StoreTypeGoogleSecretManager
+                      }
     
 
     pass1 <- liftIO $ saltPass "bulanovalm"
