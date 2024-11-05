@@ -64,3 +64,15 @@ Email
     userId UserId Maybe
     verkey Text Maybe
     UniqueEmail email
+
+
+Store
+    token TokenId OnDeleteCascade
+    key Text
+    val Text
+    UniqueStore token key
+
+Token
+    api Text
+    store StoreType
+    UniqueToken api

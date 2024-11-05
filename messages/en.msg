@@ -1,3 +1,20 @@
+RefreshTokenIsNotInitialized: The refresh token is not initialized
+UnableToObtainAccessToken: Unable to obtain access token
+Vapid: VAPID
+Gmail: Gmail
+InvalidGoogleAPITokens: Invalid Google API tokens
+VapidGenerationWarning: Generating a new VAPID key requires all clients to re-subscribe to the push notifications
+Generate: Generate
+GoogleSecretManager: Google Secret Manager
+GmailAccount: Gmail account
+Cleared: Cleared
+ClearSettings: Clear
+InvalidStoreType: Invalid store type
+StoreType: Store type
+Database: Database
+UserSession: User session
+Initialize: Initialize
+Tokens: Tokens
 NotificationSent: Notification sent
 UploadPoster: Upload poster
 Poster: Poster

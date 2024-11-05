@@ -19,7 +19,7 @@ module Model where
 
 import ClassyPrelude.Yesod
     ( Typeable, Text, mkMigrate, mkPersist, persistFileWith
-    , share, sqlSettings
+    , share, sqlSettings, String
     )
 
 import Data.Bool (Bool)
@@ -46,6 +46,7 @@ import GHC.Real ((/), (^))
 import Prelude (truncate)
 
 import Text.Hamlet (Html)
+import Text.Printf (printf)
 import Text.Show (Show, show)
 import Text.Read (Read, readMaybe)
 
@@ -57,6 +58,11 @@ import Yesod.Form.Fields (Textarea)
 data NotificationStatus = NotificationStatusUnread | NotificationStatusRead
     deriving (Show, Read, Eq, Ord)
 derivePersistField "NotificationStatus"
+
+
+data StoreType = StoreTypeDatabase | StoreTypeSession | StoreTypeGoogleSecretManager
+    deriving (Show, Read, Eq, Ord)
+derivePersistField "StoreType"
 
 
 instance PathPiece Month where
@@ -87,8 +93,36 @@ instance HashDBUser User where
 instance SqlString Textarea
 
 
-overpass :: Text
-overpass = "https://overpass-api.de/api/interpreter"
+secretVapid :: Text
+secretVapid = "vapid_min_details"
+
+apiInfoVapid :: Text
+apiInfoVapid = "VAPID"
+
+
+gmailSendEnpoint :: String -> String
+gmailSendEnpoint = printf "https://gmail.googleapis.com/gmail/v1/users/%s/messages/send"
+
+gmailAccessToken :: Text
+gmailAccessToken = "gmail_access_token"
+
+gmailAccessTokenExpiresIn :: Text
+gmailAccessTokenExpiresIn = "gmail_access_token_expires_in"
+
+
+apiInfoGoogle :: Text
+apiInfoGoogle = "GOOGLE_API"
+
+
+gmailRefreshToken :: Text
+gmailRefreshToken = "eventqr_gmail_refresh_token"
+
+
+gmailSender :: Text
+gmailSender = "gmail_sender"
+
+secretVolumeGmail :: String
+secretVolumeGmail = "/eventqr/gmail_refresh_token"
 
 
 mediae :: [(Text,Text)]

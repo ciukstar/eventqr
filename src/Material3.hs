@@ -11,6 +11,7 @@ module Material3
   , md3switchWidget
   , md3fileWidget
   , daytimeLocalField
+  , md3radioField
   ) where
 
 import Data.Maybe (isJust)
@@ -21,14 +22,31 @@ import Data.Time.Format (formatTime, defaultTimeLocale)
 import Text.Shakespeare.I18N (RenderMessage)
 
 import Yesod.Core.Handler (HandlerFor)
-import Yesod.Core.Widget (whamlet, WidgetFor)
+import Yesod.Core.Widget (whamlet, WidgetFor, handlerToWidget)
 import Yesod.Form.Fields
-    ( FormMessage, datetimeLocalField
+    ( FormMessage, datetimeLocalField, radioField, OptionList (olOptions)
+    , Option (optionInternalValue, optionExternalValue, optionDisplay)
     )
 import Yesod.Form.Types
     ( Field (fieldView)
     , FieldView (fvErrors, fvInput, fvLabel, fvRequired)
     )
+
+
+md3radioField :: (RenderMessage m FormMessage, Eq a) => HandlerFor m (OptionList a) -> Field (HandlerFor m) a
+md3radioField options = (radioField options)
+    { fieldView = \theId name attrs x isReq -> do
+          opts <- zip [1 :: Int ..] . olOptions <$> handlerToWidget options
+          let sel (Left _) _ = False
+              sel (Right y) opt = optionInternalValue opt == y
+          [whamlet|
+<div ##{theId} *{attrs}>
+  $forall (i,opt) <- opts
+    <label.radio for=#{theId}-#{i}>
+      <input type=radio ##{theId}-#{i} name=#{name} :isReq:required=true value=#{optionExternalValue opt} :sel x opt:checked>
+      <span>#{optionDisplay opt}
+    
+|] }
 
 
 md3fileWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()

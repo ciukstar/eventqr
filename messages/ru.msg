@@ -1,3 +1,20 @@
+RefreshTokenIsNotInitialized: Токен обновления не инициализирован
+UnableToObtainAccessToken: Не удалось получить токен доступа
+Vapid: VAPID
+Gmail: Gmail
+InvalidGoogleAPITokens: Неверные токены Google API
+VapidGenerationWarning: Для создания нового ключа VAPID всем клиентам необходимо повторно подписаться на push-уведомления
+Generate: Генерировать
+GoogleSecretManager: Google Secret Manager
+GmailAccount: Учетная запись Gmail
+Cleared: Очищено
+ClearSettings: Сбросить
+InvalidStoreType: Неверный тип хранилища
+StoreType: Тип хранилища
+Database: База данных
+UserSession: Пользовательская сессия
+Initialize: Инициализировать
+Tokens: Токены
 NotificationSent: Уведомление отправлено
 UploadPoster: Загрузить постер
 Poster: Плакат

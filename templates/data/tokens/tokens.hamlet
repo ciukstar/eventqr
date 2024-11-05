@@ -1,0 +1,28 @@
+
+^{widgetTopbar Nothing (msgr MsgTokens) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a.active href=@{DataR TokensR}>
+      _{MsgGmail}
+      
+    <a href=@{DataR TokensVapidR}>
+      _{MsgVapid}
+    
+  <div.page.active.padding>
+
+    <form method=post action=@{DataR TokensR} enctype=#{et} ##{idFormTokensGmail}>
+      ^{fw}
+      
+    <form method=post action=@{DataR TokensGoogleapisClearR} enctype=#{etGmailClear} ##{idFormTokensGmailClear}>
+      ^{fwGmailClear}
+
+    <nav.right-align>
+      <button.round.border type=submit form=#{idFormTokensGmailClear}>
+        _{MsgClearSettings}
+      <button type=submit form=#{idFormTokensGmail}>
+        _{MsgInitialize}
+
+
+  ^{widgetSnackbar msgs}

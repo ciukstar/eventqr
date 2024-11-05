@@ -244,6 +244,12 @@ instance Yesod App where
     
     isAuthorized FetchR _ = setUltDestCurrent >> return Authorized
     
+    isAuthorized (DataR TokensR) _ = isAdmin
+    isAuthorized (DataR TokensGoogleapisHookR) _ = isAdmin
+    isAuthorized (DataR TokensGoogleapisClearR) _ = isAdmin
+    isAuthorized (DataR TokensVapidR) _ = isAdmin
+    isAuthorized (DataR TokensVapidClearR) _ = isAdmin
+    
     
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin

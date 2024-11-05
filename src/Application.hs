@@ -111,6 +111,15 @@ import Handler.Users
     , postUserSubscriptionsR
     )
 
+import Handler.Tokens
+    ( getTokensR
+    , postTokensR
+    , getTokensGoogleapisHookR
+    , postTokensGoogleapisClearR
+    , getTokensVapidR, postTokensVapidR
+    , postTokensVapidClearR
+    ) 
+
 import System.Environment.Blank (getEnv)
 
 -- This line actually creates our YesodDispatch instance. It is the second half

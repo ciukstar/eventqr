@@ -1,0 +1,30 @@
+
+^{widgetTopbar Nothing (msgr MsgTokens) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a href=@{DataR TokensR}>
+      _{MsgGmail}
+      
+    <a.active href=@{DataR TokensVapidR}>
+      _{MsgVapid}
+    
+  <div.page.active.padding>
+  
+    <p.padding.small-text>_{MsgVapidGenerationWarning}.
+
+    <form.formStoreType method=post action=@{DataR TokensVapidR} enctype=#{et} ##{idFormVapid}>
+      ^{fw}
+      
+    <form method=post action=@{DataR TokensVapidClearR} enctype=#{etClear} ##{idFormClear}>
+      ^{fwClear}
+
+    <nav.right-align>
+      <button.round.border type=submit form=#{idFormClear}>
+        _{MsgClearSettings}
+      <button type=submit form=#{idFormVapid}>
+        _{MsgGenerate}
+
+
+  ^{widgetSnackbar msgs}

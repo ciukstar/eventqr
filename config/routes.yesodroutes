@@ -98,5 +98,9 @@
     /users/#UserId/settings UserSettingsR GET
     /users/#UserId/photo    UserPhotoR    GET
 
-     
-    
+
+    /tokens/vapid/clear      TokensVapidClearR      POST
+    /tokens/vapid            TokensVapidR           GET POST
+    /tokens/googleapis/clear TokensGoogleapisClearR POST
+    /tokens/googleapis/hook  TokensGoogleapisHookR  GET
+    /tokens                  TokensR                GET POST

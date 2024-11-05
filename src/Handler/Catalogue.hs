@@ -103,7 +103,7 @@ import Foundation
       , MsgSend, MsgSendNotification, MsgSendEmail, MsgHeader, MsgMessage, MsgEmail
       , MsgEmailAddress, MsgNotificationSentToSubscribersN, MsgSendPushNotification
       , MsgItLooksLikeUserNotSubscribedToPushNotifications, MsgPoster, MsgUploadPoster
-      , MsgAttribution, MsgNotificationSent
+      , MsgAttribution, MsgNotificationSent, MsgUnableToObtainAccessToken, MsgRefreshTokenIsNotInitialized
       )
     )
 
@@ -122,7 +122,7 @@ import Model
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent
       , PosterAttribution
-      )
+      ), gmailAccessToken, gmailSendEnpoint
     )
 
 import Network.Mail.Mime (renderMail', Mail (mailTo, mailHeaders, mailParts), Address (Address), emptyMail, Part (Part, partType, partEncoding, partDisposition, partContent, partHeaders), Encoding (None), Disposition (DefaultDisposition), PartContent (PartContent))
@@ -153,7 +153,7 @@ import Yesod.Core
     , whamlet, redirect, addMessageI, SomeMessage (SomeMessage), getYesod
     , MonadHandler (liftHandler), handlerToWidget, YesodRequest (reqGetParams)
     , getRequest, toHtml, ToWidget (toWidget), getUrlRender, FileInfo (fileContentType)
-    , fileSourceByteString
+    , fileSourceByteString, lookupSession
     )
 import Yesod.Form.Fields
     ( textField, textareaField, radioField, optionsPairs
@@ -168,6 +168,7 @@ import Yesod.Form.Types
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 import qualified Data.Text.Lazy.Encoding as TLE
+import Handler.Tokens (getRefreshToken, fetchAccessToken)
 
 
 postDataEventCalendarEventAttendeeDeleR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
@@ -591,52 +592,118 @@ postDataEventAttendeeNotifyR eid aid = do
                 redirect $ DataR $ DataEventAttendeeR eid aid
                 
       FormSuccess ((subject, message),((False, False),(True,Just email))) -> do
-          msgr <- getMessageRender
-          let atoken = undefined
-          let sendby = undefined
 
-          let mail = (emptyMail $ Address Nothing "noreply")
-                     { mailTo = [Address Nothing email]
-                     , mailHeaders = [("Subject", subject)]
-                     , mailParts = [[textPart, htmlPart]]
-                     }
-                where
-                  textPart = Part
-                      { partType = "text/plain; charset=utf-8"
-                      , partEncoding = None
-                      , partDisposition = DefaultDisposition
-                      , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
-                      , partHeaders = []
-                      }
-                  htmlPart = Part
-                      { partType = "text/html; charset=utf-8"
-                      , partEncoding = None
-                      , partDisposition = DefaultDisposition
-                      , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
-                      , partHeaders = []
-                      }
+          (rtoken,sender) <- getRefreshToken
+          case (rtoken,sender) of                          
+            (Just rt, Just sendby) -> do
+                at <- fetchAccessToken rt
+                case at of
+                  Nothing -> do
+                      msgr <- getMessageRender
+                      addMessageI msgError MsgUnableToObtainAccessToken
+                      msgs <- getMessages
+                      defaultLayout $ do
+                          setTitleI MsgAttendee
 
-          
-          raw <- liftIO $ TE.decodeUtf8 . BSL.toStrict . B64L.encode <$> renderMail' mail
-          let opts = defaults & auth ?~ oauth2Bearer (TE.encodeUtf8 atoken)
-          response <- liftIO $ tryAny $ postWith
-                  opts (gmailApi $ unpack sendby) (object ["raw" .= raw])
+                          idOverlay <- newIdent
+                          idDialogDelete <- newIdent
+                          idButtonShowDialogQrCode <- newIdent
+                          idDialogQrCode <- newIdent
+                          idButtonCloseDialogQrCode <- newIdent
 
-          let result = case response of
-                Right _ok -> msgr MsgNotificationSent
-                Left e@(SomeException _) -> case fromException e of
-                  Just (HttpExceptionRequest _ (StatusCodeException r' _bs)) -> do
-                      pack $ show $ r' L.^. WL.responseBody
-                  _otherwise -> pack $ show e
+                          idButtonShowDialogNotify <- newIdent
+                          idDialogNotifyAttendee <- newIdent
+                          idFormNotifyAttendee <- newIdent
 
-          addMessageI msgSuccess result
-          redirect $ DataR $ DataEventAttendeeR eid aid
+                          $(widgetFile "data/catalogue/attendees/attendee")
+                          
+                  Just atoken -> do
+
+                      msgr <- getMessageRender
+
+                      let mail = (emptyMail $ Address Nothing "noreply")
+                                 { mailTo = [Address Nothing email]
+                                 , mailHeaders = [("Subject", subject)]
+                                 , mailParts = [[textPart, htmlPart]]
+                                 }
+                            where
+                              textPart = Part
+                                  { partType = "text/plain; charset=utf-8"
+                                  , partEncoding = None
+                                  , partDisposition = DefaultDisposition
+                                  , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
+                                  , partHeaders = []
+                                  }
+                              htmlPart = Part
+                                  { partType = "text/html; charset=utf-8"
+                                  , partEncoding = None
+                                  , partDisposition = DefaultDisposition
+                                  , partContent = PartContent $ TLE.encodeUtf8 $ renderHtml message
+                                  , partHeaders = []
+                                  }
+
+
+                      raw <- liftIO $ TE.decodeUtf8 . BSL.toStrict . B64L.encode <$> renderMail' mail
+                      let opts = defaults & auth ?~ oauth2Bearer (TE.encodeUtf8 atoken)
+                      response <- liftIO $ tryAny $ postWith
+                              opts (gmailSendEnpoint $ unpack sendby) (object ["raw" .= raw])
+
+                      result <- case response of
+                            Right _ok -> return $ msgr MsgNotificationSent
+                            Left e@(SomeException _) -> case fromException e of
+                              Just (HttpExceptionRequest _ (StatusCodeException r' _bs)) -> do
+                                  liftIO $ print r'
+                                  return $ pack $ show $ r' L.^. WL.responseBody
+                              _otherwise -> do
+                                  liftIO $ print e
+                                  return $ pack $ show e
+
+                      addMessageI msgSuccess result
+                      redirect $ DataR $ DataEventAttendeeR eid aid
+                          
+            (Nothing,_) -> do
+                msgr <- getMessageRender
+                addMessageI msgError MsgRefreshTokenIsNotInitialized
+                msgs <- getMessages
+                defaultLayout $ do
+                    setTitleI MsgAttendee
+
+                    idOverlay <- newIdent
+                    idDialogDelete <- newIdent
+                    idButtonShowDialogQrCode <- newIdent
+                    idDialogQrCode <- newIdent
+                    idButtonCloseDialogQrCode <- newIdent
+
+                    idButtonShowDialogNotify <- newIdent
+                    idDialogNotifyAttendee <- newIdent
+                    idFormNotifyAttendee <- newIdent
+
+                    $(widgetFile "data/catalogue/attendees/attendee")
+                          
+            (Nothing,Nothing) -> do
+                msgr <- getMessageRender
+                addMessageI msgError MsgRefreshTokenIsNotInitialized
+                msgs <- getMessages
+                defaultLayout $ do
+                    setTitleI MsgAttendee
+
+                    idOverlay <- newIdent
+                    idDialogDelete <- newIdent
+                    idButtonShowDialogQrCode <- newIdent
+                    idDialogQrCode <- newIdent
+                    idButtonCloseDialogQrCode <- newIdent
+
+                    idButtonShowDialogNotify <- newIdent
+                    idDialogNotifyAttendee <- newIdent
+                    idFormNotifyAttendee <- newIdent
+
+                    $(widgetFile "data/catalogue/attendees/attendee")
 
       _otherwise -> do
           msgr <- getMessageRender
           msgs <- getMessages
           defaultLayout $ do
-              setTitleI MsgAttendees
+              setTitleI MsgAttendee
 
               idOverlay <- newIdent
               idDialogDelete <- newIdent
@@ -649,10 +716,6 @@ postDataEventAttendeeNotifyR eid aid = do
               idFormNotifyAttendee <- newIdent
 
               $(widgetFile "data/catalogue/attendees/attendee")
-
-
-gmailApi :: String -> String
-gmailApi = printf "https://gmail.googleapis.com/gmail/v1/users/%s/messages/send"
 
 
 pushNotifications :: VAPIDKeys -> Entity User -> EventId -> Text -> Html -> Handler [Either PushNotificationError ()]
@@ -669,8 +732,8 @@ pushNotifications vapid publisher eid subject message = do
 
     let topic = "EventQrNotification"
 
-    forM subscriptions $ \(Entity _ (PushSubscription _ endpoint p256dh auth)) -> do
-        let notification = mkPushNotification endpoint p256dh auth
+    forM subscriptions $ \(Entity _ (PushSubscription _ endpoint' p256dh' auth')) -> do
+        let notification = mkPushNotification endpoint' p256dh' auth'
                 & pushMessage .~ object
                     [ "title" .= subject
                     , "icon" .= expath (StaticR img_logo_svg)

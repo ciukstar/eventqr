@@ -18,8 +18,9 @@ import qualified Control.Exception as Exception
 import Data.Aeson
     ( Result (..), fromJSON, withObject, (.!=), (.:?) )
 import Data.Aeson.Types (Parser)
-import Data.FileEmbed              (embedFile)
-import Data.Yaml                   (decodeEither')
+import Data.FileEmbed (embedFile)
+import Data.Time.LocalTime (TimeZone, utc)
+import Data.Yaml (decodeEither')
 
 import Database.Persist.Sqlite
     ( SqliteConf
@@ -28,15 +29,29 @@ import Database.Persist.Sqlite
       , connectionPoolConfigIdleTimeout, connectionPoolConfigSize
       )
     )
+
+import Text.Read (readMaybe)
+
+import Web.WebPush (VAPIDKeysMinDetails (VAPIDKeysMinDetails), VAPIDKeys, readVAPIDKeys)
     
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
 import Network.Wai.Handler.Warp    (HostPreference)
 import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
                                     widgetFileReload)
-import Data.Time.LocalTime (TimeZone, utc)
-import Text.Read (readMaybe, read)
-import Web.WebPush (VAPIDKeysMinDetails (VAPIDKeysMinDetails), VAPIDKeys, readVAPIDKeys)
+
+
+data Superuser = Superuser { superuserUsername :: Text
+                           , superuserPassword :: Text
+                           }
+
+
+data GoogleApiConf = GoogleApiConf { googleApiConfClientId :: Text
+                                   , googleApiConfClientSecret :: Text
+                                   }
+
+newtype GcloudConf = GcloudConf { gcloudProjectId :: Text }
+
 
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
@@ -79,10 +94,36 @@ data AppSettings = AppSettings
     -- ^ Time Zone
     , appVAPIDKeys   :: Maybe VAPIDKeys
     -- ^ VAPID keys
+    , appSuperuser              :: Superuser
+    , appGoogleApiConf          :: GoogleApiConf
+    , appGcloudConf             :: GcloudConf
+    -- ^ Google API config
 
     , appAuthDummyLogin         :: Bool
     -- ^ Indicate if auth dummy login should be enabled.
     }
+
+instance FromJSON Superuser where
+    parseJSON :: Value -> Parser Superuser
+    parseJSON = withObject "Superuser" $ \o -> do
+        superuserUsername <- o .: "username"
+        superuserPassword <- o .: "password"
+        return Superuser {..}
+
+
+instance FromJSON GoogleApiConf where
+    parseJSON :: Value -> Parser GoogleApiConf
+    parseJSON = withObject "GoogleApiConf" $ \o -> do
+        googleApiConfClientId     <- o .: "client-id"
+        googleApiConfClientSecret <- o .: "client-secret"
+        return GoogleApiConf {..}
+
+
+instance FromJSON GcloudConf where
+    parseJSON :: Value -> Parser GcloudConf
+    parseJSON = withObject "GcloudConf" $ \o -> do
+        gcloudProjectId <- o .: "project-id"
+        return GcloudConf {..}
 
 
 instance FromJSON ConnectionPoolConfig where
@@ -124,6 +165,10 @@ instance FromJSON AppSettings where
         appTimeZone  <- fromMaybe utc . readMaybe <$> o .: "time-zone"
                         
         appVAPIDKeys <- ((readVAPIDKeys . (\(a,b,c) -> VAPIDKeysMinDetails a b c) <$>) . readMaybe =<<) <$> o .:? "vapid-triplet"
+
+        appSuperuser     <- o .:  "superuser"
+        appGoogleApiConf <- o .: "google-api"
+        appGcloudConf    <- o .: "gcloud"
 
         appAuthDummyLogin <- o .:? "auth-dummy-login"      .!= dev
 

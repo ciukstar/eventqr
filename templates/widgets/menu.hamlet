@@ -25,6 +25,10 @@
     <a href=@{DataR UsersR} :curr == Just (DataR UsersR):.active>
       <i>group
       <span>_{MsgUsers}
+
+    <a href=@{DataR TokensR} :curr == Just (DataR TokensR):.active>
+      <i>token
+      <span>_{MsgTokens}
       
     <hr>
 
