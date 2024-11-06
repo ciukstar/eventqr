@@ -13,7 +13,9 @@ module Handler.Tokens
   , getRefreshToken, fetchAccessToken
   ) where
 
-import Control.Exception.Safe (tryAny)
+import Control.Exception.Safe
+    ( tryAny, SomeException (SomeException), Exception (fromException)
+    )
 import qualified Control.Lens as L ((^.), (?~), (^?))
 import Control.Monad ((<=<), void)
 import Control.Monad.IO.Class (liftIO)
@@ -50,11 +52,12 @@ import Foundation
       , MsgStoreType, MsgInvalidStoreType, MsgRecordEdited, MsgClearSettings
       , MsgRecordDeleted, MsgInvalidFormData, MsgCleared, MsgEmailAddress
       , MsgGmail, MsgVapid, MsgGoogleSecretManager, MsgVapidGenerationWarning
+      , MsgUserAccountThroughWhichMailWillBeSent, MsgSelectLocationToStoreRefreshToken
       , MsgGenerate, MsgInvalidGoogleAPITokens
       )
     )
 
-import Material3 (md3radioField, md3widget)
+import Material3 (md3radioField)
 
 import Model
     ( gmailAccessToken, apiInfoGoogle, secretGmail, secretVolumeGmail
@@ -65,7 +68,11 @@ import Model
     , gmailSender, msgSuccess, msgError, gmailAccessTokenExpiresIn
     , apiInfoVapid, secretVapid
     )
-    
+
+import Network.HTTP.Client
+    ( HttpException(HttpExceptionRequest)
+    , HttpExceptionContent (StatusCodeException)
+    )
 import Network.Wreq
     ( post, FormParam ((:=)), responseBody, defaults, auth, oauth2Bearer
     , postWith, getWith
@@ -77,7 +84,7 @@ import Settings
     , GoogleApiConf (googleApiConfClientSecret, googleApiConfClientId)
     , GcloudConf (gcloudProjectId)
     )
-    
+
 import System.Directory (doesFileExist)
 import System.IO (readFile')
 
@@ -100,7 +107,7 @@ import Yesod.Form.Input (ireq, runInputGet)
 import Yesod.Form.Fields (optionsPairs, textField, emailField)
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
-    ( FormResult (FormSuccess), FieldView (fvInput)
+    ( FormResult (FormSuccess), FieldView (fvInput, fvLabel, fvRequired)
     , FieldSettings (FieldSettings, fsLabel, fsId, fsName, fsTooltip, fsAttrs)
     )
 
@@ -121,7 +128,7 @@ fetchAccessToken rtoken = do
 
 getRefreshToken :: Handler (Maybe Text, Maybe Text)
 getRefreshToken = do
-    
+
     tokenInfo <- runDB $ selectOne $ do
         x <- from $ table @Token
         where_ $ x ^. TokenApi ==. val apiInfoGoogle
@@ -184,7 +191,7 @@ postTokensVapidClearR = do
         return x
 
     ((fr,fwClear),etClear) <- runFormPost formTokensClear
-    
+
     case (fr,tokenVapid) of
       (FormSuccess (),Just (Entity tid (Token _ StoreTypeDatabase))) -> do
           runDB $ delete tid
@@ -194,7 +201,7 @@ postTokensVapidClearR = do
 
           refreshToken <- case tokenGmail of
             Just (Entity _ (Token _ StoreTypeSession)) -> lookupSession secretGmail
-                
+
             Just (Entity _ (Token _ StoreTypeDatabase)) -> do
                 (unValue <$>) <$> runDB ( selectOne $ do
                     x :& k <- from $ table @Store
@@ -202,7 +209,7 @@ postTokensVapidClearR = do
                     where_ $ x ^. StoreKey ==. val secretGmail
                     where_ $ k ^. TokenApi ==. val apiInfoGoogle
                     return $ x ^. StoreVal )
-                
+
             Just (Entity _ (Token _ StoreTypeGoogleSecretManager)) -> do
               liftIO $ pure . pack <$> readFile' (unpack secretVolumeGmail)
 
@@ -211,7 +218,7 @@ postTokensVapidClearR = do
           accessToken <- case refreshToken of
             Just rt -> do
                 app <- appSettings <$> getYesod
-                
+
                 refreshResponse <- liftIO $ post "https://oauth2.googleapis.com/token"
                     [ "refresh_token" := rt
                     , "client_id" := (googleApiConfClientId . appGoogleApiConf $ app)
@@ -229,7 +236,7 @@ postTokensVapidClearR = do
                 let opts = defaults & auth L.?~ oauth2Bearer (encodeUtf8 at)
 
                 res <- liftIO $ getWith opts
-                    (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretVapid}/versions/latest|])
+                    (unpack [st|#{smProjects}/#{project}/secrets/#{secretVapid}/versions/latest|])
 
                 let ver :: Maybe Int
                     ver = (readMaybe . unpack) <=< (LS.last . splitOn "/") $ res L.^. responseBody . key "name" . _String
@@ -238,7 +245,7 @@ postTokensVapidClearR = do
                   Just v -> do
 
                       void $ liftIO $ tryAny $ postWith opts
-                          (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretVapid}/versions/#{v}:destroy|])
+                          (unpack [st|#{smProjects}/#{project}/secrets/#{secretVapid}/versions/#{v}:destroy|])
                           (object [])
 
                   Nothing -> return ()
@@ -246,7 +253,7 @@ postTokensVapidClearR = do
                 runDB $ delete tid
                 addMessageI msgSuccess MsgRecordDeleted
                 redirect $ DataR TokensR
-                
+
             Nothing -> do
                 addMessageI msgError MsgInvalidGoogleAPITokens
                 redirect $ DataR TokensR
@@ -264,7 +271,7 @@ postTokensVapidClearR = do
               idOverlay <- newIdent
               idFormVapid <- newIdent
               idFormClear <- newIdent
-              $(widgetFile "data/tokens/vapid") 
+              $(widgetFile "data/tokens/vapid")
 
 
 postTokensVapidR :: Handler Html
@@ -274,14 +281,14 @@ postTokensVapidR = do
 
     VAPIDKeysMinDetails s xc yc <- liftIO generateVAPIDKeys
     let triple = pack $ show (s,xc,yc)
-    
-    case fr of          
+
+    case fr of
       FormSuccess t@StoreTypeDatabase -> do
           Entity tid _ <- runDB $ upsert (Token apiInfoVapid t) [TokenStore P.=. t]
           _ <- runDB $ upsert (Store tid "vapidTriple" triple) [StoreVal P.=. triple]
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR TokensR
-          
+          redirect $ DataR TokensVapidR
+
       FormSuccess t@StoreTypeGoogleSecretManager -> do
 
           tokenGmail <- runDB $ selectOne $ do
@@ -291,7 +298,7 @@ postTokensVapidR = do
 
           refreshToken <- case tokenGmail of
             Just (Entity _ (Token _ StoreTypeSession)) -> lookupSession secretGmail
-                
+
             Just (Entity _ (Token _ StoreTypeDatabase)) -> do
                 (unValue <$>) <$> runDB ( selectOne $ do
                     x :& k <- from $ table @Store
@@ -299,17 +306,17 @@ postTokensVapidR = do
                     where_ $ x ^. StoreKey ==. val secretGmail
                     where_ $ k ^. TokenApi ==. val apiInfoGoogle
                     return $ x ^. StoreVal )
-                
+
             Just (Entity _ (Token _ StoreTypeGoogleSecretManager)) -> do
               liftIO $ pure . pack <$> readFile' (unpack secretVolumeGmail)
 
             Nothing -> return Nothing
-            
+
           app <- appSettings <$> getYesod
 
           accessToken <- case refreshToken of
             Just rt -> do
-                
+
                 refreshResponse <- liftIO $ post "https://oauth2.googleapis.com/token"
                     [ "refresh_token" := rt
                     , "client_id" := (googleApiConfClientId . appGoogleApiConf $ app)
@@ -325,7 +332,7 @@ postTokensVapidR = do
                 let project = gcloudProjectId . appGcloudConf $ app
                 let opts = defaults & auth L.?~ oauth2Bearer (encodeUtf8 at)
                 response <- liftIO $ tryAny $ postWith opts
-                    (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretVapid}:addVersion|])
+                    (unpack [st|#{smProjects}/#{project}/secrets/#{secretVapid}:addVersion|])
                     (object [ "payload" .= object [ "data" .= decodeUtf8 (B64.encode (encodeUtf8 triple)) ]])
 
                 -- destroy previous version
@@ -338,9 +345,9 @@ postTokensVapidR = do
 
                       case prev of
                         Just v | v > 0 -> do
-                                 void $ liftIO $ tryAny $ postWith opts
-                                     (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretVapid}/versions/#{v}:destroy|])
-                                     (object [])
+                            void $ liftIO $ tryAny $ postWith opts
+                                (unpack [st|#{smProjects}/#{project}/secrets/#{secretVapid}/versions/#{v}:destroy|])
+                                (object [])
                                | otherwise -> return ()
                         Nothing -> return ()
 
@@ -352,18 +359,20 @@ postTokensVapidR = do
                 _ <- runDB $ upsert (Token apiInfoVapid t) [TokenStore P.=. t]
 
                 addMessageI msgSuccess MsgRecordEdited
-                redirect $ DataR TokensR
+                redirect $ DataR TokensVapidR
+                
             Nothing -> do
                 addMessageI msgError MsgInvalidGoogleAPITokens
-                redirect $ DataR TokensR 
+                redirect $ DataR TokensVapidR
+                
       _otherwise -> do
           addMessageI msgError MsgInvalidStoreType
-          redirect $ DataR TokensR
+          redirect $ DataR TokensVapidR
 
 
 getTokensVapidR :: Handler Html
 getTokensVapidR = do
-        
+
     tokenVapid <- runDB $ selectOne $ do
         x <- from $ table @Token
         where_ $ x ^. TokenApi ==. val apiInfoVapid
@@ -371,7 +380,7 @@ getTokensVapidR = do
 
     (fw,et) <- generateFormPost $ formVapid tokenVapid
     (fwClear,etClear) <- generateFormPost formTokensClear
-    
+
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
@@ -419,7 +428,7 @@ getTokensGoogleapisHookR = do
           _ <- runDB $ upsert (Token apiInfoGoogle x) [TokenStore P.=. x]
           addMessageI msgSuccess MsgRecordEdited
           redirect $ DataR TokensR
-          
+
       Just (email,x@StoreTypeDatabase) -> do
           setSession gmailSender email
           Entity tid _ <- runDB $ upsert (Token apiInfoGoogle x) [TokenStore P.=. x]
@@ -428,7 +437,7 @@ getTokensGoogleapisHookR = do
           _ <- runDB $ upsert (Store tid gmailSender email) [StoreVal P.=. email]
           addMessageI msgSuccess MsgRecordEdited
           redirect $ DataR TokensR
-          
+
       Just (email,x@StoreTypeGoogleSecretManager) -> do
           setSession gmailSender email
 
@@ -436,7 +445,7 @@ getTokensGoogleapisHookR = do
 
           let opts = defaults & auth L.?~ oauth2Bearer (encodeUtf8 accessToken)
           response <- liftIO $ tryAny $ postWith opts
-              (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretGmail}:addVersion|])
+              (unpack [st|#{smProjects}/#{project}/secrets/#{secretGmail}:addVersion|])
               (object [ "payload" .= object [ "data" .= decodeUtf8 (B64.encode (encodeUtf8 refreshToken)) ]])
 
           -- destroy previous version
@@ -446,26 +455,35 @@ getTokensGoogleapisHookR = do
                 let prev :: Maybe Int
                     prev = (fmap (\y -> y - 1) . readMaybe . unpack) <=< (LS.last . splitOn "/")
                         $ res L.^. responseBody . key "name" . _String
-                
+
                 case prev of
                   Just v | v > 0 -> do
-                           void $ liftIO $ tryAny $ postWith opts
-                               (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretGmail}/versions/#{v}:destroy|])
-                               (object [])
+                      void $ liftIO $ tryAny $ postWith opts
+                          (unpack [st|#{smProjects}/#{project}/secrets/#{secretGmail}/versions/#{v}:destroy|])
+                          (object [])
+
                          | otherwise -> return ()
                   Nothing -> return ()
 
-            Left e -> do
-                let msg = pack $ show e
-                addMessage msgError (toHtml msg)
-                $(logWarn) msg
+            Left e@(SomeException _) -> case fromException e of
+              Just (HttpExceptionRequest _ (StatusCodeException _ bs)) -> do
+                  $(logWarn) $ pack $ show e
+                  let msg = bs L.^. key "error" . key "message" . _String
+                  addMessage msgError (toHtml msg)
+                  redirect $ DataR TokensR
+
+              _otherwise -> do
+                  let msg = pack $ show e
+                  $(logWarn) msg
+                  addMessage msgError (toHtml msg)
+                  redirect $ DataR TokensR
 
           Entity tid _ <- runDB $ upsert (Token apiInfoGoogle x) [TokenStore P.=. x]
           _ <- runDB $ upsert (Store tid gmailSender email) [StoreVal P.=. email]
 
           addMessageI msgSuccess MsgRecordEdited
           redirect $ DataR TokensR
-          
+
       Nothing -> do
           addMessageI msgError MsgInvalidStoreType
           redirect $ DataR TokensR
@@ -489,7 +507,7 @@ postTokensGoogleapisClearR = do
           runDB $ delete tid
           addMessageI msgSuccess MsgRecordDeleted
           redirect $ DataR TokensR
-          
+
       (FormSuccess (),Just (Entity tid (Token _ StoreTypeDatabase))) -> do
           deleteSession gmailAccessToken
           deleteSession secretGmail
@@ -498,7 +516,7 @@ postTokensGoogleapisClearR = do
           runDB $ delete tid
           addMessageI msgSuccess MsgRecordDeleted
           redirect $ DataR TokensR
-          
+
       (FormSuccess (),Just (Entity tid (Token _ StoreTypeGoogleSecretManager))) -> do
           app <- appSettings <$> getYesod
           -- 1. read refresh token from mounted volume
@@ -517,9 +535,9 @@ postTokensGoogleapisClearR = do
           let opts = defaults & auth L.?~ oauth2Bearer (encodeUtf8 newAccessToken)
 
           let project = gcloudProjectId . appGcloudConf $ app
-          
+
           res <- liftIO $ getWith opts
-              (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretGmail}/versions/latest|])
+              (unpack [st|#{smProjects}/#{project}/secrets/#{secretGmail}/versions/latest|])
 
           let ver :: Maybe Int
               ver = (readMaybe . unpack) <=< (LS.last . splitOn "/") $ res L.^. responseBody . key "name" . _String
@@ -528,7 +546,7 @@ postTokensGoogleapisClearR = do
             Just v -> do
 
                 void $ liftIO $ tryAny $ postWith opts
-                    (unpack [st|#{enpointProjects}/#{project}/secrets/#{secretGmail}/versions/#{v}:destroy|])
+                    (unpack [st|#{smProjects}/#{project}/secrets/#{secretGmail}/versions/#{v}:destroy|])
                     (object [])
 
             Nothing -> return ()
@@ -549,7 +567,7 @@ postTokensGoogleapisClearR = do
           deleteSession gmailSender
           addMessageI msgSuccess MsgCleared
           redirect $ DataR TokensR
-          
+
       _otherwise -> do
           (fw,et) <- generateFormPost $ formStoreOptions tokenGmail
           msgr <- getMessageRender
@@ -583,7 +601,7 @@ postTokensR = do
 
           let scope :: Text
               scope = "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/cloud-platform"
-          
+
           r <- liftIO $ post "https://accounts.google.com/o/oauth2/v2/auth"
               [ "redirect_uri" := rndr (DataR TokensGoogleapisHookR)
               , "response_type" := ("code" :: Text)
@@ -610,7 +628,7 @@ postTokensR = do
 
 getTokensR :: Handler Html
 getTokensR = do
-    
+
     tokenGmail <- runDB $ selectOne $ do
         x <- from $ table @Token
         where_ $ x ^. TokenApi ==. val apiInfoGoogle
@@ -618,7 +636,7 @@ getTokensR = do
 
     (fw,et) <- generateFormPost $ formStoreOptions tokenGmail
     (fwClear,etClear) <- generateFormPost formTokensClear
-    
+
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
@@ -652,35 +670,47 @@ formVapid token extra = do
 
 formStoreOptions :: Maybe (Entity Token)-> Form (Text,StoreType)
 formStoreOptions token extra = do
-    
+
     let storeOptions = [ (MsgUserSession, StoreTypeSession)
                        , (MsgDatabase, StoreTypeDatabase)
                        , (MsgGoogleSecretManager, StoreTypeGoogleSecretManager)
                        ]
-                       
+
     (emailR,emailV) <- mreq emailField FieldSettings
         { fsLabel = SomeMessage MsgEmailAddress
-        , fsId = Nothing, fsName = Nothing, fsTooltip = Nothing
-        , fsAttrs = []
+        , fsId = Nothing, fsName = Nothing, fsTooltip = Nothing, fsAttrs = []
         } (Just "ciukstar@gmail.com")
-        
+
     (storeR,storeV) <- mreq (md3radioField (optionsPairs storeOptions)) FieldSettings
         { fsLabel = SomeMessage MsgStoreType
         , fsId = Nothing, fsName = Nothing, fsTooltip = Nothing
         , fsAttrs = [("style","display:flex;flex-direction:column;row-gap:1rem")]
         } (tokenStore . entityVal <$> token)
-        
+
     return ( (,) <$> emailR <*> storeR
            , [whamlet|
                #{extra}
-               ^{md3widget emailV}
-               <fieldset.shape-medium>
-                 <legend.body-medium>_{MsgStoreType}<sup>*
+
+               <div.field.label.border.round>
+                 ^{fvInput emailV}
+                 <label>
+                   #{fvLabel emailV}
+                   $if fvRequired emailV
+                     <sup>*
+                 <span.helper style="line-height:1">
+                   _{MsgUserAccountThroughWhichMailWillBeSent}
+
+
+               <fieldset.shape-medium style="margin-top:3rem">
+                 <legend.body-medium>
+                   _{MsgStoreType}<sup>*
+                 <p.small-text>
+                   _{MsgSelectLocationToStoreRefreshToken}
+
                  ^{fvInput storeV}
              |]
            )
 
 
-enpointProjects :: Text
-enpointProjects = "https://secretmanager.googleapis.com/v1/projects" :: Text
-
+smProjects :: Text
+smProjects = "https://secretmanager.googleapis.com/v1/projects"

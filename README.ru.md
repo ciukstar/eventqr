@@ -11,7 +11,30 @@
 
 
 *Диаграмма вариантов использования*
-![Entity Relationship Diagram](static/img/EventQr_UCD.svg)
+![Use Case Diagram](static/img/EventQr_UCD.svg)
+
+## Суперпользователь
+
+* Имя пользователя  
+  ```$YESOD_SUPERUSER_USERNAME```
+* Пароль  
+  ```$YESOD_SUPERUSER_PASSWORD```
+  
+Учетная запись суперпользователя определяется во время развертывания. Суперпользователь управляет другими пользователями и предоставляет или отзывает права администратора конкретным пользователям.
+
+## Интеграция с внешними API
+
+* Электронная почта: [Gmail API](https://developers.google.com/gmail/api/guides?hl=ru)  
+
+  * Идентификатор клиента  
+    ```$YESOD_GOOGLE_CLIENT_ID```
+  * Секрет клиента  
+    ```$YESOD_GOOGLE_CLIENT_SECRET```
+
+* Google Secret Manager: [Secret Manager API](https://cloud.google.com/secret-manager/docs/reference/rest)  
+
+  * Идентификатор проекта  
+    ```$YESOD_GCLOUD_PROJECT_ID```
 
 
 *Диаграмма взаимосвязи сущностей*

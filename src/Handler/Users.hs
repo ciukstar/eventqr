@@ -30,7 +30,7 @@ import Database.Esqueleto.Experimental
     )
     
 import Database.Persist
-    ( Entity (Entity), entityVal, insert, insert_, upsert, upsertBy, delete, deleteBy)
+    ( Entity (Entity), entityVal, insert, insert_, upsert, upsertBy, deleteBy)
 import qualified Database.Persist as P ((=.), delete)
 
 import Foundation
@@ -49,6 +49,7 @@ import Foundation
       , MsgSubscribeToPushNotifications, MsgVapidNotInitializedProperly
       , MsgSubscriptionSuccessful, MsgNotificationsHaveBeenDisabled
       , MsgEnableNotificationsPlease, MsgUnsubscribeSuccessful
+      , MsgSuperuser
       )
     )
 
@@ -66,7 +67,7 @@ import Model
     , EntityField
       ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
       , UserPhotoMime, UserName, UserAdmin, PushSubscriptionUser
-      , PushSubscriptionEndpoint, PushSubscriptionP256dh, PushSubscriptionAuth
+      , PushSubscriptionP256dh, PushSubscriptionAuth
       )
     )
 
@@ -244,7 +245,7 @@ postUserR uid = do
     ((fr,fw),et) <- runFormPost $ formUserEdit user
 
     case fr of
-      FormSuccess (User email _ name admin,(Just fi,attrib)) -> do
+      FormSuccess (User email _ name admin _,(Just fi,attrib)) -> do
           void $ runDB $ update $ \x -> do
             set x [ UserEmail =. val email
                   , UserName =. val name
@@ -260,7 +261,7 @@ postUserR uid = do
           addMessageI msgSuccess MsgRecordEdited
           redirect $ DataR UsersR
           
-      FormSuccess (User email _ name admin,(Nothing,attrib)) -> do
+      FormSuccess (User email _ name admin _,(Nothing,attrib)) -> do
           void $ runDB $ update $ \x -> do
             set x [ UserEmail =. val email
                   , UserName =. val name
@@ -311,7 +312,7 @@ postUsersR = do
     ((fr,fw),et) <- runFormPost $ formUser Nothing
 
     case fr of
-      FormSuccess (r@(User _ (Just pass) _ _),(Just fi,attrib)) -> do
+      FormSuccess (r@(User _ (Just pass) _ _ _),(Just fi,attrib)) -> do
           password <- liftIO $ saltPass pass
           uid <- runDB $ insert r { userPassword = Just password }
           bs <- fileSourceByteString fi
@@ -323,7 +324,7 @@ postUsersR = do
           addMessageI msgSuccess MsgRecordAdded
           redirect $ DataR UsersR
           
-      FormSuccess (r@(User _ (Just pass) _ _),(Nothing,attrib)) -> do
+      FormSuccess (r@(User _ (Just pass) _ _ _),(Nothing,attrib)) -> do
           password <- liftIO $ saltPass pass
           uid <- runDB $ insert r { userPassword = Just password }
           void $ runDB $ update $ \x -> do
@@ -405,7 +406,7 @@ formUser user extra = do
         , fsAttrs = []
         } (Just attrib)
 
-    let r = (,) <$> (User <$> emailR <*> passR <*> nameR <*> adminR)
+    let r = (,) <$> (User <$> emailR <*> passR <*> nameR <*> pure False <*> adminR)
                 <*> ((,) <$> photoR <*> attribR)
 
     idPhotoContainer <- newIdent
@@ -471,7 +472,7 @@ formUserEdit user extra = do
         , fsAttrs = []
         } (Just attrib)
 
-    let r = (,) <$> (User <$> emailR <*> pure Nothing <*> nameR <*> adminR)
+    let r = (,) <$> (User <$> emailR <*> pure Nothing <*> nameR <*> pure False <*> adminR)
                 <*> ((,) <$> photoR <*> attribR)
 
     idPhotoContainer <- newIdent

@@ -20,7 +20,7 @@
         <figcaption>
           _{MsgNoAttendeesForThisEventYet}.
     $else
-      $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _)) <- attendees
+      $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _)) <- attendees
         <a.row.padding.wave href=@{DataR $ DataEventCalendarEventAttendeeR month day eid aid}>
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

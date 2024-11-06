@@ -16,7 +16,7 @@ import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
     ( apiInfoVapid, apiInfoGoogle
-    , User (User, userEmail, userPassword, userAdmin, userName)
+    , User (User, userEmail, userPassword, userSuper, userAdmin, userName)
     , UserPhoto
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
       , userPhotoPhoto
@@ -75,6 +75,7 @@ fillDemoRu appSettings = do
     let user1 = User { userEmail = "bulanovalm@mail.ru"
                      , userPassword = Just pass1
                      , userName = Just "Буланова Любовь Михайловна"
+                     , userSuper = False
                      , userAdmin = True
                      }
     uid1 <- insert user1
@@ -90,6 +91,7 @@ fillDemoRu appSettings = do
     let user2 = User { userEmail = "petrovia@mail.ru"
                      , userPassword = Just pass2
                      , userName = Just "Петров Иван Александрович"
+                     , userSuper = False
                      , userAdmin = False
                      }
     uid2 <- insert user2
@@ -105,6 +107,7 @@ fillDemoRu appSettings = do
     let user3 = User { userEmail = "smirnovav@mail.ru"
                      , userPassword = Just pass3
                      , userName = Just "Смирнов Андрей Васильевич"
+                     , userSuper = False
                      , userAdmin = False
                      }
     uid3 <- insert user3
@@ -120,6 +123,7 @@ fillDemoRu appSettings = do
     let user4 = User { userEmail = "sergeevaav@mail.ru"
                      , userPassword = Just pass4
                      , userName = Just "Сергеева Александра Владимировна"
+                     , userSuper = False
                      , userAdmin = False
                      }
     uid4 <- insert user4

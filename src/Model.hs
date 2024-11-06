@@ -23,6 +23,10 @@ import ClassyPrelude.Yesod
     , share, sqlSettings, String
     )
 
+import Control.Applicative (pure) 
+
+import Data.Aeson (ToJSON, toJSON, FromJSON, parseJSON)
+import Data.Aeson.Types (Parser)
 import Data.Bool (Bool)
 import Data.ByteString (ByteString)
 import Data.Eq (Eq)
@@ -44,7 +48,7 @@ import GHC.Integer (Integer)
 import GHC.Num ((*))
 import GHC.Real ((/), (^))
 
-import Prelude (truncate)
+import Prelude (truncate, undefined)
 
 import Text.Hamlet (Html)
 import Text.Printf (printf)
@@ -55,6 +59,13 @@ import Text.Read (Read, readMaybe)
 import Yesod.Auth.HashDB (HashDBUser (userPasswordHash, setPasswordHash))
 import Yesod.Core.Dispatch (PathPiece, toPathPiece, fromPathPiece)
 import Yesod.Form.Fields (Textarea)
+
+import qualified Data.Aeson as A (Value (String, Bool))
+
+import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Text.Blaze.Html ( toHtml ) 
+import Data.Text.Lazy (toStrict)
+
 
 
 data NotificationStatus = NotificationStatusUnread | NotificationStatusRead
@@ -73,6 +84,18 @@ instance PathPiece Month where
 
     fromPathPiece :: Text -> Maybe Month
     fromPathPiece = readMaybe . unpack
+
+
+instance ToJSON Html where
+    toJSON :: Html -> A.Value
+    toJSON = A.String . toStrict . renderHtml
+
+instance FromJSON Html where
+    parseJSON :: A.Value -> Parser Html
+    parseJSON (A.String txt) = pure (toHtml txt)
+    parseJSON (A.Bool b) = pure (toHtml b)
+    parseJSON _ = undefined
+    
 
 
 -- You can define all of your database entities in the entities file.
@@ -118,7 +141,6 @@ gmailAccessTokenExpiresIn = "gmail_access_token_expires_in"
 
 apiInfoGoogle :: Text
 apiInfoGoogle = "GOOGLE_API"
-
 
 secretGmail :: Text
 secretGmail = "gmail_refresh_token"

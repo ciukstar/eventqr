@@ -34,7 +34,7 @@ Poster
 Event json
     time UTCTime
     name Text
-    descr Textarea
+    descr Html
 
 PushSubscription
     user UserId OnDeleteCascade
@@ -55,6 +55,7 @@ User
     email Text
     password Text Maybe
     name Text Maybe
+    super Bool
     admin Bool
     UniqueUser email
     deriving Typeable

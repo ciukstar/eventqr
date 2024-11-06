@@ -122,6 +122,8 @@ import Handler.Tokens
 
 import System.Environment.Blank (getEnv)
 
+import Yesod.Auth.Email (saltPass)
+
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
 -- comments there for more details.
@@ -163,6 +165,15 @@ makeFoundation appSettings = do
     flip runLoggingT logFunc $ flip runSqlPool pool $ do
 
         runMigration migrateAll
+
+        superpass <- liftIO $ saltPass (superuserPassword . appSuperuser $ appSettings)
+        insert_ User { userEmail = superuserUsername . appSuperuser $ appSettings
+                     , userPassword = Just superpass
+                     , userName = Just "Super User"
+                     , userSuper = True
+                     , userAdmin = True
+                     }
+
         demo <- liftIO $ getEnv "YESOD_DEMO_LANG"
         case demo of
           Just "RU" -> fillDemoRu appSettings

@@ -17,6 +17,50 @@
     <h3.small>_{MsgUseCaseDiagram}
     <img src=@{StaticR img_EventQr_UCD_svg} alt=_{MsgUseCaseDiagram} loading=lazy>
 
+
+  <section>
+    <h3.small>_{MsgSuperuser}
+    <dl>
+
+      <dt>_{MsgUsername}
+      <dd>
+        <code>&dollar;YESOD_SUPERUSER_USERNAME
+
+      <dt>_{MsgPassword}
+      <dd>
+        <code>&dollar;YESOD_SUPERUSER_PASSWORD
+
+    <p.md-typescale-body-medium>_{MsgDoc004}
+
+  <section>
+    <h3.small>_{MsgDoc005}
+    <ul>
+      <li>
+        _{MsgEmail}:
+        <a.link href="https://developers.google.com/gmail/api/guides" target=_blank>
+          Gmail API
+        <dl>
+          <dt>
+            _{MsgClientId}
+          <dd>
+            <code>&dollar;YESOD_GOOGLE_CLIENT_ID
+
+          <dt>
+            _{MsgClientSecret}
+          <dd>
+            <code>&dollar;YESOD_GOOGLE_CLIENT_SECRET
+      <li>
+        _{MsgGoogleSecretManager}:
+        <a.link href="https://cloud.google.com/secret-manager/docs/reference/rest" target=_blank>
+          Secret Manager API
+          
+        <dl>
+          <dt>
+            _{MsgProjectId}
+          <dd>
+            <code>&dollar;YESOD_GCLOUD_PROJECT_ID
+          
+
   <section>
     <h3.small>_{MsgEntityRelationshipDiagram}
     <img src=@{StaticR img_EventQr_ERD_svg} alt=_{MsgEntityRelationshipDiagram} loading=lazy>

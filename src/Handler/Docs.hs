@@ -15,7 +15,9 @@ import Foundation
     , AppMessage
       ( MsgAppName, MsgDocumentation, MsgIssueTracking, MsgSourceCode
       , MsgOverview, MsgUseCaseDiagram, MsgEntityRelationshipDiagram
-      , MsgDoc000, MsgDoc001, MsgDoc002, MsgDoc003
+      , MsgSuperuser, MsgUsername, MsgPassword, MsgEmail, MsgClientId
+      , MsgClientSecret, MsgGoogleSecretManager, MsgProjectId
+      , MsgDoc000, MsgDoc001, MsgDoc002, MsgDoc003, MsgDoc004, MsgDoc005
       )
     )
     

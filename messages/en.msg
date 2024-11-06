@@ -1,3 +1,9 @@
+ProjectId: Project ID
+ClientSecret: Client secret
+ClientId: Client id
+Superuser: Superuser
+SelectLocationToStoreRefreshToken: Select a location to store the refresh token
+UserAccountThroughWhichMailWillBeSent: User account through which mail will be sent
 UnknownMessageRecipient: Unknown message recipient
 UnknownMessagePublisher: Unidentified message publisher
 UnknownAccountForSendingEmail: Unknown account for sending email
@@ -228,4 +234,5 @@ Doc000: Event and Attendance Management
 Doc001 appname@Text href@Text: <a class="link" href=#{href} target=_blank>#{appname}</a> allows managers to register events, notify users about upcoming events and track attendance.
 Doc002 href@Text: <a class="link" href=#{href} target=_blank>Project repository</a> on GitHub.
 Doc003 href@Text: Please note that the application currently running is a demo application. Any actions are allowed and encouraged. <a class="link" href=#{href} target=_blank>Report issues</a> on GitHub.
+Doc004: A superuser account is defined at deployment time. The superuser manages other users and grants or revokes administrator privileges to specific users.
 Doc005: Integration with external APIs

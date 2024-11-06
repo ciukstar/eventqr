@@ -3,7 +3,7 @@
 
 <main.responsive>
 
-  $maybe (_,Entity uid (User email _ uname _)) <- card 
+  $maybe (_,Entity uid (User email _ uname _ _)) <- card 
 
     <figure>
       <img src=@{DataR $ UserPhotoR uid} height=64 loading=lazy alt=_{MsgPhoto}>

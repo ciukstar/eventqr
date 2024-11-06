@@ -24,7 +24,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Time.Calendar.Month (Month)
 
 import Database.Esqueleto.Experimental
-    ( selectOne, from, table, where_, val, (^.), select )
+    ( selectOne, from, table, where_, val, (^.), select, unionAll_, not_)
 import qualified Database.Esqueleto.Experimental as E ((==.))
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
 
@@ -244,7 +244,7 @@ instance Yesod App where
     
     isAuthorized FetchR _ = setUltDestCurrent >> return Authorized
     
-    isAuthorized (DataR TokensR) _ = isAdmin
+    isAuthorized r@(DataR TokensR) _ = setUltDest r >> isAdmin
     isAuthorized (DataR TokensGoogleapisHookR) _ = isAdmin
     isAuthorized (DataR TokensGoogleapisClearR) _ = isAdmin
     isAuthorized (DataR TokensVapidR) _ = isAdmin
@@ -443,7 +443,18 @@ instance YesodAuth App where
 formLogin :: Route App -> Widget
 formLogin route = do
 
-    users <- liftHandler $ runDB $ select $ from $ table @User
+    users <- liftHandler $ runDB $ select $ from $
+        ( do
+              x <- from $ table @User
+              where_ $ not_ $ x ^. UserSuper
+              return x
+        )
+        `unionAll_`
+        ( do
+              x <- from $ table @User
+              where_ $ x ^. UserSuper
+              return x
+        )
     
     msgr <- getMessageRender
     msgs <- getMessages
@@ -466,8 +477,8 @@ isAdmin :: Handler AuthResult
 isAdmin = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ True)) -> return Authorized
-        Just (Entity _ (User _ _ _ False)) -> unauthorizedI MsgAccessDeniedAdminsOnly
+        Just (Entity _ (User _ _ _ _ True)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ False)) -> unauthorizedI MsgAccessDeniedAdminsOnly
         Nothing -> unauthorizedI MsgSignInToAccessPlease
 
 
@@ -475,8 +486,8 @@ isAdministrator :: Handler Bool
 isAdministrator = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ True)) -> return True
-        Just (Entity _ (User _ _ _ False)) -> return False
+        Just (Entity _ (User _ _ _ _ True)) -> return True
+        Just (Entity _ (User _ _ _ _ False)) -> return False
         Nothing -> return False
     
 

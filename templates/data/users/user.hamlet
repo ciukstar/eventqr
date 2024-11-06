@@ -11,7 +11,7 @@
       _{MsgCards}
     
   <div.page.active>
-    $maybe Entity _ (User email _ uname admin) <- user
+    $maybe Entity _ (User email _ uname super admin) <- user
       <dl.margin>
         <dt>
           <label.bold.large-text>_{MsgName}
@@ -23,6 +23,14 @@
           <label.bold.large-text>_{MsgEmail}
         <dd.margin>
           #{email}
+
+        <dt>
+          <label.bold.large-text>_{MsgSuperuser}
+        <dd.margin>
+          $if super
+            _{MsgYes}
+          $else
+            _{MsgNo}
 
         <dt>
           <label.bold.large-text>_{MsgAdministrator}

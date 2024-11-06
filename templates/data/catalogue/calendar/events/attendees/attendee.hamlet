@@ -5,7 +5,7 @@
 
 <main.responsive>
 
-  $maybe (Entity _ (Attendee _ _ _),(Entity _ (Event time name descr),(Entity cid (Card _ _ _),Entity uid (User email _ uname _)))) <- attendee
+  $maybe (Entity _ (Attendee _ _ _),(Entity _ (Event time name descr),(Entity cid (Card _ _ _),Entity uid (User email _ uname _ _)))) <- attendee
 
     <figure>
       <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

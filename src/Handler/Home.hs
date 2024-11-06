@@ -80,6 +80,7 @@ import qualified Network.Wreq as WL (responseBody)
 import Settings (widgetFile)
 import Settings.StaticFiles (img_event_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
 
+import Text.Blaze.Html (toHtml)
 import Text.Hamlet (Html)
 import Text.Julius (rawJS)
 
@@ -93,7 +94,6 @@ import Yesod.Form.Input (runInputGet, ireq, iopt)
 import Yesod.Form.Fields
     ( urlField, intField, hiddenField, radioField, textField, optionsPairs
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
-    , Textarea (Textarea)
     )
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
@@ -116,7 +116,7 @@ getApiEventsR = do
                 
         case query of
           Just q -> where_ $ ( lower_ (x ^. EventName) `like` ((%) ++. lower_ (val q) ++. (%)) )
-              ||. ( lower_ (x ^. EventDescr) `like` ((%) ++. lower_ (val (Textarea q)) ++. (%)) )
+              ||. ( lower_ (x ^. EventDescr) `like` ((%) ++. lower_ (val (toHtml q)) ++. (%)) )
           Nothing -> limit 100
 
         return (x,attendees) )

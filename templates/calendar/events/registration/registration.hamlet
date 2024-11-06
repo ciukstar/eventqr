@@ -4,7 +4,7 @@
 <main.responsive>
 
   $case (card,event)
-    $of (Just (_,Entity uid (User email _ uname _)), Just (Entity _ (Event time name descr)))
+    $of (Just (_,Entity uid (User email _ uname _ _)), Just (Entity _ (Event time name descr)))
       <p>
         _{MsgConfirmUserRegistrationForEventPlease}.
       

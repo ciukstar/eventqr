@@ -72,7 +72,7 @@ import qualified Database.Persist as P ((=.))
 import Database.Persist.Sql (toSqlKey)
 
 import Foundation
-    ( App (appSettings, appHttpManager), Handler, Widget, Form
+    ( App (appSettings, appHttpManager), Handler, Form
     , widgetTopbar, widgetSnackbar, widgetScanner
     , Route (DataR, StaticR, EventR, EventPosterR)
     , DataR
@@ -106,7 +106,9 @@ import Foundation
       , MsgEmailAddress, MsgNotificationSentToSubscribersN, MsgSendPushNotification
       , MsgItLooksLikeUserNotSubscribedToPushNotifications, MsgPoster, MsgUploadPoster
       , MsgAttribution, MsgNotificationSent, MsgUnableToObtainAccessToken
-      , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail, MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher, MsgUnknownMessageRecipient
+      , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail
+      , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher
+      , MsgUnknownMessageRecipient
       )
     )
 
@@ -163,7 +165,7 @@ import Yesod.Core
     , fileSourceByteString
     )
 import Yesod.Form.Fields
-    ( textField, textareaField, radioField, optionsPairs
+    ( textField, radioField, optionsPairs
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
     , timeField, hiddenField, intField, htmlField, checkBoxField, emailField, fileField
     )
@@ -172,7 +174,6 @@ import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Form.Types
     ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
-    , Enctype
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 
@@ -493,7 +494,7 @@ formEventDay day event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventName . entityVal <$> event)
 
-    (descrR,descrV) <- mreq textareaField  FieldSettings
+    (descrR,descrV) <- mreq htmlField  FieldSettings
         { fsLabel = SomeMessage MsgDescription
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
@@ -925,7 +926,7 @@ formAttendee eid attendee extra = do
 
   where
 
-      pairs (Entity cid _, Entity _ (User email _ name _)) = (fromMaybe email name, cid)
+      pairs (Entity cid _, Entity _ (User email _ name _ _)) = (fromMaybe email name, cid)
 
       md3radioFieldList :: [(Entity Card, Entity User)] -> Field Handler CardId
       md3radioFieldList cards = (radioField (optionsPairs (pairs <$> cards)))
@@ -947,7 +948,7 @@ $if null opts
 $else
   <div *{attrs} style="max-height:60svh;overflow-y:auto">
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _)) <- findCard opt cards
+      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _)) <- findCard opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -1276,7 +1277,7 @@ formEvent event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventName . entityVal <$> event)
 
-    (descrR,descrV) <- mreq textareaField  FieldSettings
+    (descrR,descrV) <- mreq htmlField  FieldSettings
         { fsLabel = SomeMessage MsgDescription
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)

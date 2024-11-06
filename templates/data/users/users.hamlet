@@ -2,7 +2,7 @@
 ^{widgetTopbar Nothing (msgr MsgUsers) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
-  $forall Entity uid (User email _ uname admin) <- users
+  $forall Entity uid (User email _ uname _ admin) <- users
     <a.row.padding.wave href=@{DataR $ UserR uid}>
 
       <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
