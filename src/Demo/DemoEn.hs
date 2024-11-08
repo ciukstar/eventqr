@@ -15,7 +15,7 @@ import Database.Persist (PersistStoreWrite (insert, insert_))
 import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
-    ( apiInfoVapid, apiInfoGoogle
+    ( keyApiVapid, keyApiGmail
     , User (User, userEmail, userPassword, userSuper, userAdmin, userName)
     , UserPhoto
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
@@ -28,7 +28,7 @@ import Model
     , Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
     , Token (Token, tokenApi, tokenStore)
     , Store (Store, storeToken, storeKey, storeVal)
-    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager)
+    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager), secretVapid
     )
     
 import Settings (AppSettings (appDevelopment))
@@ -54,19 +54,19 @@ fillDemoEn appSettings = do
 
     if appDevelopment appSettings
         then do
-        tid <- insert Token { tokenApi = apiInfoVapid
+        tid <- insert Token { tokenApi = keyApiVapid
                             , tokenStore = StoreTypeDatabase
                             }
         insert_ Store { storeToken = tid
-                      , storeKey = "VAPID triple"
+                      , storeKey = secretVapid
                       , storeVal = "(77365822285703042512872615574182905356295150688934735928983377057495846568016,89758693107958609666387142100268936888371385180946146470089126836526923460219,12181163207068819145591782690996401924629474419901482659430518799427544674224)"
                       }
         else do
-        insert_ Token { tokenApi = apiInfoGoogle
+        insert_ Token { tokenApi = keyApiGmail
                       , tokenStore = StoreTypeGoogleSecretManager
                       }
 
-        insert_ Token { tokenApi = apiInfoVapid
+        insert_ Token { tokenApi = keyApiVapid
                       , tokenStore = StoreTypeGoogleSecretManager
                       }
 

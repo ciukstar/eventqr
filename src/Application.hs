@@ -112,12 +112,12 @@ import Handler.Users
     )
 
 import Handler.Tokens
-    ( getTokensR
-    , postTokensR
-    , getTokensGoogleapisHookR
-    , postTokensGoogleapisClearR
+    ( getTokensGmailR, postTokensGmailR
+    , postTokensGmailClearR
+    , getTokensGmailHookR
     , getTokensVapidR, postTokensVapidR
     , postTokensVapidClearR
+    , getTokensVapidHookR
     ) 
 
 import System.Environment.Blank (getEnv)

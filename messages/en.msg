@@ -12,7 +12,7 @@ UnableToObtainAccessToken: Unable to obtain access token
 Vapid: VAPID
 Gmail: Gmail
 InvalidGoogleAPITokens: Invalid Google API tokens
-VapidGenerationWarning: Generating a new VAPID key requires all clients to re-subscribe to the push notifications
+VapidGenerationWarning: Generating a new VAPID key will require all clients to re-subscribe to push notifications
 Generate: Generate
 GoogleSecretManager: Google Secret Manager
 GmailAccount: Gmail account

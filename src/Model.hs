@@ -119,8 +119,14 @@ instance SqlString Textarea
 
 
 
-apiInfoVapid :: Text
-apiInfoVapid = "VAPID"
+keyApiVapid :: Text
+keyApiVapid = "VAPID"
+
+secretRefreshTokenVapid :: Text
+secretRefreshTokenVapid = "vapid_refresh_token"
+
+secretVolumeRefreshTokenVapid :: Text
+secretVolumeRefreshTokenVapid = [st|/vrt/#{secretRefreshTokenVapid}|]
 
 secretVapid :: Text
 secretVapid = "vapid_min_details"
@@ -129,28 +135,27 @@ secretVolumeVapid :: Text
 secretVolumeVapid = [st|/vmd/#{secretVapid}|]
 
 
+keyApiGmail :: Text
+keyApiGmail = "GMAIL_API"
+
 gmailSendEnpoint :: String -> String
 gmailSendEnpoint = printf "https://gmail.googleapis.com/gmail/v1/users/%s/messages/send"
 
-gmailAccessToken :: Text
-gmailAccessToken = "gmail_access_token"
+keyAccessTokenGmail :: Text
+keyAccessTokenGmail = "gmail_access_token"
 
-gmailAccessTokenExpiresIn :: Text
-gmailAccessTokenExpiresIn = "gmail_access_token_expires_in"
+keyAccessTokenGmailExpiresIn :: Text
+keyAccessTokenGmailExpiresIn = "gmail_access_token_expires_in"
 
+secretRefreshTokenGmail :: Text
+secretRefreshTokenGmail = "gmail_refresh_token"
 
-apiInfoGoogle :: Text
-apiInfoGoogle = "GOOGLE_API"
-
-secretGmail :: Text
-secretGmail = "gmail_refresh_token"
-
-secretVolumeGmail :: Text
-secretVolumeGmail = [st|/grt/#{secretGmail}|]
+secretVolumeRefreshTokenGmail :: Text
+secretVolumeRefreshTokenGmail = [st|/grt/#{secretRefreshTokenGmail}|]
 
 
-gmailSender :: Text
-gmailSender = "gmail_sender"
+keySendby :: Text
+keySendby = "mail_sendby"
 
 
 mediae :: [(Text,Text)]

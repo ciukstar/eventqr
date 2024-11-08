@@ -99,8 +99,10 @@
     /users/#UserId/photo    UserPhotoR    GET
 
 
-    /tokens/vapid/clear      TokensVapidClearR      POST
-    /tokens/vapid            TokensVapidR           GET POST
-    /tokens/googleapis/clear TokensGoogleapisClearR POST
-    /tokens/googleapis/hook  TokensGoogleapisHookR  GET
-    /tokens                  TokensR                GET POST
+    /tokens/vapid/hook  TokensVapidHookR  GET
+    /tokens/vapid/clear TokensVapidClearR POST
+    /tokens/vapid       TokensVapidR      GET POST
+    
+    /tokens/gmail/hook  TokensGmailHookR  GET
+    /tokens/gmail/clear TokensGmailClearR POST
+    /tokens/gmail       TokensGmailR      GET POST

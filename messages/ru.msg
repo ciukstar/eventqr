@@ -12,7 +12,7 @@ UnableToObtainAccessToken: Не удалось получить токен до�
 Vapid: VAPID
 Gmail: Gmail
 InvalidGoogleAPITokens: Неверные токены Google API
-VapidGenerationWarning: Для создания нового ключа VAPID всем клиентам необходимо повторно подписаться на push-уведомления
+VapidGenerationWarning: Генерация нового ключа VAPID потребует от всех клиентов повторной подписки на push-уведомления
 Generate: Генерировать
 GoogleSecretManager: Google Secret Manager
 GmailAccount: Учетная запись Gmail

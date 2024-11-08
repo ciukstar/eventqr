@@ -1,7 +1,7 @@
 
 
 $with idMenu <- idMenuLang
-  <button.trigger-lang.circle.transparent data-ui=##{idMenu}>
+  <button.trigger-lang.circle.transparent.no-elevate data-ui=##{idMenu}>
     <i>language
     <menu.left.no-wrap ##{idMenu}>
       $forall (lang,_) <- langs

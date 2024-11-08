@@ -4,7 +4,7 @@
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a href=@{DataR TokensR}>
+    <a href=@{DataR TokensGmailR}>
       _{MsgGmail}
       
     <a.active href=@{DataR TokensVapidR}>

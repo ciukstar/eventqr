@@ -177,7 +177,7 @@ import Yesod.Form.Types
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 
-import Handler.Tokens (getRefreshToken, fetchAccessToken)
+import Handler.Tokens (fetchRefreshToken, fetchAccessToken, fetchVapidKeys)
 
 
 postDataEventCalendarEventAttendeeDeleR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
@@ -573,7 +573,7 @@ postDataEventAttendeeDeleR eid aid = do
 
 getAccessToken :: Handler (Either AppMessage (Text,Text))
 getAccessToken = do
-    (rtoken,sender) <- getRefreshToken
+    (rtoken,sender) <- fetchRefreshToken
     case (rtoken,sender) of       
       (Just rt, Just sendby) -> do
           at <- fetchAccessToken rt
@@ -682,7 +682,7 @@ postDataEventAttendeeNotifyR eid aid = do
       postMessage :: Maybe (Entity Attendee, (Entity Event, (Entity Card, Entity User)))
                   -> Text -> Html -> Handler ()
       postMessage attendee subject message = do
-          vapidKeys <- appVAPIDKeys . appSettings <$> getYesod
+          vapidKeys <- fetchVapidKeys
           user <- maybeAuth
           case (vapidKeys,user,attendee) of
             (Just vapid,Just publisher@(Entity pid _),Just (_,(_,(_,Entity rid _)))) -> do

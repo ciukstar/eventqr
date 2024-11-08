@@ -4,7 +4,7 @@
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a.active href=@{DataR TokensR}>
+    <a.active href=@{DataR TokensGmailR}>
       _{MsgGmail}
       
     <a href=@{DataR TokensVapidR}>
@@ -12,10 +12,10 @@
     
   <div.page.active.padding>
 
-    <form method=post action=@{DataR TokensR} enctype=#{et} ##{idFormTokensGmail}>
+    <form method=post action=@{DataR TokensGmailR} enctype=#{et} ##{idFormTokensGmail}>
       ^{fw}
       
-    <form method=post action=@{DataR TokensGoogleapisClearR} enctype=#{etClear} ##{idFormTokensGmailClear}>
+    <form method=post action=@{DataR TokensGmailClearR} enctype=#{etClear} ##{idFormTokensGmailClear}>
       ^{fwClear}
 
     <nav.right-align>

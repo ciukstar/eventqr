@@ -1,7 +1,7 @@
 
 
 $maybe Entity uid _ <- user
-  <button.circle.transparent data-ui=#accountmenutrigger>
+  <button.circle.transparent.no-elevate data-ui=#accountmenutrigger>
     <img src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>
     <menu.left.no-wrap #accountmenutrigger>
     
