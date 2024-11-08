@@ -1,0 +1,20 @@
+
+Array.from(
+  document.querySelectorAll('time.full-datetime[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleDateString(
+    navigator.language,
+    { year: 'numeric',
+      month: 'short',
+      weekday: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    }
+  );
+});
+
+
+document.getElementById(#{idOverlay}).addEventListener('click', e => {
+  document.getElementById(#{idDialogDelete}).close();
+});

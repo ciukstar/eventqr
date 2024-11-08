@@ -24,8 +24,11 @@ import qualified Data.Text.Encoding as TE
 import Data.Time.Calendar.Month (Month)
 
 import Database.Esqueleto.Experimental
-    ( selectOne, from, table, where_, val, (^.), select, unionAll_, not_)
-import qualified Database.Esqueleto.Experimental as E ((==.))
+    ( SqlExpr, selectOne, from, table, where_, val, select, unionAll_, not_
+    , (^.)
+    , countRows, unValue
+    )
+import qualified Database.Esqueleto.Experimental as E ((==.), Value)
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
 
 import Text.Email.Validate (emailAddress, localPart)
@@ -106,6 +109,14 @@ widgetTopbar backlink title idOverlay idDialogDelete editRoute = do
 widgetAccount :: Widget
 widgetAccount = do
     user <- maybeAuth
+    unread <- case user of
+      Nothing -> return 0
+      Just (Entity uid _) -> handlerToWidget $ maybe 0 unValue <$> runDB ( selectOne $ do
+        x <- from $ table @Notification
+        where_ $ x ^. NotificationRecipient E.==. val uid
+        where_ $ x ^. NotificationStatus E.==. val NotificationStatusUnread
+        return (countRows :: SqlExpr (E.Value Int)))
+        
     $(widgetFile "widgets/account")
 
 
@@ -259,6 +270,10 @@ instance Yesod App where
     isAuthorized (DataR (UserR _)) _ = isAdmin
     isAuthorized (DataR UsersR) _ = setUltDestCurrent >> isAdmin
     isAuthorized (DataR (UserPhotoR _)) _ = return Authorized
+    isAuthorized (DataR (UserNotificationsR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (UserNotificationR uid _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (UserNotificationDeleR uid _)) _ = isAuthenticatedSelf uid
+        
     isAuthorized (DataR (UserSettingsR uid)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (UserSubscriptionsR uid)) _ = isAuthenticatedSelf uid
     

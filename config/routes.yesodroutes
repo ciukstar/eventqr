@@ -94,9 +94,12 @@
     /users              UsersR    GET POST
     
     /users/#UserId/subscriptions UserSubscriptionsR POST
-    
-    /users/#UserId/settings UserSettingsR GET
-    /users/#UserId/photo    UserPhotoR    GET
+
+    /users/#UserId/settings                           UserSettingsR         GET
+    /users/#UserId/notifications/#NotificationId/dele UserNotificationDeleR POST
+    /users/#UserId/notifications/#NotificationId      UserNotificationR     GET
+    /users/#UserId/notifications                      UserNotificationsR    GET
+    /users/#UserId/photo                              UserPhotoR            GET
 
 
     /tokens/vapid/hook  TokensVapidHookR  GET

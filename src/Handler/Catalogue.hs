@@ -108,7 +108,8 @@ import Foundation
       , MsgAttribution, MsgNotificationSent, MsgUnableToObtainAccessToken
       , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail
       , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher
-      , MsgUnknownMessageRecipient
+      , MsgUnknownMessageRecipient, MsgCheckAtLeastOneOptionPlease
+      , MsgProvideRecipientEmailPlease, MsgMessageSent
       )
     )
 
@@ -143,7 +144,7 @@ import Network.HTTP.Client
     )
 import Network.HTTP.Types.URI (extractPath)
 
-import Settings (widgetFile, AppSettings (appTimeZone, appVAPIDKeys))
+import Settings (widgetFile, AppSettings (appTimeZone))
 import Settings.StaticFiles (img_logo_svg)
 
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -629,11 +630,14 @@ logNotification :: UserId -> UserId -> Text -> Html -> Handler ()
 logNotification pid rid subject message = do
     now <- liftIO getCurrentTime
     runDB $ insert_ $ Notification pid rid now subject message NotificationStatusUnread
+    addMessageI msgSuccess MsgNotificationSent
 
 
 postDataEventAttendeeNotifyR :: EventId -> AttendeeId -> Handler Html
 postDataEventAttendeeNotifyR eid aid = do
 
+    publisher <- maybeAuth
+    
     attendee <- runDB $ selectOne $ do
         x :& e :& c :& u <- from $ table @Attendee
             `innerJoin` table @Event `on` (\(x :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
@@ -647,20 +651,49 @@ postDataEventAttendeeNotifyR eid aid = do
 
     msgr <- getMessageRender
     
-    case fr1 of
-      FormSuccess ((subject, message),((True, True),(True,Just email))) -> do
-          postMessage attendee subject message
-          postEmail email subject message
+    case (fr1,(publisher,attendee)) of
+      (FormSuccess ((subj, msg), ((True, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          postMessage attendee subj msg
+          logNotification pid rid subj msg
+          postEmail email subj msg
           redirect $ DataR $ DataEventAttendeeR eid aid
-      
-      FormSuccess ((subject, message),((True,True), (False,_))) -> do
-          postMessage attendee subject message
+          
+      (FormSuccess ((subj, msg), ((True, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          postMessage attendee subj msg
+          logNotification pid rid subj msg
           redirect $ DataR $ DataEventAttendeeR eid aid
-                
-      FormSuccess ((subject, message),((False, False),(True,Just email))) -> do
-          postEmail email subject message
+          
+      (FormSuccess ((subj, msg), ((True, False),(True,Just email))),_) -> do
+          postMessage attendee subj msg
+          postEmail email subj msg
+          redirect $ DataR $ DataEventAttendeeR eid aid
+          
+      (FormSuccess ((subj, msg), ((True, False),(False,_))),_) -> do
+          postMessage attendee subj msg
+          redirect $ DataR $ DataEventAttendeeR eid aid
+          
+      (FormSuccess ((subj, msg), ((False, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          logNotification pid rid subj msg
+          postEmail email subj msg
+          redirect $ DataR $ DataEventAttendeeR eid aid
+          
+      (FormSuccess ((subj, msg), ((False, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          logNotification pid rid subj msg
+          redirect $ DataR $ DataEventAttendeeR eid aid
+          
+      (FormSuccess ((subj, msg), ((False, False),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          logNotification pid rid subj msg
+          postEmail email subj msg
           redirect $ DataR $ DataEventAttendeeR eid aid
 
+      (FormSuccess (_, ((False, False),(False,_))),_) -> do
+          addMessageI msgError MsgCheckAtLeastOneOptionPlease
+          redirect $ DataR $ DataEventAttendeeR eid aid
+
+      (FormSuccess (_, (_,(True,Nothing))),_) -> do
+          addMessageI msgError MsgProvideRecipientEmailPlease
+          redirect $ DataR $ DataEventAttendeeR eid aid
+          
       _otherwise -> do
           msgs <- getMessages
           defaultLayout $ do
@@ -685,9 +718,8 @@ postDataEventAttendeeNotifyR eid aid = do
           vapidKeys <- fetchVapidKeys
           user <- maybeAuth
           case (vapidKeys,user,attendee) of
-            (Just vapid,Just publisher@(Entity pid _),Just (_,(_,(_,Entity rid _)))) -> do
-                results <- pushNotifications vapid publisher eid subject message
-                logNotification pid rid subject message
+            (Just vapid,Just publisher,Just (_,(_,(_,Entity rid _)))) -> do
+                results <- pushNotifications vapid publisher rid eid subject message
                 addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
                 
             (Nothing,_,_) -> do
@@ -719,13 +751,15 @@ postDataEventAttendeeNotifyR eid aid = do
               
 
 
-pushNotifications :: VAPIDKeys -> Entity User -> EventId -> Text -> Html -> Handler [Either PushNotificationError ()]
-pushNotifications vapid publisher eid subject message = do
+pushNotifications :: VAPIDKeys -> Entity User -> UserId -> EventId -> Text -> Html
+                  -> Handler [Either PushNotificationError ()]
+pushNotifications vapid publisher rid eid subject message = do
 
     rndr <- getUrlRender
 
     subscriptions <- runDB $ select $ do
         x <- from $ table @PushSubscription
+        where_ $ x ^. PushSubscriptionUser ==. val rid
         return x
 
     let expath = decodeUtf8 . extractPath . encodeUtf8 . rndr

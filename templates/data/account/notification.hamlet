@@ -1,0 +1,48 @@
+
+^{widgetTopbar (Just (DataR $ UserNotificationsR uid,stati)) (msgr MsgNotification) idOverlay (Just idDialogDelete) Nothing}
+
+<main.responsive.padding>
+  $maybe (Entity _ (Notification pid _ published subject msg _),Entity _ (User email _ uname _ _)) <- notification
+    <dl>
+      <dt.bold.large-text>
+        _{MsgMessageSubject}
+      <dd.margin>
+        #{subject}
+
+      <dt.bold.large-text>
+        _{MsgSent}
+      <dd.margin>
+        <figure>
+          <img.circle.tiny src=@{DataR $ UserPhotoR pid} loading=lazy alt=_{MsgPhoto}>
+          <figcaption>
+            <div>
+              $maybe name <- uname
+                #{name}
+              $nothing
+                #{email}
+       
+            $with dt <- show published
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
+
+      <dt.bold.large-text>
+        _{MsgMessage}
+      <dd.margin>
+        #{msg}
+
+      
+  ^{widgetSnackbar msgs}
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+<dialog ##{idDialogDelete}>
+  <h5>_{MsgConfirmPlease}
+  <div>_{MsgDeleteAreYouSure}
+  <nav.right-align.no-space>
+    <button.transparent.link data-ui=##{idOverlay}
+      onclick="document.getElementById('#{idDialogDelete}').close()">
+      _{MsgCancel}
+    <form method=post action=@{DataR $ UserNotificationDeleR uid nid} enctype=#{et0}>
+      ^{fw0}
+      <button.primary type=submit>
+        _{MsgDele}

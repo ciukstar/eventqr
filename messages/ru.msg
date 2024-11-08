@@ -1,3 +1,16 @@
+Notification: Уведомление
+New: Новое
+From: От
+Sent: Отправлено
+Unread: Непрочитано
+Read: Прочитано
+MessageSent: Сообщение отправлено
+Publisher: Публикатор
+NoNotificationsForYouAtTheMoment: На данный момент для вас нет уведомлений
+Notifications: Уведомления
+ProvideRecipientEmailPlease: Пожалуйста, укажите адрес электронной почты получателя
+CheckAtLeastOneOptionPlease: Пожалуйста, отметьте хотя бы один из вариантов
+UserSessionLocalTesting: Пользовательская сессия (локальное тестирование)
 ProjectId: Идентификатор проекта
 ClientSecret: Секрет клиента
 ClientId: Идентификатор клиента

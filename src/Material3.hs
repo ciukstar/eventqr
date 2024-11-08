@@ -44,7 +44,8 @@ md3radioField options = (radioField options)
   $forall (i,opt) <- opts
     <label.radio for=#{theId}-#{i}>
       <input type=radio ##{theId}-#{i} name=#{name} :isReq:required=true value=#{optionExternalValue opt} :sel x opt:checked>
-      <span>#{optionDisplay opt}
+      <span style="white-space:normal">
+        #{optionDisplay opt}
     
 |] }
 

@@ -54,7 +54,7 @@ import Foundation
       , MsgRecordDeleted, MsgInvalidFormData, MsgCleared, MsgEmailAddress
       , MsgGmail, MsgVapid, MsgGoogleSecretManager, MsgVapidGenerationWarning
       , MsgUserAccountThroughWhichMailWillBeSent, MsgSelectLocationToStoreRefreshToken
-      , MsgGenerate
+      , MsgGenerate, MsgUserSessionLocalTesting
       )
     )
 
@@ -98,7 +98,7 @@ import Text.Shakespeare.Text (st)
 
 import Web.WebPush
     ( generateVAPIDKeys, VAPIDKeysMinDetails (VAPIDKeysMinDetails)
-    , VAPIDKeys
+    , VAPIDKeys, readVAPIDKeys
     )
 
 import Yesod.Core
@@ -126,10 +126,12 @@ fetchVapidKeys = do
         where_ $ x ^. TokenApi ==. val keyApiVapid
         return x
 
-    (readMay =<<) <$> case tokenVapid of
-      Just (Entity _ (Token _ StoreTypeSession)) -> lookupSession secretVapid
+    ((readVAPIDKeys . (\(a,x,y) -> VAPIDKeysMinDetails a x y) <$>) . readMay =<<) <$> case tokenVapid of
+      Just (Entity _ (Token _ StoreTypeSession)) -> do
+          $(logWarn) "There is no point of having VAPID keys saved in user session"
+          lookupSession secretVapid
           
-      Just (Entity tid (Token _ StoreTypeDatabase)) ->
+      Just (Entity tid (Token _ StoreTypeDatabase)) -> do
           (unValue <$>) <$> runDB ( selectOne $ do
               x <- from $ table @Store
               where_ $ x ^. StoreToken ==. val tid
@@ -710,7 +712,7 @@ getTokensGmailR = do
 formVapid :: Maybe (Entity Token) -> Form StoreType
 formVapid token extra = do
     
-    let storeOptions = [ (MsgUserSession, StoreTypeSession)
+    let storeOptions = [ (MsgUserSessionLocalTesting, StoreTypeSession)
                        , (MsgDatabase, StoreTypeDatabase)
                        , (MsgGoogleSecretManager, StoreTypeGoogleSecretManager)
                        ]

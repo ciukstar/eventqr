@@ -1,3 +1,16 @@
+Notification: Notification
+New: New
+From: From
+Sent: Sent
+Unread: Unread
+Read: Read
+MessageSent: Message sent
+Publisher: Publisher
+NoNotificationsForYouAtTheMoment: There are no notifications for you at the moment
+Notifications: Notifications
+ProvideRecipientEmailPlease: Please provide the recipient's email address
+CheckAtLeastOneOptionPlease: Please check at least one of the options
+UserSessionLocalTesting: User session (local testing)
 ProjectId: Project ID
 ClientSecret: Client secret
 ClientId: Client id

@@ -43,8 +43,6 @@ connection-pool:
 
 time-zone: "_env:YESOD_TIME_ZONE:'+00:00'"
 
-vapid-triplet: "_env:YESOD_VAPID_TRIPLET:'(privateNumber,publicCoordX,publicCoordY)'"
-
 superuser:
   username: "_env:YESOD_SUPERUSER_USERNAME:???@???.???"
   password: "_env:YESOD_SUPERUSER_PASSWORD:???"

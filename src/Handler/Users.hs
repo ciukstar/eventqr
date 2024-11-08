@@ -11,22 +11,25 @@ module Handler.Users
   , postUserDeleR
   , getUserEditR
   , getUserNewR
+  , getUserNotificationsR, getUserNotificationR
+  , postUserNotificationDeleR
   , getUserSettingsR
   , postUserSubscriptionsR
   ) where
 
+import ClassyPrelude (readMay)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Aeson (toJSON)
 import Data.Maybe (isJust)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Text.Encoding (encodeUtf8)
 
 import Database.Esqueleto.Experimental
     ( select, from, table, selectOne, where_, val, update, set
-    , (^.), (==.), (=.)
-    , Value (unValue), orderBy, asc
+    , (^.), (==.), (=.), (:&) ((:&))
+    , Value (unValue), orderBy, asc, innerJoin, on
     )
     
 import Database.Persist
@@ -34,11 +37,12 @@ import Database.Persist
 import qualified Database.Persist as P ((=.), delete)
 
 import Foundation
-    ( App (appSettings), Handler, Form, widgetTopbar, widgetSnackbar
+    ( Handler, Form, widgetTopbar, widgetSnackbar
     , Route (DataR, StaticR, HomeR)
     , DataR
       ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
-      , UserCardsR, UserSettingsR, UserSubscriptionsR
+      , UserCardsR, UserNotificationsR, UserNotificationR, UserSettingsR
+      , UserSubscriptionsR, UserNotificationDeleR
       )
     , AppMessage
       ( MsgUsers, MsgPhoto, MsgUser, MsgAdministrator, MsgEmail, MsgName
@@ -49,9 +53,13 @@ import Foundation
       , MsgSubscribeToPushNotifications, MsgVapidNotInitializedProperly
       , MsgSubscriptionSuccessful, MsgNotificationsHaveBeenDisabled
       , MsgEnableNotificationsPlease, MsgUnsubscribeSuccessful
-      , MsgSuperuser
+      , MsgSuperuser, MsgNotifications, MsgNoNotificationsForYouAtTheMoment
+      , MsgRead, MsgUnread, MsgFrom, MsgNotification, MsgMessage, MsgSent
+      , MsgMessageSubject      
       )
     )
+
+import Handler.Tokens (fetchVapidKeys)
 
 import Material3 (md3switchWidget)
     
@@ -64,14 +72,17 @@ import Model
       ( PushSubscription, pushSubscriptionEndpoint, pushSubscriptionP256dh
       , pushSubscriptionAuth
       )
+    , NotificationId, Notification (Notification)
+    , NotificationStatus (NotificationStatusRead, NotificationStatusUnread)
     , EntityField
       ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
       , UserPhotoMime, UserName, UserAdmin, PushSubscriptionUser
-      , PushSubscriptionP256dh, PushSubscriptionAuth
+      , PushSubscriptionP256dh, PushSubscriptionAuth, NotificationRecipient
+      , NotificationPublisher, NotificationStatus, NotificationId
       )
     )
 
-import Settings (widgetFile, AppSettings (appVAPIDKeys))
+import Settings (widgetFile)
 import Settings.StaticFiles
     ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
 
@@ -84,7 +95,7 @@ import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , FileInfo (fileContentType), SomeMessage (SomeMessage)
-    , MonadHandler (liftHandler), addMessageI, fileSourceByteString, getYesod
+    , MonadHandler (liftHandler), addMessageI, fileSourceByteString, YesodRequest (reqGetParams), getRequest
     )
 import Yesod.Form.Fields
     ( emailField, textField, fileField, passwordField, htmlField
@@ -97,12 +108,13 @@ import Yesod.Form.Types
     , FieldView (fvErrors, fvInput, fvRequired, fvLabel, fvId )
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Yesod.Form.Input (runInputGet, iopt)
 
 
 postUserSubscriptionsR :: UserId -> Handler Html
 postUserSubscriptionsR uid = do
 
-    vapid <- appVAPIDKeys . appSettings <$> getYesod
+    vapid <- fetchVapidKeys
 
     case vapid of
       Nothing -> do
@@ -129,22 +141,22 @@ postUserSubscriptionsR uid = do
                     , PushSubscriptionAuth P.=. keyAuth'
                     ]
                 addMessageI msgSuccess MsgSubscriptionSuccessful
-                redirect $ DataR $ UserSettingsR uid
+                redirect $ DataR $ UserNotificationsR uid
                 
             FormSuccess (False, PushSubscription _ endpoint' _ _) -> do
                 void $ runDB $ deleteBy (UniquePushSubscription endpoint')
                 addMessageI msgSuccess MsgUnsubscribeSuccessful
-                redirect $ DataR $ UserSettingsR uid
+                redirect $ DataR $ UserNotificationsR uid
 
             _otherwise -> do           
                 addMessageI msgError MsgInvalidFormData
-                redirect $ DataR $ UserSettingsR uid
+                redirect $ DataR $ UserNotificationsR uid
 
 
 getUserSettingsR :: UserId -> Handler Html
 getUserSettingsR uid = do
 
-    vapid <- appVAPIDKeys . appSettings <$> getYesod
+    vapid <- fetchVapidKeys
 
     case vapid of
       Nothing -> do
@@ -170,6 +182,71 @@ getUserSettingsR uid = do
               idOverlay <- newIdent
               idFormSubscription <- newIdent
               $(widgetFile "data/account/push/subscriptions")
+
+
+postUserNotificationDeleR  :: UserId -> NotificationId -> Handler Html
+postUserNotificationDeleR uid nid = do
+    ((fr0,_),_) <- runFormPost formUserNotificationDelete
+    case fr0 of
+      FormSuccess () -> do
+          runDB $ P.delete nid
+          addMessageI msgSuccess MsgRecordDeleted
+          redirect $ DataR $ UserNotificationsR uid
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ DataR $ UserNotificationR uid nid
+
+
+getUserNotificationR :: UserId -> NotificationId -> Handler Html
+getUserNotificationR uid nid = do
+
+    stati <- reqGetParams <$> getRequest
+
+
+    notification <- runDB $ selectOne $ do
+        x :& p <- from $ table @Notification
+            `innerJoin` table @User `on` (\(x :& p) -> x ^. NotificationPublisher ==. p ^. UserId)
+        where_ $ x ^. NotificationId ==. val nid
+        return (x,p)
+
+    runDB $ update $ \x -> do
+      set x [ NotificationStatus =. val NotificationStatusRead ]
+      where_ $ x ^. NotificationId ==. val nid
+
+    (fw0,et0) <- generateFormPost formUserNotificationDelete
+
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgNotification 
+        idOverlay <- newIdent
+        idDialogDelete <- newIdent
+        $(widgetFile "data/account/notification")
+
+
+formUserNotificationDelete :: Form ()
+formUserNotificationDelete extra = return (pure (), [whamlet|#{extra}|])
+
+
+getUserNotificationsR :: UserId -> Handler Html
+getUserNotificationsR uid = do
+
+    status <- (readMay =<<) <$> runInputGet ( iopt textField "status" )
+
+    notifications <- runDB $ select $ do
+        x :& p <- from $ table @Notification
+            `innerJoin` table @User `on` (\(x :& p) -> x ^. NotificationPublisher ==. p ^. UserId)
+        where_ $ x ^. NotificationRecipient ==. val uid
+        case status of
+          Just s -> where_ $ x ^. NotificationStatus ==. val s
+          Nothing -> return ()
+        return (x,p)
+
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgNotifications 
+        idFormSearch <- newIdent
+        $(widgetFile "data/account/notifications")
 
 
 formSubscribe :: VAPIDKeys -> UserId -> Maybe (Entity PushSubscription) -> Form (Bool,PushSubscription)

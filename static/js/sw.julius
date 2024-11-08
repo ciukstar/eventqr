@@ -23,7 +23,11 @@ self.addEventListener('push', (e) => {
 
 self.addEventListener('notificationclick', function (e) {
   
-  if (e.action === #{actionReadNotifcation}) {
+  if (e.action === #{actionDismissNotifcation}) {
+
+    e.notification.close();
+    
+  } else {
     
     e.notification.close();
 
@@ -54,10 +58,6 @@ self.addEventListener('notificationclick', function (e) {
     });
     
     e.waitUntil(promise);
-    
-  } else  {
-
-    e.notification.close();
     
   }
   

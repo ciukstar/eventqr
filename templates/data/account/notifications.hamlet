@@ -1,0 +1,56 @@
+
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{HomeR}>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgNotifications}
+      
+    <a.button.circle.transparent href=@{DataR $ UserSettingsR uid} title=_{MsgSettings}>
+      <i>settings
+
+<main.responsive.no-padding>
+
+  <form method=get action=@{DataR $ UserNotificationsR uid} ##{idFormSearch}>
+
+  $forall (s, label) <- [(NotificationStatusUnread, MsgUnread), (NotificationStatusRead, MsgRead)]
+    $if pure s == status
+      <button.chip.fill.round.small-margin type=submit form=#{idFormSearch}>
+        <i>done
+        <span>_{label}
+    $else
+      <button.chip.round.small-margin type=submit name=status value=#{show s} form=#{idFormSearch}>
+        <span>_{label}
+
+  $if null notifications
+    <figure.margin.pading style="text-align:center">
+      <i.extra>folder_open
+      <figcaption>
+        _{MsgNoNotificationsForYouAtTheMoment}.
+  $else
+    $forall (Entity nid (Notification pid _ published subject _ status),Entity _ (User email _ uname _ _)) <- notifications
+      <a.row.padding.wave href=@?{(DataR $ UserNotificationR uid nid,[("status",pack $ show status)])}>
+        <img.circle src=@{DataR $ UserPhotoR pid} loading=lazy alt=_{MsgPhoto}>
+        <div.content.max>
+
+          <h6.headline.large-text :status == NotificationStatusUnread:.bold>
+            #{subject}
+
+          $with dt <- show published
+            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+              #{dt}
+              
+          <div.supporting-text.small-text>
+            _{MsgFrom}: 
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+
+        <i>arrow_forward_ios
+
+      <hr>
+
+      
+  ^{widgetSnackbar msgs}

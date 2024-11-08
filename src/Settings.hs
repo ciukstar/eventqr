@@ -31,8 +31,6 @@ import Database.Persist.Sqlite
     )
 
 import Text.Read (readMaybe)
-
-import Web.WebPush (VAPIDKeysMinDetails (VAPIDKeysMinDetails), VAPIDKeys, readVAPIDKeys)
     
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
 import Network.Wai.Handler.Warp    (HostPreference)
@@ -94,8 +92,6 @@ data AppSettings = AppSettings
     
     , appTimeZone    :: TimeZone
     -- ^ Time Zone
-    , appVAPIDKeys   :: Maybe VAPIDKeys
-    -- ^ VAPID keys
     , appSuperuser              :: Superuser
     , appGoogleApiConf          :: GoogleApiConf
     , appGcloudConf             :: GcloudConf
@@ -167,8 +163,6 @@ instance FromJSON AppSettings where
         appAnalytics              <- o .:? "analytics"
                                      
         appTimeZone  <- fromMaybe utc . readMaybe <$> o .: "time-zone"
-                        
-        appVAPIDKeys <- ((readVAPIDKeys . (\(a,b,c) -> VAPIDKeysMinDetails a b c) <$>) . readMaybe =<<) <$> o .:? "vapid-triplet"
 
         appSuperuser     <- o .:  "superuser"
         appGoogleApiConf <- o .: "google-api"

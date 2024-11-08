@@ -107,7 +107,9 @@ import Handler.Users
     ( getUsersR, postUsersR
     , getUserR, postUserR
     , getUserNewR, getUserEditR, postUserDeleR
-    , getUserPhotoR, getUserSettingsR
+    , getUserPhotoR
+    , getUserNotificationsR, getUserNotificationR, postUserNotificationDeleR
+    , getUserSettingsR
     , postUserSubscriptionsR
     )
 
