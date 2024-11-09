@@ -2,6 +2,14 @@
 
 document.getElementById(#{fvId view}).addEventListener('change', function (e) {
 
+  setTimeout(() => {
+    e.target.parentElement.appendChild((() => {
+      const p = document.createElement('progress');
+      p.className = 'circle center-align middle-align';
+      return p;
+    })());
+  },300);
+  
   if (e.target.checked) {
     Notification.requestPermission().then(function (permission) {
       

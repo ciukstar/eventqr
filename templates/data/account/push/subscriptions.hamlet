@@ -1,10 +1,50 @@
-
+  
 ^{widgetTopbar (Just (DataR $ UserNotificationsR uid,[])) (msgr MsgSettings) idOverlay Nothing Nothing}
 
 <main.responsive>
+  
+  <div.overlay ##{idOverlay} data-ui=##{idOverlay}>
 
   <form method=post action=@{DataR $ UserSubscriptionsR uid} enctype=#{et} ##{idFormSubscription}>
     ^{fw}
 
+  $if not (null subscriptions)
+    <details open>
+      <summary>_{MsgYourOtherSubscriptions}
+      $forall Entity sid (PushSubscription _ _ _ _ time ua) <- subscriptions
+        $with i <- pack $ show $ fromSqlKey sid
+          <div.row.padding>
+            <div.max>
+              $maybe userAgent <- ua
+                <details>
+                  <summary.headline.bold>
+                    #{userAgent}
+
+                  #{userAgent}
+              $nothing
+                <div.headline.large-text> 
+                  _{MsgUnknownDevice}
+
+              $with dt <- show time
+                <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+                  #{dt}
+
+
+            <button.circle.secondary type=button title=_{MsgUnsubscribe} data-ui=##{idOverlay}
+              onclick="document.getElementById('#{idDialogUnsubscribe}#{i}').show()">
+              <i.no-round>unsubscribe
+
+          <dialog ##{idDialogUnsubscribe}#{i}>
+            <h6>_{MsgConfirmPlease}
+            <div>_{MsgUnsubscribeAreYouSure}
+            <nav.right-align>
+              <button.transparent.link data-ui=##{idOverlay}
+                onclick="document.getElementById('#{idDialogUnsubscribe}#{i}').close()">
+                _{MsgCancel}
+              <form method=post action=@?{(DataR $ UserUnsubscribeR uid sid,stati)} enctype=#{et0}>
+                ^{fw0}
+                <button.primary type=submit>
+                  _{MsgUnsubscribe}
+        
       
   ^{widgetSnackbar msgs}

@@ -110,7 +110,7 @@ import Handler.Users
     , getUserPhotoR
     , getUserNotificationsR, getUserNotificationR, postUserNotificationDeleR
     , getUserSettingsR
-    , postUserSubscriptionsR
+    , postUserSubscriptionsR, postUserUnsubscribeR
     )
 
 import Handler.Tokens

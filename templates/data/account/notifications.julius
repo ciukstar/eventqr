@@ -13,3 +13,12 @@ Array.from(
     }
   );
 });
+
+
+navigator.serviceWorker.ready.then((registration) => {
+  registration.pushManager.getSubscription().then((subscription) => {
+    const a = document.getElementById(#{idAnchorSettings});
+    const params = new URLSearchParams({ endpoint: subscription.toJSON().endpoint });
+    a.href = `${a.href}?${params}`;
+  });
+});

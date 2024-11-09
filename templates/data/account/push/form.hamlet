@@ -1,5 +1,16 @@
 
 
+$maybe _ <- vapidKeys
+$nothing
+  <figure.error-text style="text-align:center">
+    <i.extra>error
+    <figcaption>
+      _{MsgVapidNotInitializedProperly}.
+  <p.small-text style="line-height:1.2">
+    _{MsgVapidRequiredToPushNotifications}.
+    _{MsgVapidCanBeGeneratedByAdmin}.
+        
+
 ^{extra}
 
 ^{md3switchWidget view}

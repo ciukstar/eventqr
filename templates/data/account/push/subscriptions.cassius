@@ -1,0 +1,11 @@
+
+
+main
+
+    details
+        summary.headline
+            max-width: 70vw
+            list-style: none
+            overflow: hidden
+            white-space: nowrap
+            text-overflow: ellipsis

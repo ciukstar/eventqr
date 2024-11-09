@@ -276,6 +276,8 @@ instance Yesod App where
         
     isAuthorized (DataR (UserSettingsR uid)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (UserSubscriptionsR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (UserUnsubscribeR uid _)) _ = isAuthenticatedSelf uid
+    
     
     isAuthorized (DataR (UserCardsR _)) _ = isAdmin
     isAuthorized (DataR (UserCardR _ _)) _ = isAdmin

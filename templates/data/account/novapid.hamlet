@@ -1,8 +1,0 @@
-
-^{widgetTopbar (Just (HomeR,[])) (msgr MsgSettings) idOverlay Nothing Nothing}
-
-<main.responsive>
-  <figure style="text-align:center">
-    <i.extra>warning
-    <figcaption>
-      _{MsgVapidNotInitializedProperly}

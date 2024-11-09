@@ -41,6 +41,8 @@ PushSubscription
     endpoint Text
     p256dh Text
     auth Text
+    time UTCTime
+    userAgent Text Maybe
     UniquePushSubscription endpoint
 
 

@@ -7,7 +7,7 @@
     <h6.title.max>
       _{MsgNotifications}
       
-    <a.button.circle.transparent href=@{DataR $ UserSettingsR uid} title=_{MsgSettings}>
+    <a.button.circle.transparent href=@{DataR $ UserSettingsR uid} title=_{MsgSettings} ##{idAnchorSettings}>
       <i>settings
 
 <main.responsive.no-padding>

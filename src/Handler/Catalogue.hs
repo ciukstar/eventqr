@@ -767,7 +767,7 @@ pushNotifications vapid publisher rid eid subject message = do
 
     let topic = "EventQrNotification"
 
-    forM subscriptions $ \(Entity _ (PushSubscription _ endpoint' p256dh' auth')) -> do
+    forM subscriptions $ \(Entity _ (PushSubscription _ endpoint' p256dh' auth' _ _)) -> do
         let notification = mkPushNotification endpoint' p256dh' auth'
                 & pushMessage .~ object
                     [ "title" .= subject

@@ -1,4 +1,18 @@
 
+Array.from(
+  document.querySelectorAll('time.full-datetime[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleDateString(
+    navigator.language,
+    { year: 'numeric',
+      month: 'short',
+      weekday: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    }
+  );
+});
 
 navigator.permissions.query({ name: 'notifications' }).then(function (permission) {
   if (permission.state === 'denied') {
@@ -22,4 +36,9 @@ navigator.permissions.query({ name: 'notifications' }).then(function (permission
       return warning;
     })());
   }
+});
+
+
+document.getElementById(#{idOverlay}).addEventListener('click', e => {
+  Array.from(document.querySelectorAll('dialog')).forEach(x => { x.close(); });
 });

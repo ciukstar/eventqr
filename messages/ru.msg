@@ -1,3 +1,10 @@
+YourOtherSubscriptions: Ваши другие подписки
+UnsubscribeAreYouSure: Вы уверены, что хотите отписаться?
+Unsubscribe: Отписаться
+UnknownDevice: Неизвестное устройство
+AllSubscriptions: Все подписки
+VapidCanBeGeneratedByAdmin: Ключ VAPID может быть сгенерирован администратором
+VapidRequiredToPushNotifications: Для отправки push-уведомлений требуется действительный ключ VAPID
 Notification: Уведомление
 New: Новое
 From: От
