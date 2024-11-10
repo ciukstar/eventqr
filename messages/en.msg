@@ -1,3 +1,12 @@
+YouDoNonHaveCardsYet: You don't have any cards yet
+MyCards: My cards
+RegisterForEvent: Register for event
+SelectCardToRegister: Select a card to register
+YouDoNotHaveACardToRegisterYet: You don't have a card to register for the event yet
+YouAreRegisteredForThisEvent: You are registered for this event
+RegisterWithQrCode: Register with QR code
+RegisterForThisEvent: Register for this event
+EventStartTime: Event start time
 YourOtherSubscriptions: Your other subscriptions
 UnsubscribeAreYouSure: Are you sure you want to unsubscribe?
 Unsubscribe: Unsubscribe

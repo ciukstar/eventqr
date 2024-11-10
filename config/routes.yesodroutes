@@ -14,12 +14,15 @@
 /scanner/attendee/register AttendeeRegistrationR GET POST
 /scanner                   ScanQrR               GET
 
-/events/#EventId/attendees/#AttendeeId EventAttendeeR     GET
-/events/#EventId/attendees             EventAttendeesR    GET
-/events/#EventId/register              EventRegistrationR GET POST
-/events/#EventId/scanner               EventScannerR      GET
-/events/#EventId/poster                EventPosterR       GET
-/events/#EventId                       EventR             GET
+/events/#EventId/attendees/#AttendeeId                EventAttendeeR         GET
+/events/#EventId/attendees                            EventAttendeesR        GET
+/events/#EventId/users/#UserId/unregister             EventUserUnregisterR   POST
+/events/#EventId/users/#UserId/cards/#CardId/register EventUserCardRegisterR POST
+/events/#EventId/users/#UserId/register               EventUserRegisterR     GET POST
+/events/#EventId/register                             EventRegistrationR     GET POST
+/events/#EventId/scanner                              EventScannerR          GET
+/events/#EventId/poster                               EventPosterR           GET
+/events/#EventId                                      EventR                 GET
 
 /api/events ApiEventsR GET
 

@@ -10,6 +10,8 @@ module Handler.Home
   ( getHomeR, getFetchR
   , getEventR, getEventPosterR, getEventScannerR
   , getEventRegistrationR, postEventRegistrationR
+  , getEventUserRegisterR, postEventUserRegisterR
+  , postEventUserCardRegisterR, postEventUserUnregisterR
   , getEventAttendeesR
   , getEventAttendeeR
   , getScanQrR
@@ -24,6 +26,8 @@ import Data.Aeson (decode)
 import qualified Data.Aeson as A (Value)
 import Data.Bifunctor (Bifunctor(second))
 import qualified Data.List as L (find)
+import qualified Data.List.Safe as LS (head)
+import Data.Maybe (isJust)
 import Data.Text (unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Calendar (toGregorian)
@@ -34,6 +38,7 @@ import Database.Esqueleto.Experimental
     ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
     , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
     , innerJoin, on, orderBy, asc, subSelectCount, like, limit, lower_
+    , delete, subSelectList, in_
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -42,13 +47,14 @@ import Foundation
     ( Handler, Form, widgetSnackbar, widgetTopbar, widgetScanner
     , Route
       ( CalendarR, HomeR, EventR, EventRegistrationR
+      , EventUserRegisterR, EventUserCardRegisterR, EventUserUnregisterR
       , ScanQrR, AttendeeRegistrationR, EventAttendeesR
       , EventAttendeeR, EventScannerR
       , ApiEventsR, DataR, StaticR, EventPosterR
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
-      ( MsgAppName, MsgEventsCalendar, MsgName, MsgTime, MsgCard
+      ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard
       , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
@@ -57,21 +63,28 @@ import Foundation
       , MsgInvalidFormData, MsgClose, MsgQrCode, MsgNoUpcomingEventsYet
       , MsgSelectAnEventToRegisterPlease, MsgSearchEvents, MsgRegistrationDate
       , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees, MsgScanner
-      , MsgRegistrationForEvent, MsgNoEventsFound, MsgPoster
+      , MsgRegistrationForEvent, MsgNoEventsFound, MsgPoster, MsgEventStartTime
+      , MsgRegisterForThisEvent, MsgRegisterWithQrCode, MsgUnsubscribe
+      , MsgYouAreRegisteredForThisEvent, MsgUnsubscribeAreYouSure
+      , MsgUnsubscribeSuccessful, MsgYouDoNotHaveACardToRegisterYet
+      , MsgConfirmPlease, MsgSubscriptionSuccessful, MsgSelectCardToRegister
+      , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
+      , MsgMyCards
       )
     )
 
 import Model
     ( msgSuccess, msgError
     , EventId, Event (Event)
-    , CardId, Card
-    , User (User)
+    , CardId, Card (Card)
+    , UserId, User (User)
     , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info)
+    , Poster (Poster)
     , EntityField
       ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
-      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent
-      ), Poster (Poster)
+      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent, CardIssued
+      )
     )
 
 import Network.Wreq (get)
@@ -81,13 +94,16 @@ import Settings (widgetFile)
 import Settings.StaticFiles (img_event_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
 
 import Text.Blaze.Html (toHtml)
+import Text.Cassius (cassius)
 import Text.Hamlet (Html)
-import Text.Julius (rawJS)
+import Text.Julius (rawJS, juliusFile)
 
+import Yesod.Auth (YesodAuth(maybeAuthId))
 import Yesod.Core
-    ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep, provideJson
-    , getMessageRender, newIdent, whamlet, addMessageI, redirect, handlerToWidget
-    , MonadHandler (liftHandler), ToContent (toContent)
+    ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep
+    , provideJson, getMessageRender, newIdent, whamlet, addMessageI, redirect
+    , MonadHandler (liftHandler), ToContent (toContent), ToWidget (toWidget)
+    , handlerToWidget
     )
 import Yesod.Core.Widget (setTitleI)
 import Yesod.Form.Input (runInputGet, ireq, iopt)
@@ -99,6 +115,7 @@ import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Control.Monad (when, unless)
 
 
 getApiEventsR :: Handler TypedContent
@@ -235,6 +252,149 @@ getScanQrR = do
         $(widgetFile "scanner/scanner")
 
 
+postEventUserUnregisterR :: EventId -> UserId -> Handler Html
+postEventUserUnregisterR eid uid = do
+    ((fr0,_),_) <- runFormPost formEventUserUnregister
+    case fr0 of
+      FormSuccess () -> do
+          runDB $ delete $ do
+              x <- from $ table @Attendee
+              where_ $ x ^. AttendeeEvent ==. val eid
+              where_ $ x ^. AttendeeCard `in_` subSelectList ( do
+                  c <- from $ table @Card
+                  where_ $ c ^. CardUser ==. val uid
+                  return $ c ^. CardId )
+
+          addMessageI msgSuccess MsgUnsubscribeSuccessful
+          redirect $ EventR eid
+
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ EventR eid
+
+
+postEventUserCardRegisterR :: EventId -> UserId -> CardId -> Handler Html
+postEventUserCardRegisterR eid _uid cid = do
+    ((fw,_),_) <- runFormPost formEventUserRegister
+    case fw of
+      FormSuccess () -> do
+          now <- liftIO getCurrentTime
+          runDB $ insert_ Attendee { attendeeEvent = eid
+                                   , attendeeCard = cid
+                                   , attendeeRegDate = now
+                                   }
+          addMessageI msgSuccess MsgSubscriptionSuccessful
+          redirect $ EventR eid
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ EventR eid
+
+
+postEventUserRegisterR :: EventId -> UserId -> Handler Html
+postEventUserRegisterR eid uid = do
+
+    ((fr,fw),et) <- runFormPost $ formUserCards uid
+
+    case fr of
+      FormSuccess cid -> postEventUserCardRegisterR eid uid cid
+      _otherwise -> do
+          msgr <- getMessageRender
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgCards
+              idOverlay <- newIdent
+              $(widgetFile "upcoming/cards")
+
+
+getEventUserRegisterR :: EventId -> UserId -> Handler Html
+getEventUserRegisterR eid uid = do
+
+    (fw,et) <- generateFormPost $ formUserCards uid
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgCards
+        idOverlay <- newIdent
+        $(widgetFile "upcoming/cards")
+
+
+formUserCards :: UserId -> Form CardId
+formUserCards uid extra = do
+
+    cards <- liftHandler $ runDB $ select $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardUser  ==. val uid
+        orderBy [asc (x ^. CardIssued)]
+        return (x,u)
+
+    (cardR,cardV) <- mreq (md3radioFieldList cards) "" Nothing
+
+    let w = [whamlet|#{extra} ^{fvInput cardV}|]
+    return (cardR,w)
+
+  where
+
+      pairs (Entity cid _,Entity _ (User email _ _ _ _)) = (email, cid)
+
+      md3radioFieldList :: [(Entity Card,Entity User)] -> Field Handler CardId
+      md3radioFieldList cards = (radioField (optionsPairs (pairs <$> cards)))
+          { fieldView = \theId name attrs x isReq -> do
+                opts <- zip [1 :: Int ..] . olOptions <$> handlerToWidget (optionsPairs (pairs <$> cards))
+
+                let sel (Left _) _ = False
+                    sel (Right y) opt = optionInternalValue opt == y
+
+                let findEvent :: Option CardId -> [(Entity Card,Entity User)] -> Maybe (Entity Card,Entity User)
+                    findEvent opt = L.find (\(Entity cid' _,_) -> cid' == optionInternalValue opt)
+                unless (null opts) $ toWidget [cassius|
+                    div.row
+                        .content
+                            display: inline-grid
+                        .headline
+                            display: inline-block
+                            white-space: nowrap
+                            overflow: hidden
+                            text-overflow: ellipsis
+                    |]
+                [whamlet|
+$if null opts
+    <figure style="text-align:center">
+      <span style="font-size:4rem">&varnothing;
+      <figcaption>
+        _{MsgYouDoNotHaveACardToRegisterYet}.
+$else
+  <div *{attrs}>
+    $forall (i,opt) <- opts
+      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _)) <- findEvent opt cards
+        <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
+                  
+          <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+          <div.content.max>
+            <h6.headline.large-text>
+              $maybe name <- uname
+                #{name}
+              $nothing
+                #{email}
+            <div.supporting-text.small-text>
+              _{MsgIssueDate}
+            <div.supporting-text.small-text>
+              $with dt <- show issued
+                <time.day datetime=#{dt}>
+                  #{dt}
+                  
+          <label.radio>
+            <input type=radio ##{theId}-#{i} name=#{name} :isReq:required=true value=#{optionExternalValue opt}
+              :sel x opt:checked>
+            <span>
+
+|]
+          }
+
+
 postEventRegistrationR :: EventId -> Handler Html
 postEventRegistrationR eid = do
 
@@ -352,6 +512,8 @@ getEventScannerR eid = do
 getEventR :: EventId -> Handler Html
 getEventR eid = do
 
+    userId <- maybeAuthId
+    
     event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
 
@@ -363,16 +525,47 @@ getEventR eid = do
         where_ $ x ^. EventId ==. val eid
         return (x,attendees) )
 
+    subscribed <- case userId of
+      Nothing -> return False
+      Just uid -> isJust <$> runDB ( selectOne $ do
+          x :& c <- from $ table @Attendee
+              `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+          where_ $ x ^. AttendeeEvent ==. val eid
+          where_ $ c ^. CardUser ==. val uid
+          return x )
+
+    cards <- case userId of
+      Nothing -> return []
+      Just uid -> runDB $ select $ do
+          x <- from $ table @Card
+          where_ $ x ^. CardUser ==. val uid
+          return x
+
+    (fw,et) <- generateFormPost formEventUserRegister
+    (fw0,et0) <- generateFormPost formEventUserUnregister
+
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgEvent
-
         idOverlay <- newIdent
-        idActionQrScan <- newIdent
+        idActions <- newIdent
+        idFormEventUserCardRegister <- newIdent
         idButtonQrScan <- newIdent
-
+        idButtonUnsubscribe <- newIdent
+        idDialogUnsubscribe <- newIdent
+        idButtonCloseDialogUnsubscribe <- newIdent
+        when (isJust userId && subscribed)
+            $ toWidget $(juliusFile "templates/upcoming/unregister.julius")
         $(widgetFile "upcoming/event")
+
+
+formEventUserUnregister :: Form ()
+formEventUserUnregister extra = return (pure (), [whamlet|^{extra}|])
+
+
+formEventUserRegister :: Form ()
+formEventUserRegister extra = return (pure (), [whamlet|^{extra}|])
 
 
 getHomeR :: Handler Html
@@ -404,6 +597,16 @@ getHomeR = do
         orderBy [asc (x ^. EventTime)]
         limit 100
         return (x, attendees) )
+
+    userId <- maybeAuthId
+    cards <- case userId of
+      Nothing -> return []
+      Just uid -> runDB $ select $ do
+          x :& u <- from $ table @Card
+             `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+          where_ $ x ^. CardUser  ==. val uid
+          orderBy [asc (x ^. CardIssued)]
+          return (x,u)
 
     msgr <- getMessageRender
     msgs <- getMessages

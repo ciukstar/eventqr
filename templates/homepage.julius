@@ -14,6 +14,18 @@ Array.from(
   );
 });
 
+Array.from(
+  document.querySelectorAll('time.day[datetime]')
+).forEach(function (x) {
+  x.textContent = new Date(x.getAttribute('datetime')).toLocaleDateString(
+    navigator.language,
+    { year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }
+  );
+});
+
 
 document.getElementById(#{idButtonUpcomingEvents}).addEventListener('click', e => {
   e.preventDefault();

@@ -14,8 +14,9 @@ main
             dt + dd
                 margin-bottom: 1rem
 
-        ##{idActionQrScan}
+        ##{idActions}
             display: flex
             flex-direction: column
             text-align: center
+            row-gap: 1rem
     

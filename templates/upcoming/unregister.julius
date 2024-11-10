@@ -1,0 +1,13 @@
+
+
+document.getElementById(#{idButtonUnsubscribe}).addEventListener('click', e => {
+  document.getElementById(#{idDialogUnsubscribe}).show();
+});
+
+document.getElementById(#{idButtonCloseDialogUnsubscribe}).addEventListener('click', e => {
+  document.getElementById(#{idDialogUnsubscribe}).close();
+});
+
+document.getElementById(#{idOverlay}).addEventListener('click', e => {
+  document.getElementById(#{idDialogUnsubscribe}).close();
+});

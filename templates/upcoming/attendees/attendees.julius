@@ -30,7 +30,6 @@ function closeDialogQrCode(dialog) {
 }
 
 function showDialogQrCode(dialog) {
-  console.log('showDialogQrCode: ', #{idOverlay});
   document.getElementById(#{idOverlay}).classList.add('active');
   dialog.show();
 }

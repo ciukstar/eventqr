@@ -230,6 +230,10 @@ instance Yesod App where
     isAuthorized (EventAttendeesR _) _ = return Authorized
     isAuthorized (EventAttendeeR _ _) _ = return Authorized
     isAuthorized (EventRegistrationR _) _ = return Authorized
+    isAuthorized (EventUserRegisterR _ uid) _ = isAuthenticatedSelf uid
+    isAuthorized (EventUserCardRegisterR _ uid _) _ = isAuthenticatedSelf uid
+    isAuthorized (EventUserUnregisterR _ uid) _ = isAuthenticatedSelf uid
+    
     isAuthorized ScanQrR _ = return Authorized
     isAuthorized AttendeeRegistrationR _ = return Authorized
     
@@ -388,7 +392,6 @@ instance Yesod App where
     errorHandler (InvalidArgs msgs) = selectRep $ do
         provideRep $ defaultLayout $ do
             setTitleI MsgInvalidArguments
-            idHeader <- newIdent
             $(widgetFile "error/invalid-args")
         provideRep $ return $ object ["message" .= msgs]
         provideRep $ return $ T.intercalate ", " msgs

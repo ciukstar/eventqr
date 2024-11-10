@@ -23,7 +23,7 @@
           #{name}
 
         <dt.bold.large-text>
-          _{MsgTime}
+          _{MsgEventStartTime}
         <dd>
           $with dt <- show time
             <time.full-datetime datetime=#{dt}>
@@ -39,14 +39,55 @@
         <dd>
           #{attendees}
 
-    <p ##{idActionQrScan}>
-      <a.button.margin href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
-        <i>qr_code_scanner
-        <span>_{MsgScanQrCode}
+    $maybe uid <- userId
+      <div ##{idActions}>
+        $if subscribed
+          <span.italic>_{MsgYouAreRegisteredForThisEvent}.
+          <div>
+            <button.transparent.link ##{idButtonUnsubscribe} data-ui=##{idOverlay}>
+              _{MsgUnsubscribe}
+              
+        $elseif length cards > 1
+          <a.button.fill href=@{EventUserRegisterR eid uid}>
+            <i>how_to_reg
+            <span>_{MsgRegisterForThisEvent}
 
-      <label for=#{idButtonQrScan}>
-        _{MsgScanQrCodeAndLinkToEvent}.
+          <a.button.fill href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+            <i>qr_code_scanner
+            <span>_{MsgRegisterWithQrCode}
+            
+        $elseif length cards == 1
+          $maybe Entity cid _ <- LS.head cards
+            <form method=post action=@{EventUserCardRegisterR eid uid cid} enctype=#{et} ##{idFormEventUserCardRegister}>
+              ^{fw}
+            <button.fill.max type=submit form=#{idFormEventUserCardRegister}>
+              <i>how_to_reg
+              <span>_{MsgRegisterForThisEvent}
 
+          <a.button.fill href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+            <i>qr_code_scanner
+            <span>_{MsgRegisterWithQrCode}
+            
+        $else
+          <p.italic>_{MsgYouDoNotHaveACardToRegisterYet}
+          
+
+
+      <div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+      <dialog ##{idDialogUnsubscribe}>
+        <h6>_{MsgConfirmPlease}
+        <div>
+          _{MsgUnsubscribeAreYouSure}
+
+        <nav.right-align>
+          <button.transparent type=button ##{idButtonCloseDialogUnsubscribe} data-ui=##{idOverlay}>
+            _{MsgCancel}
+
+          <form method=post action=@{EventUserUnregisterR eid uid} enctype=#{et0}>
+            ^{fw0}
+            <button type=submit>
+              _{MsgUnsubscribe}
         
   ^{widgetSnackbar msgs}
         

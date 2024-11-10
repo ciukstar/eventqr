@@ -1,0 +1,19 @@
+
+^{widgetTopbar (Just (EventR eid,[])) (msgr MsgCards) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <p.italic.margin>
+    _{MsgSelectCardToRegister}
+
+  <form method=post action=@{EventUserRegisterR eid uid} enctype=#{et}>
+    ^{fw}
+    <nav.right-align.margin>
+      <a.button.transparent href=@{EventR eid} role=button>
+        _{MsgCancel}
+        
+      <button type=submit>
+        _{MsgRegisterForEvent}
+        
+  ^{widgetSnackbar msgs}
+        

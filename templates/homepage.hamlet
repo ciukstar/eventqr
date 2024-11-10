@@ -21,7 +21,35 @@
           _{MsgNumberOfAttendees}:
         <td.large-text>
           #{(.) sum (fmap snd) $ upcoming}
-        
+
+  <details>
+    <summary.wave.padding>
+      <span.small-margin>
+        <i>style
+        <div.badge.border.text-secondary>#{show (length cards)}
+      <span>_{MsgMyCards}
+    $if null cards
+      <figure.null.margin.pading>
+        <i.extra>folder_open
+        <figcaption>
+          _{MsgYouDoNonHaveCardsYet}.
+    $else
+      $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _ _)) <- cards
+        <article>
+          <div.row>
+            <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+            <div.max>
+              <div.headline.large-text>
+                $maybe name <- uname
+                  #{name}
+                $nothing
+                  #{email}
+              <div.supporting-text.small-text>
+                $with dt <- show issued
+                  <time.day datetime=#{dt}>
+                    #{dt}
+          <figure.qrcode>
+            <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
 
 $if not (null msgs)
   ^{widgetSnackbar msgs}

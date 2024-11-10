@@ -1,3 +1,12 @@
+YouDoNonHaveCardsYet: У вас пока нет карточек
+MyCards: Мои карточки
+RegisterForEvent: Записаться на мероприятие
+SelectCardToRegister: Выберите карту для регистрации
+YouDoNotHaveACardToRegisterYet: У вас пока нет карты для регистрации на мероприятие
+YouAreRegisteredForThisEvent: Вы зарегистрированы на это мероприятие
+RegisterWithQrCode: Записаться с QR-кодом
+RegisterForThisEvent: Записаться на это мероприятие
+EventStartTime: Время начала мероприятия
 YourOtherSubscriptions: Ваши другие подписки
 UnsubscribeAreYouSure: Вы уверены, что хотите отписаться?
 Unsubscribe: Отписаться

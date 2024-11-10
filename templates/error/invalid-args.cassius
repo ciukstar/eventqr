@@ -1,13 +1,11 @@
 
-##{idHeader}
-    height: var(--app-top-appbar-height,64px)
-    display: flex
-    flex-direction: row
-    justify-content: flex-start
-    align-items: center
-    gap: 0.5rem
-    padding: 0 0.5rem
-    
+header
+    nav
+      .title
+          white-space: nowrap
+          overflow: hidden
+          text-overflow: ellipsis
+          
 main
     margin: 1rem 2rem
     display: flex

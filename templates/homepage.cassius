@@ -12,6 +12,9 @@ main
         align-self: center
         line-height: 1
 
+    figure.null, figure.qrcode
+        text-align: center
+
 ##{idDialogUpcomingEvents}
     z-index: 101
     .dialog-content

@@ -55,6 +55,8 @@ import Handler.Home
     ( getHomeR, getFetchR, getEventR
     , getEventPosterR, getEventScannerR
     , getEventRegistrationR, postEventRegistrationR
+    , getEventUserRegisterR, postEventUserRegisterR
+    , postEventUserCardRegisterR, postEventUserUnregisterR
     , getEventAttendeesR, getEventAttendeeR
     , getScanQrR
     , getAttendeeRegistrationR, postAttendeeRegistrationR
