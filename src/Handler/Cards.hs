@@ -55,7 +55,7 @@ import Foundation
     , AppMessage
       ( MsgPhoto, MsgUser, MsgName
       , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel
-      , MsgSave
+      , MsgSave, MsgCardDoesNotContainAdditionalInfo
       , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgNewField
       , MsgDetails, MsgCards, MsgCard, MsgIssueDate, MsgAdd, MsgClose
       , MsgQrCode, MsgCardNumber, MsgCardholder

@@ -1,3 +1,7 @@
+FillInCard: Fill in the card
+CardDoesNotContainAdditionalInfo: The card does not contain any additional data to display
+NumberSign: ##
+LoginToSeeYourCardsPlease: Please log in to see your cards
 YouDoNonHaveCardsYet: You don't have any cards yet
 MyCards: My cards
 RegisterForEvent: Register for event

@@ -1,7 +1,7 @@
 
 ^{widgetTopbar Nothing (msgr MsgAppName) idOverlay Nothing Nothing}
 
-<main.responsive ##{idMain}>
+<main.responsive.no-padding ##{idMain}>
 
   <h5.intro.small.center-align>
     _{MsgWelcomeTo} _{MsgAppName}
@@ -26,30 +26,84 @@
     <summary.wave.padding>
       <span.small-margin>
         <i>style
-        <div.badge.border.text-secondary>#{show (length cards)}
+        $maybe _ <- userId
+          <div.badge.border.text-secondary>#{show (length cards)}
       <span>_{MsgMyCards}
-    $if null cards
-      <figure.null.margin.pading>
-        <i.extra>folder_open
-        <figcaption>
-          _{MsgYouDoNonHaveCardsYet}.
-    $else
-      $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _ _)) <- cards
-        <article>
-          <div.row>
-            <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
-            <div.max>
-              <div.headline.large-text>
+      
+    $maybe uid <- userId
+      $if null cards
+        <figure.null.margin.pading>
+          <i.extra>folder_open
+          <figcaption>
+            _{MsgYouDoNonHaveCardsYet}.
+      $else
+        $forall ((Entity cid (Card _ _ issued),Entity _ (User email _ uname _ _)),attrs) <- cards
+          $with i <- show $ fromSqlKey cid
+            <dialog ##{idDialogQrCode}#{i} style="z-index:102">
+              <div>
+                <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
                 $maybe name <- uname
                   #{name}
                 $nothing
                   #{email}
-              <div.supporting-text.small-text>
-                $with dt <- show issued
-                  <time.day datetime=#{dt}>
-                    #{dt}
-          <figure.qrcode>
-            <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+                
+              <div>
+                <figure.qrcode>
+                  <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+
+              <nav.right-align>
+                <button.transparent.link data-ui=##{idOverlay}
+                  onclick="document.getElementById('#{idDialogQrCode}#{i}').close()">
+                  _{MsgClose}
+
+            <article.margin>
+              <div.row>
+                <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+                <div.max>
+                  <div.headline.large-text>
+                    $maybe name <- uname
+                      #{name}
+                    $nothing
+                      #{email}
+              <div>
+                <dl>
+                  <dt>
+                    <label.bold>_{MsgCardNumber}
+                  <dd>
+                    #{i}
+      
+                  <dt>
+                    <label.bold>_{MsgIssueDate}
+                  <dd>
+                    $with dt <- show issued
+                      <time.day datetime=#{dt}>
+                        #{dt} 
+
+                $if not (null attrs)
+                  $forall Entity _ (Info _ name val) <- attrs
+                    <dt>
+                      <label.bold>#{name}
+                    <dd>
+                      #{val}
+                $else
+                  <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
+                  <button.fill>
+                    _{MsgFillInCard}
+      
+                <nav.right-align>
+                  <button.circle title=_{MsgQrCode} data-ui=##{idOverlay}
+                    onclick="document.getElementById('#{idDialogQrCode}#{i}').show()">
+                    <i.no-round>qr_code
+      
+    $nothing
+      <div style="text-align:center">
+        <p>
+          _{MsgLoginToSeeYourCardsPlease}
+        <a.button.fill href=@{AuthR LoginR} title=_{MsgSignIn}>
+          _{MsgSignIn}
+         
+        
+
 
 $if not (null msgs)
   ^{widgetSnackbar msgs}

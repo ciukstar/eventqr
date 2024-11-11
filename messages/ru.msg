@@ -1,3 +1,7 @@
+FillInCard: Заполнить карточку
+CardDoesNotContainAdditionalInfo: Карточка не содержит дополнительных данных для отображения
+NumberSign: №
+LoginToSeeYourCardsPlease: Пожалуйста, войдите в систему, чтобы увидеть свои карточки
 YouDoNonHaveCardsYet: У вас пока нет карточек
 MyCards: Мои карточки
 RegisterForEvent: Записаться на мероприятие

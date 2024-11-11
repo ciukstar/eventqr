@@ -19,11 +19,15 @@
         $nothing
           #{email}
 
-      $forall Entity _ (Info _ name val) <- attrs
-        <dt>
-          <label.bold.medium-text>#{name}
-        <dd>
-          #{val}
+      $if not (null attrs)
+        <dl>
+          $forall Entity _ (Info _ name val) <- attrs
+            <dt>
+              <label.bold.medium-text>#{name}
+            <dd>
+              #{val}
+      $else
+        <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
         
 
     <button.border.transparent.margin ##{idButtonShowDialogQrCode}>

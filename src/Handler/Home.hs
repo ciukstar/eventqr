@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE TupleSections #-}
 
 module Handler.Home
   ( getHomeR, getFetchR
@@ -46,7 +47,7 @@ import Database.Persist.Sql (toSqlKey, fromSqlKey)
 import Foundation
     ( Handler, Form, widgetSnackbar, widgetTopbar, widgetScanner
     , Route
-      ( CalendarR, HomeR, EventR, EventRegistrationR
+      ( AuthR, CalendarR, HomeR, EventR, EventRegistrationR
       , EventUserRegisterR, EventUserCardRegisterR, EventUserUnregisterR
       , ScanQrR, AttendeeRegistrationR, EventAttendeesR
       , EventAttendeeR, EventScannerR
@@ -54,7 +55,7 @@ import Foundation
       )
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
-      ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard
+      ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard, MsgSignIn
       , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
@@ -69,7 +70,8 @@ import Foundation
       , MsgUnsubscribeSuccessful, MsgYouDoNotHaveACardToRegisterYet
       , MsgConfirmPlease, MsgSubscriptionSuccessful, MsgSelectCardToRegister
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
-      , MsgMyCards
+      , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgNumberSign, MsgFillInCard
+      , MsgCardDoesNotContainAdditionalInfo
       )
     )
 
@@ -98,7 +100,7 @@ import Text.Cassius (cassius)
 import Text.Hamlet (Html)
 import Text.Julius (rawJS, juliusFile)
 
-import Yesod.Auth (YesodAuth(maybeAuthId))
+import Yesod.Auth (YesodAuth(maybeAuthId), Route (LoginR))
 import Yesod.Core
     ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep
     , provideJson, getMessageRender, newIdent, whamlet, addMessageI, redirect
@@ -115,12 +117,12 @@ import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
 import Yesod.Persist.Core (YesodPersist(runDB))
-import Control.Monad (when, unless)
+import Control.Monad (when, unless, forM)
 
 
 getApiEventsR :: Handler TypedContent
 getApiEventsR = do
-
+    
     query <- runInputGet $ iopt textField "q"
 
     events <- (second unValue <$>) <$> runDB ( select $ do
@@ -599,14 +601,21 @@ getHomeR = do
         return (x, attendees) )
 
     userId <- maybeAuthId
-    cards <- case userId of
-      Nothing -> return []
-      Just uid -> runDB $ select $ do
-          x :& u <- from $ table @Card
-             `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
-          where_ $ x ^. CardUser  ==. val uid
-          orderBy [asc (x ^. CardIssued)]
-          return (x,u)
+    cards <- do
+        cards <- case userId of
+          Nothing -> return []
+          Just uid -> runDB $ select $ do
+              x :& u <- from $ table @Card
+                 `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+              where_ $ x ^. CardUser  ==. val uid
+              orderBy [asc (x ^. CardIssued)]
+              return (x,u)
+              
+        forM cards $ \c@(Entity cid _,_) -> (c,) <$> runDB ( select $ do
+            x <- from $ table @Info
+            where_ $ x ^. InfoCard ==. val cid
+            return x )
+                
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -615,6 +624,9 @@ getHomeR = do
 
         idOverlay <- newIdent
         idMain <- newIdent
+
+        idDialogQrCode <- newIdent
+        
         idButtonUpcomingEvents <- newIdent
         idDialogUpcomingEvents <- newIdent
         idButtonCloseDialogUpcomingEvents <- newIdent
