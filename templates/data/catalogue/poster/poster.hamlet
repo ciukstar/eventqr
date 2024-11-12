@@ -1,21 +1,21 @@
 
 $maybe _ <- poster
-  ^{widgetTopbar (Just (DataR $ DataEventsR,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) Nothing}
+  ^{widgetTopbar (Just (DataR $ DataEventsR uid,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) Nothing}
 $nothing
-  ^{widgetTopbar (Just (DataR $ DataEventsR,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+  ^{widgetTopbar (Just (DataR $ DataEventsR uid,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
 
 <div.overlay ##{idOverlay} data-ui=##{idOverlay}>
 
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a href=@{DataR $ DataEventR eid}>
+    <a href=@{DataR $ DataEventR uid eid}>
       _{MsgDetails}
       
-    <a.active href=@{DataR $ DataEventPosterR eid}>
+    <a.active href=@{DataR $ DataEventPosterR uid eid}>
       _{MsgPoster}
       
-    <a href=@{DataR $ DataEventAttendeesR eid}>
+    <a href=@{DataR $ DataEventAttendeesR uid eid}>
       _{MsgAttendees}
     
   <div.padding.page.active>
@@ -28,7 +28,7 @@ $nothing
           <button.transparent.link data-ui=##{idOverlay}
             onclick="document.getElementById('#{idDialogDelete}').close()">
             _{MsgCancel}
-          <form method=post action=@{DataR $ DataEventPosterDeleR eid pid} enctype=#{et0}>
+          <form method=post action=@{DataR $ DataEventPosterDeleR uid eid pid} enctype=#{et0}>
             ^{fw0}
             <button.primary type=submit>
               _{MsgDele}
@@ -36,7 +36,7 @@ $nothing
     <figure>
       <img src=@{EventPosterR eid} height=128 loading=lazy alt=_{MsgPoster} ##{idImgPoster}>
 
-    <form method=post action=@{DataR $ DataEventPosterR eid} enctype=#{et} style="text-align:center">
+    <form method=post action=@{DataR $ DataEventPosterR uid eid} enctype=#{et} style="text-align:center">
       ^{fw}
       <nav.right-align>
         <button type=submit>

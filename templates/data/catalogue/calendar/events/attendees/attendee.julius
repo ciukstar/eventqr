@@ -34,3 +34,8 @@ document.getElementById(#{idButtonCloseDialogQrCode}).addEventListener('click', 
   document.getElementById(#{idOverlay}).classList.remove('active');
   document.getElementById(#{idDialogQrCode}).close();
 });
+
+document.getElementById(#{idButtonShowDialogNotify}).addEventListener('click', e => {
+  document.getElementById(#{idOverlay}).classList.add('active');
+  document.getElementById(#{idDialogNotifyAttendee}).show();
+});

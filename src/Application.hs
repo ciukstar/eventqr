@@ -92,6 +92,7 @@ import Handler.Catalogue
   , getDataEventPosterR, postDataEventPosterR, postDataEventPosterDeleR
   , getDataEventCalendarEventPosterR, postDataEventCalendarEventPosterR
   , postDataEventCalendarEventPosterDeleR
+  , postDataEventCalendarEventAttendeeNotifyR
   )
 
 import Handler.Cards

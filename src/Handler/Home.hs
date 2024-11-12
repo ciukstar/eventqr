@@ -70,7 +70,7 @@ import Foundation
       , MsgUnsubscribeSuccessful, MsgYouDoNotHaveACardToRegisterYet
       , MsgConfirmPlease, MsgSubscriptionSuccessful, MsgSelectCardToRegister
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
-      , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgNumberSign, MsgFillInCard
+      , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgFillInCard
       , MsgCardDoesNotContainAdditionalInfo
       )
     )
@@ -122,7 +122,7 @@ import Control.Monad (when, unless, forM)
 
 getApiEventsR :: Handler TypedContent
 getApiEventsR = do
-    
+
     query <- runInputGet $ iopt textField "q"
 
     events <- (second unValue <$>) <$> runDB ( select $ do
@@ -132,7 +132,7 @@ getApiEventsR = do
             attendees = subSelectCount $ do
                 a <- from $ table @Attendee
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
-                
+
         case query of
           Just q -> where_ $ ( lower_ (x ^. EventName) `like` ((%) ++. lower_ (val q) ++. (%)) )
               ||. ( lower_ (x ^. EventDescr) `like` ((%) ++. lower_ (val (toHtml q)) ++. (%)) )
@@ -203,7 +203,7 @@ formAttendeeRegistration card extra = do
 
   where
 
-      pairs (Entity eid (Event _ name _)) = (name, eid)
+      pairs (Entity eid (Event _ _ name _)) = (name, eid)
 
       md3radioFieldList :: [Entity Event] -> Field Handler EventId
       md3radioFieldList events = (radioField (optionsPairs (pairs <$> events)))
@@ -225,7 +225,7 @@ $if null opts
 $else
   <div *{attrs} style="height:40svh;overflow-y:auto">
     $forall (i,opt) <- opts
-      $maybe Entity _ (Event time ename _) <- findEvent opt events
+      $maybe Entity _ (Event _ time ename _) <- findEvent opt events
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
           <label.radio>
             <input type=radio ##{theId}-#{i} name=#{name} :isReq:required=true value=#{optionExternalValue opt}
@@ -287,7 +287,7 @@ postEventUserCardRegisterR eid _uid cid = do
                                    }
           addMessageI msgSuccess MsgSubscriptionSuccessful
           redirect $ EventR eid
-          
+
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
           redirect $ EventR eid
@@ -313,7 +313,7 @@ getEventUserRegisterR :: EventId -> UserId -> Handler Html
 getEventUserRegisterR eid uid = do
 
     (fw,et) <- generateFormPost $ formUserCards uid
-    
+
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
@@ -372,7 +372,7 @@ $else
     $forall (i,opt) <- opts
       $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _)) <- findEvent opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
-                  
+
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
           <div.content.max>
@@ -387,7 +387,7 @@ $else
               $with dt <- show issued
                 <time.day datetime=#{dt}>
                   #{dt}
-                  
+
           <label.radio>
             <input type=radio ##{theId}-#{i} name=#{name} :isReq:required=true value=#{optionExternalValue opt}
               :sel x opt:checked>
@@ -515,7 +515,7 @@ getEventR :: EventId -> Handler Html
 getEventR eid = do
 
     userId <- maybeAuthId
-    
+
     event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
 
@@ -610,23 +610,23 @@ getHomeR = do
               where_ $ x ^. CardUser  ==. val uid
               orderBy [asc (x ^. CardIssued)]
               return (x,u)
-              
+
         forM cards $ \c@(Entity cid _,_) -> (c,) <$> runDB ( select $ do
             x <- from $ table @Info
             where_ $ x ^. InfoCard ==. val cid
             return x )
-                
+
 
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
-        setTitleI MsgAppName 
+        setTitleI MsgAppName
 
         idOverlay <- newIdent
         idMain <- newIdent
 
         idDialogQrCode <- newIdent
-        
+
         idButtonUpcomingEvents <- newIdent
         idDialogUpcomingEvents <- newIdent
         idButtonCloseDialogUpcomingEvents <- newIdent

@@ -1,16 +1,16 @@
 
-^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR uid month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a href=@{DataR $ DataEventCalendarEventR month day eid}>
+    <a href=@{DataR $ DataEventCalendarEventR uid month day eid}>
       _{MsgDetails}
       
-    <a href=@{DataR $ DataEventCalendarEventPosterR month day eid}>
+    <a href=@{DataR $ DataEventCalendarEventPosterR uid month day eid}>
       _{MsgPoster}
       
-    <a.active href=@{DataR $ DataEventCalendarEventAttendeesR month day eid}>
+    <a.active href=@{DataR $ DataEventCalendarEventAttendeesR uid month day eid}>
       _{MsgAttendees}
     
   <div.page.active.no-padding>
@@ -21,7 +21,7 @@
           _{MsgNoAttendeesForThisEventYet}.
     $else
       $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _)) <- attendees
-        <a.row.padding.wave href=@{DataR $ DataEventCalendarEventAttendeeR month day eid aid}>
+        <a.row.padding.wave href=@{DataR $ DataEventCalendarEventAttendeeR uid month day eid aid}>
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
@@ -41,7 +41,7 @@
 
         <hr>
 
-  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventAttendeeNewR eid}
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventAttendeeNewR uid eid}
     style="z-index:1" onclick="event.stopPropagation()">
     <i>add
 

@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (DataR $ DataEventCalendarR month,[])) (msgr MsgEvents) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ DataEventCalendarR uid month,[])) (msgr MsgEvents) idOverlay Nothing Nothing}
 
 <main.responsive.no-padding>
 
@@ -9,8 +9,8 @@
       <figcaption>
         _{MsgNoEventsForThisDayYet}.
   $else
-    $forall Entity eid (Event time name _) <- events
-      <a.row.padding.wave href=@{DataR $ DataEventCalendarEventR month day eid}>
+    $forall Entity eid (Event mid time name _) <- events
+      <a.row.padding.wave href=@{DataR $ DataEventCalendarEventR mid month day eid}>
         <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
           <h6.headline.large-text>
@@ -24,7 +24,7 @@
         
       <hr>
 
-  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventCalendarEventNewR month day}
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventCalendarEventNewR uid month day}
     style="z-index:1" onclick="event.stopPropagation()">
     <i>add
 

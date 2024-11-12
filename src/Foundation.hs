@@ -129,7 +129,8 @@ widgetMainMenuTrigger idOverlay idDialogMainMenu = $(widgetFile "widgets/trigger
     
 
 widgetMainMenu :: Text -> Text -> Widget
-widgetMainMenu idOverlay idDialogMainMenu = do    
+widgetMainMenu idOverlay idDialogMainMenu = do
+    userId <- maybeAuthId
     curr <- getCurrentRoute
     idButtonMainMenuClose <- newIdent
     $(widgetFile "widgets/menu")
@@ -293,27 +294,26 @@ instance Yesod App where
     
     isAuthorized (DataR (CardQrImageR _)) _ = return Authorized
 
-    isAuthorized (DataR DataEventsR) _ = setUltDestCurrent >> isAdmin
-    isAuthorized (DataR DataEventNewR) _ = isAdmin
-    isAuthorized (DataR (DataEventR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventEditR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventDeleR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventScannerR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventRegistrationR _)) _ = isAdmin
+    isAuthorized (DataR (DataEventsR _)) _ = setUltDestCurrent >> isAdmin
+    isAuthorized (DataR (DataEventNewR _)) _ = isAdmin
+    isAuthorized (DataR (DataEventR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventEditR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventDeleR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventScannerR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventRegistrationR _ _)) _ = isAdmin
 
     
-    isAuthorized (DataR (DataEventPosterDeleR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventPosterR _)) _ = isAdmin
+    isAuthorized (DataR (DataEventPosterDeleR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventPosterR _ _)) _ = isAdmin
         
-    isAuthorized (DataR (DataEventAttendeesR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeNewR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeDeleR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeNotifyR _ _)) _ = isAdmin
-    
+    isAuthorized (DataR (DataEventAttendeesR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventAttendeeR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventAttendeeNewR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventAttendeeDeleR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventAttendeeNotifyR {})) _ = isAdmin    
 
-    isAuthorized (DataR (DataEventCalendarR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventsR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventsR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventNewR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventEditR {})) _ = isAdmin
@@ -327,6 +327,7 @@ instance Yesod App where
     isAuthorized (DataR (DataEventCalendarEventAttendeesR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventAttendeeR {})) _ = isAdmin
     isAuthorized (DataR (DataEventCalendarEventAttendeeDeleR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventAttendeeNotifyR {})) _ = isAdmin
     
     
     

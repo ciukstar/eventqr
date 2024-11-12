@@ -1,11 +1,11 @@
 
 <div.overlay ##{idOverlay}>
 
-^{widgetTopbar (Just (DataR $ DataEventAttendeesR eid,[])) (msgr MsgAttendee) idOverlay (Just idDialogDelete) Nothing}
+^{widgetTopbar (Just (DataR $ DataEventAttendeesR uid eid,[])) (msgr MsgAttendee) idOverlay (Just idDialogDelete) Nothing}
 
 <main.responsive>
 
-  $maybe (Entity _ (Attendee _ _ _),(Entity _ (Event time name descr),(Entity cid (Card _ _ _),Entity uid (User email _ uname _ _)))) <- attendee
+  $maybe (Entity _ (Attendee _ _ _),(Entity _ (Event _ time name descr),(Entity cid (Card _ _ _),Entity uid (User email _ uname _ _)))) <- attendee
 
     <figure>
       <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -37,10 +37,16 @@
       <span>_{MsgNotifyUser}
 
     <dialog ##{idDialogQrCode}>
-      <h5>_{MsgQrCode}
+      <h6>_{MsgQrCode}
       <div>
         <figure>
           <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+          <figcaption>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+            
 
       <nav.right-align>
         <button.transparent.link ##{idButtonCloseDialogQrCode}>
@@ -57,7 +63,7 @@
     <button.transparent.link data-ui=##{idOverlay}
       onclick="document.getElementById('#{idDialogDelete}').close()">
       _{MsgCancel}
-    <form method=post action=@{DataR $ DataEventAttendeeDeleR eid aid} enctype=#{et0}>
+    <form method=post action=@{DataR $ DataEventAttendeeDeleR uid eid aid} enctype=#{et0}>
       ^{fw0}
       <button.primary type=submit>
         _{MsgDele}
@@ -69,7 +75,7 @@
     
   <div>
   
-    <form method=post action=@{DataR $ DataEventAttendeeNotifyR eid aid} enctype=#{et1} ##{idFormNotifyAttendee}>
+    <form method=post action=@{DataR $ DataEventAttendeeNotifyR uid eid aid} enctype=#{et1} ##{idFormNotifyAttendee}>
       ^{fw1}
       
   <nav.right-align.no-space>

@@ -25,6 +25,7 @@ module Handler.Catalogue
   , getDataEventPosterR, postDataEventPosterR, postDataEventPosterDeleR
   , getDataEventCalendarEventPosterR, postDataEventCalendarEventPosterR
   , postDataEventCalendarEventPosterDeleR
+  , postDataEventCalendarEventAttendeeNotifyR
   ) where
 
 
@@ -87,6 +88,7 @@ import Foundation
       , DataEventCalendarScannerR, DataEventCalendarRegistrationR
       , DataEventAttendeeNotifyR, DataEventPosterDeleR, DataEventPosterR
       , DataEventCalendarEventPosterR, DataEventCalendarEventPosterDeleR
+      , DataEventCalendarEventAttendeeNotifyR
       )
     , AppMessage
       ( MsgEventsCatalogue, MsgEvent, MsgDetails, MsgScanQrCodeAndLinkToEvent
@@ -109,9 +111,11 @@ import Foundation
       , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail
       , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher
       , MsgUnknownMessageRecipient, MsgCheckAtLeastOneOptionPlease
-      , MsgProvideRecipientEmailPlease, MsgMessageSent
+      , MsgProvideRecipientEmailPlease
       )
     )
+    
+import Handler.Tokens (fetchRefreshToken, fetchAccessToken, fetchVapidKeys)
 
 import Material3 (daytimeLocalField, md3textareaWidget, md3widget, md3checkboxWidget, md3fileWidget)
 
@@ -178,24 +182,100 @@ import Yesod.Form.Types
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 
-import Handler.Tokens (fetchRefreshToken, fetchAccessToken, fetchVapidKeys)
+
+postDataEventCalendarEventAttendeeNotifyR :: UserId -> Month -> Day -> EventId -> AttendeeId -> Handler Html
+postDataEventCalendarEventAttendeeNotifyR uid month day eid aid = do
+
+    publisher <- maybeAuth
+    
+    attendee <- runDB $ selectOne $ do
+        x :& e :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Event `on` (\(x :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
+            `innerJoin` table @Card `on` (\(x :& _ :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @User `on` (\(_ :& _ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. AttendeeId ==. val aid
+        return (x,(e,(c,u)))
+
+    (fw0,et0) <- generateFormPost formAttendeeRemove
+    ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
+    
+    case (fr1,(publisher,attendee)) of
+      (FormSuccess ((subj, msg), ((True, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          postMessage eid attendee subj msg
+          logNotification pid rid subj msg
+          postEmail email subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      (FormSuccess ((subj, msg), ((True, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          postMessage eid attendee subj msg
+          logNotification pid rid subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      (FormSuccess ((subj, msg), ((True, False),(True,Just email))),_) -> do
+          postMessage eid attendee subj msg
+          postEmail email subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      (FormSuccess ((subj, msg), ((True, False),(False,_))),_) -> do
+          postMessage eid attendee subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      (FormSuccess ((subj, msg), ((False, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          logNotification pid rid subj msg
+          postEmail email subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      (FormSuccess ((subj, msg), ((False, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          logNotification pid rid subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      (FormSuccess ((subj, msg), ((False, False),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
+          logNotification pid rid subj msg
+          postEmail email subj msg
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+
+      (FormSuccess (_, ((False, False),(False,_))),_) -> do
+          addMessageI msgError MsgCheckAtLeastOneOptionPlease
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+
+      (FormSuccess (_, (_,(True,Nothing))),_) -> do
+          addMessageI msgError MsgProvideRecipientEmailPlease
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
+          
+      _otherwise -> do
+          msgr <- getMessageRender
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgAttendee
+
+              idOverlay <- newIdent
+              idDialogDelete <- newIdent
+              idButtonShowDialogQrCode <- newIdent
+              idDialogQrCode <- newIdent
+              idButtonCloseDialogQrCode <- newIdent
+
+              idButtonShowDialogNotify <- newIdent
+              idDialogNotifyAttendee <- newIdent
+              idFormNotifyAttendee <- newIdent
+
+              $(widgetFile "data/catalogue/calendar/events/attendees/attendee")
 
 
-postDataEventCalendarEventAttendeeDeleR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
-postDataEventCalendarEventAttendeeDeleR month day eid aid = do
+postDataEventCalendarEventAttendeeDeleR :: UserId -> Month -> Day -> EventId -> AttendeeId -> Handler Html
+postDataEventCalendarEventAttendeeDeleR uid month day eid aid = do
     ((fr,_),_) <- runFormPost formAttendeeRemove
     case fr of
       FormSuccess () -> do
           runDB $ delete aid
           addMessageI msgSuccess MsgRecordDeleted
-          redirect $ DataR $ DataEventCalendarEventAttendeesR month day eid
+          redirect $ DataR $ DataEventCalendarEventAttendeesR uid month day eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventCalendarEventAttendeeR month day eid aid
+          redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
 
 
-getDataEventCalendarEventAttendeeR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
-getDataEventCalendarEventAttendeeR month day eid aid = do
+getDataEventCalendarEventAttendeeR :: UserId -> Month -> Day -> EventId -> AttendeeId -> Handler Html
+getDataEventCalendarEventAttendeeR uid month day eid aid = do
 
     attendee <- runDB $ selectOne $ do
         x :& e :& c :& u <- from $ table @Attendee
@@ -206,23 +286,27 @@ getDataEventCalendarEventAttendeeR month day eid aid = do
         return (x,(e,(c,u)))
 
     (fw0,et0) <- generateFormPost formAttendeeRemove
+    (fw1,et1) <- generateFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
 
     msgr <- getMessageRender
     msgs <- getMessages
     defaultLayout $ do
-        setTitleI MsgAttendees
+        setTitleI MsgAttendee
 
         idOverlay <- newIdent
         idDialogDelete <- newIdent
+        idButtonShowDialogNotify <- newIdent 
         idButtonShowDialogQrCode <- newIdent
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
+        idDialogNotifyAttendee <- newIdent
+        idFormNotifyAttendee <- newIdent
 
         $(widgetFile "data/catalogue/calendar/events/attendees/attendee")
 
 
-getDataEventCalendarEventAttendeesR :: Month -> Day -> EventId -> Handler Html
-getDataEventCalendarEventAttendeesR month day eid = do
+getDataEventCalendarEventAttendeesR :: UserId -> Month -> Day -> EventId -> Handler Html
+getDataEventCalendarEventAttendeesR uid month day eid = do
 
     attendees <- runDB $ select $ do
         x :& c :& u <- from $ table @Attendee
@@ -239,21 +323,21 @@ getDataEventCalendarEventAttendeesR month day eid = do
         $(widgetFile "data/catalogue/calendar/events/attendees/attendees")
 
 
-postDataEventCalendarEventPosterDeleR :: Month -> Day -> EventId -> PosterId -> Handler Html
-postDataEventCalendarEventPosterDeleR month day eid pid = do
+postDataEventCalendarEventPosterDeleR :: UserId -> Month -> Day -> EventId -> PosterId -> Handler Html
+postDataEventCalendarEventPosterDeleR uid month day eid pid = do
     ((fr0,_),_) <- runFormPost formPosterDelete
     case fr0 of
       FormSuccess () -> do
           runDB $ delete pid
           addMessageI msgSuccess MsgRecordDeleted
-          redirect $ DataR $ DataEventCalendarEventPosterR month day eid
+          redirect $ DataR $ DataEventCalendarEventPosterR uid month day eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventCalendarEventPosterR month day eid
+          redirect $ DataR $ DataEventCalendarEventPosterR uid month day eid
 
 
-postDataEventCalendarEventPosterR :: Month -> Day -> EventId -> Handler Html
-postDataEventCalendarEventPosterR month day eid = do
+postDataEventCalendarEventPosterR :: UserId -> Month -> Day -> EventId -> Handler Html
+postDataEventCalendarEventPosterR uid month day eid = do
 
     poster <- runDB $ selectOne $ do
         x <- from $ table @Poster
@@ -271,14 +355,14 @@ postDataEventCalendarEventPosterR month day eid = do
           void $ runDB $ upsertBy (UniquePoster eid) (Poster eid (fileContentType fi) bs attrib)
               [PosterAttribution P.=. attrib]
           addMessageI msgSuccess MsgRecordAdded
-          redirect $ DataR $ DataEventCalendarEventPosterR month day eid
+          redirect $ DataR $ DataEventCalendarEventPosterR uid month day eid
 
       FormSuccess (Nothing,attrib) -> do
           void $ runDB $ update $ \x -> do
               set x [ PosterAttribution =. val attrib ]
               where_ $ x ^. PosterEvent ==. val eid
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR $ DataEventCalendarEventPosterR month day eid
+          redirect $ DataR $ DataEventCalendarEventPosterR uid month day eid
 
       _otherwise -> do
           msgr <- getMessageRender
@@ -291,8 +375,8 @@ postDataEventCalendarEventPosterR month day eid = do
               $(widgetFile "data/catalogue/calendar/events/poster/poster")
 
 
-getDataEventCalendarEventPosterR :: Month -> Day -> EventId -> Handler Html
-getDataEventCalendarEventPosterR month day eid = do
+getDataEventCalendarEventPosterR :: UserId -> Month -> Day -> EventId -> Handler Html
+getDataEventCalendarEventPosterR uid month day eid = do
 
     poster <- runDB $ selectOne $ do
         x <- from $ table @Poster
@@ -313,8 +397,8 @@ getDataEventCalendarEventPosterR month day eid = do
         $(widgetFile "data/catalogue/calendar/events/poster/poster")
 
 
-postDataEventCalendarRegistrationR :: Month -> Day -> EventId -> Handler Html
-postDataEventCalendarRegistrationR month day eid = do
+postDataEventCalendarRegistrationR :: UserId -> Month -> Day -> EventId -> Handler Html
+postDataEventCalendarRegistrationR uid month day eid = do
 
     ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
 
@@ -326,14 +410,14 @@ postDataEventCalendarRegistrationR month day eid = do
                                    , attendeeRegDate = now
                                    }
           addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
-          redirect $ DataR $ DataEventCalendarEventR month day eid
+          redirect $ DataR $ DataEventCalendarEventR uid month day eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventCalendarRegistrationR month day eid
+          redirect $ DataR $ DataEventCalendarRegistrationR uid month day eid
 
 
-getDataEventCalendarRegistrationR :: Month -> Day -> EventId -> Handler Html
-getDataEventCalendarRegistrationR month day eid = do
+getDataEventCalendarRegistrationR :: UserId -> Month -> Day -> EventId -> Handler Html
+getDataEventCalendarRegistrationR uid month day eid = do
 
     cid <- toSqlKey <$> runInputGet (ireq intField "cid")
 
@@ -357,8 +441,8 @@ getDataEventCalendarRegistrationR month day eid = do
         $(widgetFile "data/catalogue/calendar/events/registration/registration")
 
 
-getDataEventCalendarScannerR :: Month -> Day -> EventId -> Handler Html
-getDataEventCalendarScannerR month day eid = do
+getDataEventCalendarScannerR :: UserId -> Month -> Day -> EventId -> Handler Html
+getDataEventCalendarScannerR uid month day eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
@@ -372,34 +456,34 @@ getDataEventCalendarScannerR month day eid = do
         $(widgetFile "data/catalogue/calendar/events/scanner/scanner")
 
 
-postDataEventCalendarEventDeleR :: Month -> Day -> EventId -> Handler Html
-postDataEventCalendarEventDeleR month day eid = do
+postDataEventCalendarEventDeleR :: UserId -> Month -> Day -> EventId -> Handler Html
+postDataEventCalendarEventDeleR uid month day eid = do
     ((fr,_),_) <- runFormPost formEventDelete
     case fr of
       FormSuccess () -> do
           runDB $ delete eid
           addMessageI msgSuccess MsgRecordDeleted
-          redirect $ DataR $ DataEventCalendarEventsR month day
+          redirect $ DataR $ DataEventCalendarEventsR uid month day
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventCalendarEventR month day eid
+          redirect $ DataR $ DataEventCalendarEventR uid month day eid
 
 
-postDataEventCalendarEventR :: Month -> Day -> EventId -> Handler Html
-postDataEventCalendarEventR month day eid = do
+postDataEventCalendarEventR :: UserId -> Month -> Day -> EventId -> Handler Html
+postDataEventCalendarEventR uid month day eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
         where_ $ x ^. EventId ==. val eid
         return x
 
-    ((fr,fw),et) <- runFormPost $ formEventDay day event
+    ((fr,fw),et) <- runFormPost $ formEventDay uid day event
 
     case fr of
       FormSuccess r -> do
           runDB $ replace eid r
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR $ DataEventCalendarEventR month day eid
+          redirect $ DataR $ DataEventCalendarEventR uid month day eid
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -410,15 +494,15 @@ postDataEventCalendarEventR month day eid = do
               $(widgetFile "data/catalogue/calendar/events/edit")
 
 
-getDataEventCalendarEventEditR :: Month -> Day -> EventId -> Handler Html
-getDataEventCalendarEventEditR month day eid = do
+getDataEventCalendarEventEditR :: UserId -> Month -> Day -> EventId -> Handler Html
+getDataEventCalendarEventEditR uid month day eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
         where_ $ x ^. EventId ==. val eid
         return x
 
-    (fw,et) <- generateFormPost $ formEventDay day event
+    (fw,et) <- generateFormPost $ formEventDay uid day event
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -428,8 +512,8 @@ getDataEventCalendarEventEditR month day eid = do
         $(widgetFile "data/catalogue/calendar/events/edit")
 
 
-getDataEventCalendarEventR :: Month -> Day -> EventId -> Handler Html
-getDataEventCalendarEventR month day eid = do
+getDataEventCalendarEventR :: UserId -> Month -> Day -> EventId -> Handler Html
+getDataEventCalendarEventR uid month day eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
@@ -449,14 +533,14 @@ getDataEventCalendarEventR month day eid = do
         $(widgetFile "data/catalogue/calendar/events/event")
 
 
-postDataEventCalendarEventsR :: Month -> Day -> Handler Html
-postDataEventCalendarEventsR month day = do
-    ((fr,fw),et) <- runFormPost $ formEventDay day Nothing
+postDataEventCalendarEventsR :: UserId -> Month -> Day -> Handler Html
+postDataEventCalendarEventsR uid month day = do
+    ((fr,fw),et) <- runFormPost $ formEventDay uid day Nothing
     case fr of
       FormSuccess r -> do
           runDB $ insert_ r
           addMessageI msgSuccess MsgRecordAdded
-          redirect $ DataR $ DataEventCalendarEventsR month day
+          redirect $ DataR $ DataEventCalendarEventsR uid month day
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -467,10 +551,10 @@ postDataEventCalendarEventsR month day = do
               $(widgetFile "data/catalogue/calendar/events/new")
 
 
-getDataEventCalendarEventNewR :: Month -> Day -> Handler Html
-getDataEventCalendarEventNewR month day = do
+getDataEventCalendarEventNewR :: UserId -> Month -> Day -> Handler Html
+getDataEventCalendarEventNewR uid month day = do
 
-    (fw,et) <- generateFormPost $ formEventDay day Nothing
+    (fw,et) <- generateFormPost $ formEventDay uid day Nothing
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -480,8 +564,8 @@ getDataEventCalendarEventNewR month day = do
         $(widgetFile "data/catalogue/calendar/events/new")
 
 
-formEventDay :: Day -> Maybe (Entity Event) -> Form Event
-formEventDay day event extra = do
+formEventDay :: UserId -> Day -> Maybe (Entity Event) -> Form Event
+formEventDay mid day event extra = do
 
     tz <- appTimeZone . appSettings <$> getYesod
 
@@ -500,12 +584,12 @@ formEventDay day event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
 
-    let r = Event <$> (localTimeToUTC tz . LocalTime day <$> timeR) <*> nameR <*> descrR
+    let r = Event mid <$> (localTimeToUTC tz . LocalTime day <$> timeR) <*> nameR <*> descrR
     return (r,$(widgetFile "data/catalogue/calendar/events/form"))
 
 
-getDataEventCalendarEventsR :: Month -> Day -> Handler Html
-getDataEventCalendarEventsR month day = do
+getDataEventCalendarEventsR :: UserId -> Month -> Day -> Handler Html
+getDataEventCalendarEventsR uid month day = do
 
     tz <- appTimeZone . appSettings <$> getYesod
 
@@ -523,8 +607,8 @@ getDataEventCalendarEventsR month day = do
         $(widgetFile "data/catalogue/calendar/events/events")
 
 
-getDataEventCalendarR :: Month -> Handler Html
-getDataEventCalendarR month = do
+getDataEventCalendarR :: UserId -> Month -> Handler Html
+getDataEventCalendarR uid month = do
     stati <- reqGetParams <$> getRequest
 
     let start = weekFirstDay Monday (periodFirstDay month)
@@ -559,17 +643,17 @@ getDataEventCalendarR month = do
       groupByKey f = fromListWith (<>) . fmap (\x -> (f x,[x]))
 
 
-postDataEventAttendeeDeleR :: EventId -> AttendeeId -> Handler Html
-postDataEventAttendeeDeleR eid aid = do
+postDataEventAttendeeDeleR :: UserId -> EventId -> AttendeeId -> Handler Html
+postDataEventAttendeeDeleR uid eid aid = do
     ((fr,_),_) <- runFormPost formAttendeeRemove
     case fr of
       FormSuccess () -> do
           runDB $ delete aid
           addMessageI msgSuccess MsgRecordDeleted
-          redirect $ DataR $ DataEventAttendeesR eid
+          redirect $ DataR $ DataEventAttendeesR uid eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
 
 
 getAccessToken :: Handler (Either AppMessage (Text,Text))
@@ -633,8 +717,8 @@ logNotification pid rid subject message = do
     addMessageI msgSuccess MsgNotificationSent
 
 
-postDataEventAttendeeNotifyR :: EventId -> AttendeeId -> Handler Html
-postDataEventAttendeeNotifyR eid aid = do
+postDataEventAttendeeNotifyR :: UserId -> EventId -> AttendeeId -> Handler Html
+postDataEventAttendeeNotifyR uid eid aid = do
 
     publisher <- maybeAuth
     
@@ -648,53 +732,52 @@ postDataEventAttendeeNotifyR eid aid = do
 
     (fw0,et0) <- generateFormPost formAttendeeRemove
     ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
-
-    msgr <- getMessageRender
     
     case (fr1,(publisher,attendee)) of
       (FormSuccess ((subj, msg), ((True, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
-          postMessage attendee subj msg
+          postMessage eid attendee subj msg
           logNotification pid rid subj msg
           postEmail email subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       (FormSuccess ((subj, msg), ((True, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
-          postMessage attendee subj msg
+          postMessage eid attendee subj msg
           logNotification pid rid subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       (FormSuccess ((subj, msg), ((True, False),(True,Just email))),_) -> do
-          postMessage attendee subj msg
+          postMessage eid attendee subj msg
           postEmail email subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       (FormSuccess ((subj, msg), ((True, False),(False,_))),_) -> do
-          postMessage attendee subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          postMessage eid attendee subj msg
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       (FormSuccess ((subj, msg), ((False, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           postEmail email subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       (FormSuccess ((subj, msg), ((False, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       (FormSuccess ((subj, msg), ((False, False),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           postEmail email subj msg
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
 
       (FormSuccess (_, ((False, False),(False,_))),_) -> do
           addMessageI msgError MsgCheckAtLeastOneOptionPlease
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
 
       (FormSuccess (_, (_,(True,Nothing))),_) -> do
           addMessageI msgError MsgProvideRecipientEmailPlease
-          redirect $ DataR $ DataEventAttendeeR eid aid
+          redirect $ DataR $ DataEventAttendeeR uid eid aid
           
       _otherwise -> do
+          msgr <- getMessageRender
           msgs <- getMessages
           defaultLayout $ do
               setTitleI MsgAttendee
@@ -710,45 +793,43 @@ postDataEventAttendeeNotifyR eid aid = do
               idFormNotifyAttendee <- newIdent
 
               $(widgetFile "data/catalogue/attendees/attendee")
-  where
 
-      postMessage :: Maybe (Entity Attendee, (Entity Event, (Entity Card, Entity User)))
-                  -> Text -> Html -> Handler ()
-      postMessage attendee subject message = do
-          vapidKeys <- fetchVapidKeys
-          user <- maybeAuth
-          case (vapidKeys,user,attendee) of
-            (Just vapid,Just publisher,Just (_,(_,(_,Entity rid _)))) -> do
-                results <- pushNotifications vapid publisher rid eid subject message
-                addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
-                
-            (Nothing,_,_) -> do
-                addMessageI msgError MsgVapidNotInitializedProperly
-                
-            (_,Nothing,_) -> do
-                addMessageI msgError MsgUnknownMessagePublisher
-                
-            (_,_,Nothing) -> do
-                addMessageI msgError MsgUnknownMessageRecipient
-                
-      
-      postEmail :: Text -> Text -> Html
-                -> Handler ()
-      postEmail email subject message = do
-          msgr <- getMessageRender
-          at <- getAccessToken
-          case at of
-            Left msg -> do
-                addMessageI msgError msg
-                    
-            Right (atoken,sendby) -> do
-                result <- sendEmail atoken sendby email subject message
-                (status,msg) <- return $ case result of
-                                  Right () -> (msgSuccess, msgr MsgNotificationSent)
-                                  Left msg -> (msgError, msg)
 
-                addMessageI status msg
-              
+postMessage :: EventId -> Maybe (Entity Attendee, (Entity Event, (Entity Card, Entity User)))
+            -> Text -> Html -> Handler ()
+postMessage eid attendee subject message = do
+    vapidKeys <- fetchVapidKeys
+    user <- maybeAuth
+    case (vapidKeys,user,attendee) of
+      (Just vapid,Just publisher,Just (_,(_,(_,Entity rid _)))) -> do
+          results <- pushNotifications vapid publisher rid eid subject message
+          addMessageI msgSuccess (MsgNotificationSentToSubscribersN (length $ filter isRight results))
+
+      (Nothing,_,_) -> do
+          addMessageI msgError MsgVapidNotInitializedProperly
+
+      (_,Nothing,_) -> do
+          addMessageI msgError MsgUnknownMessagePublisher
+
+      (_,_,Nothing) -> do
+          addMessageI msgError MsgUnknownMessageRecipient
+
+
+postEmail :: Text -> Text -> Html -> Handler ()
+postEmail email subject message = do
+    msgr <- getMessageRender
+    at <- getAccessToken
+    case at of
+      Left msg -> do
+          addMessageI msgError msg
+
+      Right (atoken,sendby) -> do
+          result <- sendEmail atoken sendby email subject message
+          (status,msg) <- return $ case result of
+                            Right () -> (msgSuccess, msgr MsgNotificationSent)
+                            Left msg -> (msgError, msg)
+
+          addMessageI status msg
 
 
 pushNotifications :: VAPIDKeys -> Entity User -> UserId -> EventId -> Text -> Html
@@ -785,8 +866,8 @@ pushNotifications vapid publisher rid eid subject message = do
         sendPushNotification vapid manager notification
 
 
-getDataEventAttendeeR :: EventId -> AttendeeId -> Handler Html
-getDataEventAttendeeR eid aid = do
+getDataEventAttendeeR :: UserId -> EventId -> AttendeeId -> Handler Html
+getDataEventAttendeeR uid eid aid = do
 
     attendee <- runDB $ selectOne $ do
         x :& e :& c :& u <- from $ table @Attendee
@@ -901,14 +982,14 @@ formAttendeeRemove :: Form ()
 formAttendeeRemove extra = return (pure (),[whamlet|^{extra}|])
 
 
-postDataEventAttendeesR :: EventId -> Handler Html
-postDataEventAttendeesR eid = do
+postDataEventAttendeesR :: UserId -> EventId -> Handler Html
+postDataEventAttendeesR uid eid = do
     ((fr,fw),et) <- runFormPost $ formAttendee eid Nothing
     case fr of
       FormSuccess r -> do
           runDB $ insert_ r
           addMessageI msgSuccess MsgRecordAdded
-          redirect $ DataR $ DataEventAttendeesR eid
+          redirect $ DataR $ DataEventAttendeesR uid eid
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -919,8 +1000,8 @@ postDataEventAttendeesR eid = do
               $(widgetFile "data/catalogue/attendees/new")
 
 
-getDataEventAttendeeNewR :: EventId -> Handler Html
-getDataEventAttendeeNewR eid = do
+getDataEventAttendeeNewR :: UserId -> EventId -> Handler Html
+getDataEventAttendeeNewR uid eid = do
 
     (fw,et) <- generateFormPost $ formAttendee eid Nothing
 
@@ -1006,8 +1087,8 @@ $else
           }
 
 
-getDataEventAttendeesR :: EventId -> Handler Html
-getDataEventAttendeesR eid = do
+getDataEventAttendeesR :: UserId -> EventId -> Handler Html
+getDataEventAttendeesR uid eid = do
 
     attendees <- runDB $ select $ do
         x :& c :& u <- from $ table @Attendee
@@ -1024,21 +1105,21 @@ getDataEventAttendeesR eid = do
         $(widgetFile "data/catalogue/attendees/attendees")
 
 
-postDataEventPosterDeleR :: EventId -> PosterId -> Handler Html
-postDataEventPosterDeleR eid pid = do
+postDataEventPosterDeleR :: UserId -> EventId -> PosterId -> Handler Html
+postDataEventPosterDeleR uid eid pid = do
     ((fr0,_),_) <- runFormPost formPosterDelete
     case fr0 of
       FormSuccess () -> do
           runDB $ delete pid
           addMessageI msgSuccess MsgRecordDeleted
-          redirect $ DataR $ DataEventPosterR eid
+          redirect $ DataR $ DataEventPosterR uid eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventPosterR eid
+          redirect $ DataR $ DataEventPosterR uid eid
 
 
-postDataEventPosterR :: EventId -> Handler Html
-postDataEventPosterR eid = do
+postDataEventPosterR :: UserId -> EventId -> Handler Html
+postDataEventPosterR uid eid = do
 
     poster <- runDB $ selectOne $ do
         x <- from $ table @Poster
@@ -1056,14 +1137,14 @@ postDataEventPosterR eid = do
           void $ runDB $ upsertBy (UniquePoster eid) (Poster eid (fileContentType fi) bs attrib)
               [PosterAttribution P.=. attrib]
           addMessageI msgSuccess MsgRecordAdded
-          redirect $ DataR $ DataEventPosterR eid
+          redirect $ DataR $ DataEventPosterR uid eid
 
       FormSuccess (Nothing,attrib) -> do
           void $ runDB $ update $ \x -> do
               set x [ PosterAttribution =. val attrib ]
               where_ $ x ^. PosterEvent ==. val eid
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR $ DataEventPosterR eid
+          redirect $ DataR $ DataEventPosterR uid eid
 
       _otherwise -> do
           msgr <- getMessageRender
@@ -1076,8 +1157,8 @@ postDataEventPosterR eid = do
               $(widgetFile "data/catalogue/poster/poster")
 
 
-getDataEventPosterR :: EventId -> Handler Html
-getDataEventPosterR eid = do
+getDataEventPosterR :: UserId -> EventId -> Handler Html
+getDataEventPosterR uid eid = do
 
     poster <- runDB $ selectOne $ do
         x <- from $ table @Poster
@@ -1134,8 +1215,8 @@ formPosterDelete :: Form ()
 formPosterDelete extra = return (pure (), [whamlet|#{extra}|])
 
 
-postDataEventRegistrationR :: EventId -> Handler Html
-postDataEventRegistrationR eid = do
+postDataEventRegistrationR :: UserId -> EventId -> Handler Html
+postDataEventRegistrationR uid eid = do
 
     ((fr,_),_) <- runFormPost $ formRegistration Nothing Nothing
 
@@ -1147,14 +1228,14 @@ postDataEventRegistrationR eid = do
                                    , attendeeRegDate = now
                                    }
           addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
-          redirect $ DataR $ DataEventR eid
+          redirect $ DataR $ DataEventR uid eid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventRegistrationR eid
+          redirect $ DataR $ DataEventRegistrationR uid eid
 
 
-getDataEventRegistrationR :: EventId -> Handler Html
-getDataEventRegistrationR eid = do
+getDataEventRegistrationR :: UserId -> EventId -> Handler Html
+getDataEventRegistrationR uid eid = do
 
     cid <- toSqlKey <$> runInputGet (ireq intField "cid")
 
@@ -1187,8 +1268,8 @@ formRegistration event card extra = do
     return (r,w)
 
 
-getDataEventScannerR :: EventId -> Handler Html
-getDataEventScannerR eid = do
+getDataEventScannerR :: UserId -> EventId -> Handler Html
+getDataEventScannerR uid eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
@@ -1202,28 +1283,28 @@ getDataEventScannerR eid = do
         $(widgetFile "data/catalogue/scanner/scanner")
 
 
-postDataEventDeleR :: EventId -> Handler Html
-postDataEventDeleR eid = do
+postDataEventDeleR :: UserId -> EventId -> Handler Html
+postDataEventDeleR uid eid = do
     ((fr,_),_) <- runFormPost formEventDelete
     case fr of
       FormSuccess () -> do
           runDB $ delete eid
           addMessageI msgSuccess MsgRecordDeleted
-          redirect $ DataR DataEventsR
+          redirect $ DataR $ DataEventsR uid
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ DataEventR eid
+          redirect $ DataR $ DataEventR uid eid
 
 
-getDataEventEditR :: EventId -> Handler Html
-getDataEventEditR eid = do
+getDataEventEditR :: UserId -> EventId -> Handler Html
+getDataEventEditR uid eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
         where_ $ x ^. EventId ==. val eid
         return x
 
-    (fw,et) <- generateFormPost $ formEvent event
+    (fw,et) <- generateFormPost $ formEvent uid event
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -1233,21 +1314,21 @@ getDataEventEditR eid = do
         $(widgetFile "data/catalogue/edit")
 
 
-postDataEventR :: EventId -> Handler Html
-postDataEventR eid = do
+postDataEventR :: UserId -> EventId -> Handler Html
+postDataEventR uid eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
         where_ $ x ^. EventId ==. val eid
         return x
 
-    ((fr,fw),et) <- runFormPost $ formEvent event
+    ((fr,fw),et) <- runFormPost $ formEvent uid event
 
     case fr of
       FormSuccess r -> do
           runDB $ replace eid r
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR $ DataEventR eid
+          redirect $ DataR $ DataEventR uid eid
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -1258,8 +1339,8 @@ postDataEventR eid = do
               $(widgetFile "data/catalogue/edit")
 
 
-getDataEventR :: EventId -> Handler Html
-getDataEventR eid = do
+getDataEventR :: UserId -> EventId -> Handler Html
+getDataEventR uid eid = do
 
     event <- runDB $ selectOne $ do
         x <- from $ table @Event
@@ -1283,10 +1364,10 @@ formEventDelete :: Form ()
 formEventDelete extra = return (pure (), [whamlet|#{extra}|])
 
 
-getDataEventNewR :: Handler Html
-getDataEventNewR = do
+getDataEventNewR :: UserId -> Handler Html
+getDataEventNewR uid = do
 
-    (fw,et) <- generateFormPost $ formEvent Nothing
+    (fw,et) <- generateFormPost $ formEvent uid Nothing
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -1296,8 +1377,8 @@ getDataEventNewR = do
         $(widgetFile "data/catalogue/new")
 
 
-formEvent :: Maybe (Entity Event) -> Form Event
-formEvent event extra = do
+formEvent :: UserId -> Maybe (Entity Event) -> Form Event
+formEvent manager event extra = do
 
     tz <- appTimeZone . appSettings <$> getYesod
 
@@ -1316,18 +1397,18 @@ formEvent event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
 
-    let r = Event <$> (localTimeToUTC tz <$> timeR) <*> nameR <*> descrR
+    let r = Event manager <$> (localTimeToUTC tz <$> timeR) <*> nameR <*> descrR
     return (r,$(widgetFile "data/catalogue/form"))
 
 
-postDataEventsR :: Handler Html
-postDataEventsR = do
-    ((fr,fw),et) <- runFormPost $ formEvent Nothing
+postDataEventsR :: UserId -> Handler Html
+postDataEventsR uid = do
+    ((fr,fw),et) <- runFormPost $ formEvent uid Nothing
     case fr of
       FormSuccess r -> do
           runDB $ insert_ r
           addMessageI msgSuccess MsgRecordAdded
-          redirect $ DataR DataEventsR
+          redirect $ DataR $ DataEventsR uid
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -1338,8 +1419,8 @@ postDataEventsR = do
               $(widgetFile "data/catalogue/new")
 
 
-getDataEventsR :: Handler Html
-getDataEventsR = do
+getDataEventsR :: UserId -> Handler Html
+getDataEventsR uid = do
 
     month <- liftIO $ (\(y,m,_) -> YearMonth y m) . toGregorian . utctDay <$>  getCurrentTime
 

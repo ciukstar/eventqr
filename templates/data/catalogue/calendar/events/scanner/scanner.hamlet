@@ -1,9 +1,9 @@
 
-^{widgetTopbar (Just (DataR $ DataEventCalendarEventR month day eid,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ DataEventCalendarEventR uid month day eid,[])) (msgr MsgScanner) idOverlay Nothing Nothing}
 
 <main.responsive>
 
-  $maybe Entity _ (Event time name _) <- event
+  $maybe Entity _ (Event _ time name _) <- event
     <dl>
       <dt.large-text>
         _{MsgRegistrationForEvent}:
@@ -14,5 +14,5 @@
           <time.full-datetime datetime=#{dt}>
             #{dt}
 
-  ^{widgetScanner $ DataR $ DataEventCalendarRegistrationR month day eid}
+  ^{widgetScanner $ DataR $ DataEventCalendarRegistrationR uid month day eid}
 

@@ -32,6 +32,7 @@ Poster
     UniquePoster event
 
 Event json
+    manager UserId OnDeleteCascade
     time UTCTime
     name Text
     descr Html

@@ -1,10 +1,10 @@
 
-^{widgetTopbar (Just (DataR $ DataEventR eid,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ DataEventR uid eid,[])) (msgr MsgRegistration) idOverlay Nothing Nothing}
 
 <main.responsive>
 
   $case (card,event)
-    $of (Just (_,Entity uid (User email _ uname _ _)), Just (Entity _ (Event time name descr)))
+    $of (Just (_,Entity uid (User email _ uname _ _)), Just (Entity _ (Event _ time name descr)))
       <p>
         _{MsgConfirmUserRegistrationForEventPlease}.
       
@@ -30,17 +30,17 @@
           #{descr}
 
 
-      <form method=post action=@{DataR $ DataEventRegistrationR eid} enctype=#{et}>
+      <form method=post action=@{DataR $ DataEventRegistrationR uid eid} enctype=#{et}>
         ^{fw}
         <div.form-actions>
             
           <button.margin type=submit>
             _{MsgRegister}
           
-          <a.link href=@{DataR $ DataEventScannerR eid}>
+          <a.link href=@{DataR $ DataEventScannerR uid eid}>
             _{MsgScanAgain}
           
-          <a.link href=@{DataR $ DataEventR eid}>
+          <a.link href=@{DataR $ DataEventR uid eid}>
             _{MsgCancel}
      
     $of _

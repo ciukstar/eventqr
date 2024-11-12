@@ -47,38 +47,39 @@
 /data DataR:
 
 
-    /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/dele DataEventCalendarEventAttendeeDeleR  POST
-    /catalogue/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId      DataEventCalendarEventAttendeeR      GET
-    /catalogue/#Month/calendar/#Day/events/#EventId/attendees                  DataEventCalendarEventAttendeesR     GET
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/notify DataEventCalendarEventAttendeeNotifyR POST
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/dele   DataEventCalendarEventAttendeeDeleR   POST
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId        DataEventCalendarEventAttendeeR       GET
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/attendees                    DataEventCalendarEventAttendeesR      GET
 
-    /catalogue/#Month/calendar/#Day/events/#EventId/posters/#PosterId/dele DataEventCalendarEventPosterDeleR POST
-    /catalogue/#Month/calendar/#Day/events/#EventId/posters                DataEventCalendarEventPosterR     GET POST
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/posters/#PosterId/dele DataEventCalendarEventPosterDeleR POST
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/posters                DataEventCalendarEventPosterR     GET POST
 
-    /catalogue/#Month/calendar/#Day/events/#EventId/register DataEventCalendarRegistrationR GET POST
-    /catalogue/#Month/calendar/#Day/events/#EventId/scanner  DataEventCalendarScannerR      GET
-    /catalogue/#Month/calendar/#Day/events/#EventId/dele     DataEventCalendarEventDeleR    POST
-    /catalogue/#Month/calendar/#Day/events/#EventId/edit     DataEventCalendarEventEditR    GET
-    /catalogue/#Month/calendar/#Day/events/new/form          DataEventCalendarEventNewR     GET
-    /catalogue/#Month/calendar/#Day/events/#EventId          DataEventCalendarEventR        GET POST
-    /catalogue/#Month/calendar/#Day/events                   DataEventCalendarEventsR       GET POST
-    /catalogue/#Month/calendar                               DataEventCalendarR             GET
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/register DataEventCalendarRegistrationR GET POST
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/scanner  DataEventCalendarScannerR      GET
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/dele     DataEventCalendarEventDeleR    POST
+    /c/#UserId/#Month/calendar/#Day/events/#EventId/edit     DataEventCalendarEventEditR    GET
+    /c/#UserId/#Month/calendar/#Day/events/new/form          DataEventCalendarEventNewR     GET
+    /c/#UserId/#Month/calendar/#Day/events/#EventId          DataEventCalendarEventR        GET POST
+    /c/#UserId/#Month/calendar/#Day/events                   DataEventCalendarEventsR       GET POST
+    /c/#UserId/#Month/calendar                               DataEventCalendarR             GET
 
-    /catalogue/#EventId/attendees/#AttendeeId/notify DataEventAttendeeNotifyR POST
-    /catalogue/#EventId/attendees/#AttendeeId/dele   DataEventAttendeeDeleR   POST
-    /catalogue/#EventId/attendees/new/form           DataEventAttendeeNewR    GET
-    /catalogue/#EventId/attendees/#AttendeeId        DataEventAttendeeR       GET
-    /catalogue/#EventId/attendees                    DataEventAttendeesR      GET POST
+    /c/#UserId/#EventId/attendees/#AttendeeId/notify DataEventAttendeeNotifyR POST
+    /c/#UserId/#EventId/attendees/#AttendeeId/dele   DataEventAttendeeDeleR   POST
+    /c/#UserId/#EventId/attendees/new/form           DataEventAttendeeNewR    GET
+    /c/#UserId/#EventId/attendees/#AttendeeId        DataEventAttendeeR       GET
+    /c/#UserId/#EventId/attendees                    DataEventAttendeesR      GET POST
 
-    /catalogue/#EventId/posters/#PosterId/dele DataEventPosterDeleR POST
-    /catalogue/#EventId/posters                DataEventPosterR     GET POST
+    /c/#UserId/#EventId/posters/#PosterId/dele DataEventPosterDeleR POST
+    /c/#UserId/#EventId/posters                DataEventPosterR     GET POST
     
-    /catalogue/#EventId/register DataEventRegistrationR GET POST
-    /catalogue/#EventId/scanner  DataEventScannerR      GET
-    /catalogue/#EventId/dele     DataEventDeleR         POST
-    /catalogue/#EventId/edit     DataEventEditR         GET
-    /catalogue/new/form          DataEventNewR          GET
-    /catalogue/#EventId          DataEventR             GET POST
-    /catalogue                   DataEventsR            GET POST
+    /c/#UserId/#EventId/register DataEventRegistrationR GET POST
+    /c/#UserId/#EventId/scanner  DataEventScannerR      GET
+    /c/#UserId/#EventId/dele     DataEventDeleR         POST
+    /c/#UserId/#EventId/edit     DataEventEditR         GET
+    /c/#UserId/new/form          DataEventNewR          GET
+    /c/#UserId/#EventId          DataEventR             GET POST
+    /c/#UserId                   DataEventsR            GET POST
 
     /qrcode/#CardId CardQrImageR GET
 

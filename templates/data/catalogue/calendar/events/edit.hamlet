@@ -1,12 +1,12 @@
 
-^{widgetTopbar (Just (DataR $ DataEventCalendarEventR month day eid,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ DataEventCalendarEventR uid month day eid,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
 
 <main.responsive>
 
-  <form.margin method=post action=@{DataR $ DataEventCalendarEventR month day eid} enctype=#{et} novalidate>
+  <form.margin method=post action=@{DataR $ DataEventCalendarEventR uid month day eid} enctype=#{et} novalidate>
     ^{fw}
     <nav.right-align>
-      <a.button.transparent href=@{DataR $ DataEventCalendarEventR month day eid}>
+      <a.button.transparent href=@{DataR $ DataEventCalendarEventR uid month day eid}>
         _{MsgCancel}
       <button.primary type=submit>
         _{MsgSave}

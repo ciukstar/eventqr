@@ -4,11 +4,11 @@
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a.vertical href=@{DataR DataEventsR}>
+    <a.vertical href=@{DataR $ DataEventsR uid}>
       <i>list
       <span>_{MsgList}
       
-    <a.active.vertical href=@{DataR $ DataEventCalendarR month}>
+    <a.active.vertical href=@{DataR $ DataEventCalendarR uid month}>
       <i>calendar_month
       <span>_{MsgCalendar}
     
@@ -16,12 +16,12 @@
 
     <div.calendar ##{idCalendarPage}>
       <div.header>
-        <a.button.circle.transparent href=@?{(DataR $ DataEventCalendarR prev,stati)} rel=nofollow aria-label=_{MsgPrevious}>
+        <a.button.circle.transparent href=@?{(DataR $ DataEventCalendarR uid prev,stati)} rel=nofollow aria-label=_{MsgPrevious}>
           <i>arrow_back_ios_new
         $with m <- show month
           <time.month-of-year datetime=#{m}>
             #{m}
-        <a.button.circle.transparent href=@?{(DataR $ DataEventCalendarR next,stati)} rel=nofollow aria-label=_{MsgNext}>
+        <a.button.circle.transparent href=@?{(DataR $ DataEventCalendarR uid next,stati)} rel=nofollow aria-label=_{MsgNext}>
           <i>arrow_forward_ios
 
       $forall wd <- [MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun]
@@ -33,13 +33,13 @@
           $with (y,m,d) <- toGregorian day
             $if (==) month (YearMonth y m)
               $maybe xs <- M.lookup day events
-                <a.cell.tertiary-container href=@?{(DataR $ DataEventCalendarEventsR month day,stati)} rel=nofollow>
+                <a.cell.tertiary-container href=@?{(DataR $ DataEventCalendarEventsR uid month day,stati)} rel=nofollow>
                   <time.day-of-month datetime=#{show day}>
                     <small>#{d}
                   <div>
                     <b>#{length xs}
               $nothing
-                <a.cell.secondary-container href=@?{(DataR $ DataEventCalendarEventsR month day,stati)} rel=nofollow>
+                <a.cell.secondary-container href=@?{(DataR $ DataEventCalendarEventsR uid month day,stati)} rel=nofollow>
                   <time.day-of-month datetime=#{show day}>
                     <small>#{d}
             $else

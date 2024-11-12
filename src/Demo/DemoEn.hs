@@ -22,7 +22,7 @@ import Model
       , userPhotoPhoto
       )
     , Card (Card, cardUser, cardIssued, cardQr)
-    , Event (Event, eventTime, eventName, eventDescr)
+    , Event (Event, eventTime, eventName, eventDescr, eventManager)
     , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info, infoCard, infoName, infoValue)
     , Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
@@ -303,7 +303,8 @@ fillDemoEn appSettings = do
                                          |]
                    }
 
-    eid11 <- insert $ Event { eventTime = addUTCTime hour now
+    eid11 <- insert $ Event { eventManager = uid1
+                            , eventTime = addUTCTime hour now
                             , eventName = "Private party"
                             , eventDescr = "Only Disco"
                             }
@@ -314,7 +315,8 @@ fillDemoEn appSettings = do
                      , posterAttribution = Just freepik
                      }
 
-    eid12 <- insert $ Event { eventTime = addUTCTime (2 * hour) now
+    eid12 <- insert $ Event { eventManager = uid2
+                            , eventTime = addUTCTime (2 * hour) now
                             , eventName = "Wellness party"
                             , eventDescr = "Wellness party, then Disco"
                             }
@@ -325,7 +327,8 @@ fillDemoEn appSettings = do
                      , posterAttribution = Just freepik
                      }
 
-    eid2 <- insert $ Event { eventTime = addUTCTime (2 * day) now
+    eid2 <- insert $ Event { eventManager = uid3
+                           , eventTime = addUTCTime (2 * day) now
                            , eventName = "Team-building event"
                            , eventDescr = "Team-building event, then Disco"
                            }
@@ -336,7 +339,8 @@ fillDemoEn appSettings = do
                      , posterAttribution = Just freepik
                      }
 
-    eid3 <- insert $ Event { eventTime = addUTCTime (3 * day) now
+    eid3 <- insert $ Event { eventManager = uid4
+                           , eventTime = addUTCTime (3 * day) now
                            , eventName = "Shareholder meeting"
                            , eventDescr = "Shareholder meeting, then Disco"
                            }
@@ -347,7 +351,8 @@ fillDemoEn appSettings = do
                      , posterAttribution = Just freepik
                      }
 
-    eid4 <- insert $ Event { eventTime = addUTCTime (4 * day) now
+    eid4 <- insert $ Event { eventManager = uid1
+                           , eventTime = addUTCTime (4 * day) now
                            , eventName = "Board meeting"
                            , eventDescr = "Board meeting, then Disco"
                            }

@@ -3,7 +3,7 @@
 
 <main.responsive>
 
-  $maybe Entity _ (Event time name _) <- event
+  $maybe Entity _ (Event _ time name _) <- event
     <dl>
       <dt.large-text>
         _{MsgRegistrationForEvent}:

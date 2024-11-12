@@ -1,20 +1,20 @@
 
-^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR month day,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) (Just $ DataR $ DataEventCalendarEventEditR month day eid)}
+^{widgetTopbar (Just (DataR $ DataEventCalendarEventsR uid month day,[])) (msgr MsgEvent) idOverlay (Just idDialogDelete) (Just $ DataR $ DataEventCalendarEventEditR uid month day eid)}
 
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a.active href=@{DataR $ DataEventCalendarEventR month day eid}>
+    <a.active href=@{DataR $ DataEventCalendarEventR uid month day eid}>
       _{MsgDetails}
       
-    <a href=@{DataR $ DataEventCalendarEventPosterR month day eid}>
+    <a href=@{DataR $ DataEventCalendarEventPosterR uid month day eid}>
       _{MsgPoster}
       
-    <a href=@{DataR $ DataEventCalendarEventAttendeesR month day eid}>
+    <a href=@{DataR $ DataEventCalendarEventAttendeesR uid month day eid}>
       _{MsgAttendees}
     
   <div.page.active.padding>
-    $maybe Entity _ (Event time name descr) <- event
+    $maybe Entity _ (Event _ time name descr) <- event
       <dl>
         <dt.bold.large-text>
           _{MsgName}
@@ -34,7 +34,7 @@
           #{descr}
 
     <p ##{idActionQrScan}>
-      <a.button.margin href=@{DataR $ DataEventCalendarScannerR month day eid} ##{idButtonQrScan}
+      <a.button.margin href=@{DataR $ DataEventCalendarScannerR uid month day eid} ##{idButtonQrScan}
                        title=_{MsgScanQrCodeAndLinkToEvent}>
         <i>qr_code_scanner
         <span>_{MsgScanQrCode}
@@ -53,7 +53,7 @@
     <button.transparent.link data-ui=##{idOverlay}
       onclick="document.getElementById('#{idDialogDelete}').close()">
       _{MsgCancel}
-    <form method=post action=@{DataR $ DataEventCalendarEventDeleR month day eid} enctype=#{et0}>
+    <form method=post action=@{DataR $ DataEventCalendarEventDeleR uid month day eid} enctype=#{et0}>
       ^{fw0}
       <button.primary type=submit>
         _{MsgDele}

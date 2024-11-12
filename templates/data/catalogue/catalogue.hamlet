@@ -4,11 +4,11 @@
 <main.responsive.no-padding>
 
   <div.tabs.min>
-    <a.active.vertical href=@{DataR DataEventsR}>
+    <a.active.vertical href=@{DataR $ DataEventsR uid}>
       <i>list
       <span>_{MsgList}
       
-    <a.vertical href=@{DataR $ DataEventCalendarR month}>
+    <a.vertical href=@{DataR $ DataEventCalendarR uid month}>
       <i>calendar_month
       <span>_{MsgCalendar}
     
@@ -19,8 +19,8 @@
         <figcaption>
           _{MsgNoEventsYet}.
     $else
-      $forall Entity eid (Event time name _) <- events
-        <a.row.padding.wave href=@{DataR $ DataEventR eid}>
+      $forall Entity eid (Event mid time name _) <- events
+        <a.row.padding.wave href=@{DataR $ DataEventR mid eid}>
         
           <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
 
@@ -37,7 +37,7 @@
 
         <hr>
 
-  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR DataEventNewR}
+  <a.button.circle.extra.fixed.right.bottom.margin.medium-elevate href=@{DataR $ DataEventNewR uid}
     style="z-index:1" onclick="event.stopPropagation()">
     <i>add
 

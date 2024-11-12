@@ -18,9 +18,10 @@
       <i>home
       <span>_{MsgHome}
 
-    <a href=@{DataR DataEventsR}>
-      <i>topic
-      <span>_{MsgEventsCatalogue}
+    $maybe uid <- userId
+      <a href=@{DataR $ DataEventsR uid}>
+        <i>topic
+        <span>_{MsgEventsCatalogue}
 
     <a href=@{DataR UsersR} :curr == Just (DataR UsersR):.active>
       <i>group
