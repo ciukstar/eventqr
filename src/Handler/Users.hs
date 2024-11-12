@@ -59,17 +59,18 @@ import Foundation
       , MsgRead, MsgUnread, MsgFrom, MsgNotification, MsgMessage, MsgSent
       , MsgMessageSubject, MsgVapidRequiredToPushNotifications
       , MsgVapidCanBeGeneratedByAdmin, MsgYourOtherSubscriptions, MsgUnsubscribe
-      , MsgUnknownDevice, MsgUnsubscribeAreYouSure
+      , MsgUnknownDevice, MsgUnsubscribeAreYouSure, MsgManager
       )
     )
 
 import Handler.Tokens (fetchVapidKeys)
 
-import Material3 (md3switchWidget)
+import Material3 (md3widget, md3switchWidget)
     
 import Model
     ( msgSuccess, msgError
-    , UserId, User(User, userName, userEmail, userPassword, userAdmin)
+    , UserId
+    , User(User, userName, userEmail, userPassword, userAdmin, userManager)
     , UserPhoto (UserPhoto)
     , Unique (UniquePushSubscription)
     , PushSubscriptionId
@@ -81,7 +82,7 @@ import Model
     , NotificationStatus (NotificationStatusRead, NotificationStatusUnread)
     , EntityField
       ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
-      , UserPhotoMime, UserName, UserAdmin, PushSubscriptionUser
+      , UserPhotoMime, UserName, UserAdmin, PushSubscriptionUser, UserManager
       , PushSubscriptionP256dh, PushSubscriptionAuth, NotificationRecipient
       , NotificationPublisher, NotificationStatus, PushSubscriptionEndpoint
       , NotificationId, PushSubscriptionTime, PushSubscriptionUserAgent
@@ -349,11 +350,12 @@ postUserR uid = do
     ((fr,fw),et) <- runFormPost $ formUserEdit user
 
     case fr of
-      FormSuccess (User email _ name admin _,(Just fi,attrib)) -> do
+      FormSuccess (User email _ name _ admin manager,(Just fi,attrib)) -> do
           void $ runDB $ update $ \x -> do
             set x [ UserEmail =. val email
                   , UserName =. val name
                   , UserAdmin =. val admin
+                  , UserManager =. val manager
                   ]
             where_ $ x ^. UserId ==. val uid
           bs <- fileSourceByteString fi
@@ -365,11 +367,12 @@ postUserR uid = do
           addMessageI msgSuccess MsgRecordEdited
           redirect $ DataR UsersR
           
-      FormSuccess (User email _ name admin _,(Nothing,attrib)) -> do
+      FormSuccess (User email _ name _ admin manager,(Nothing,attrib)) -> do
           void $ runDB $ update $ \x -> do
             set x [ UserEmail =. val email
                   , UserName =. val name
                   , UserAdmin =. val admin
+                  , UserManager =. val manager
                   ]
             where_ $ x ^. UserId ==. val uid
           void $ runDB $ update $ \x -> do
@@ -416,7 +419,7 @@ postUsersR = do
     ((fr,fw),et) <- runFormPost $ formUser Nothing
 
     case fr of
-      FormSuccess (r@(User _ (Just pass) _ _ _),(Just fi,attrib)) -> do
+      FormSuccess (r@(User _ (Just pass) _ _ _ _),(Just fi,attrib)) -> do
           password <- liftIO $ saltPass pass
           uid <- runDB $ insert r { userPassword = Just password }
           bs <- fileSourceByteString fi
@@ -428,7 +431,7 @@ postUsersR = do
           addMessageI msgSuccess MsgRecordAdded
           redirect $ DataR UsersR
           
-      FormSuccess (r@(User _ (Just pass) _ _ _),(Nothing,attrib)) -> do
+      FormSuccess (r@(User _ (Just pass) _ _ _ _),(Nothing,attrib)) -> do
           password <- liftIO $ saltPass pass
           uid <- runDB $ insert r { userPassword = Just password }
           void $ runDB $ update $ \x -> do
@@ -491,6 +494,12 @@ formUser user extra = do
         , fsAttrs = []
         } (userAdmin . entityVal <$> user)
 
+    (managerR,managerV) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgManager
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = []
+        } (userManager . entityVal <$> user)
+
     (photoR,photoV) <- mopt fileField FieldSettings
         { fsLabel = SomeMessage MsgPhoto
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
@@ -510,7 +519,7 @@ formUser user extra = do
         , fsAttrs = []
         } (Just attrib)
 
-    let r = (,) <$> (User <$> emailR <*> passR <*> nameR <*> pure False <*> adminR)
+    let r = (,) <$> (User <$> emailR <*> passR <*> nameR <*> pure False <*> adminR <*> managerR)
                 <*> ((,) <$> photoR <*> attribR)
 
     idPhotoContainer <- newIdent
@@ -557,6 +566,12 @@ formUserEdit user extra = do
         , fsAttrs = []
         } (userAdmin . entityVal <$> user)
 
+    (managerR,managerV) <- mreq checkBoxField FieldSettings
+        { fsLabel = SomeMessage MsgManager
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = []
+        } (userManager . entityVal <$> user)
+
     (photoR,photoV) <- mopt fileField FieldSettings
         { fsLabel = SomeMessage MsgPhoto
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
@@ -576,7 +591,7 @@ formUserEdit user extra = do
         , fsAttrs = []
         } (Just attrib)
 
-    let r = (,) <$> (User <$> emailR <*> pure Nothing <*> nameR <*> pure False <*> adminR)
+    let r = (,) <$> (User <$> emailR <*> pure Nothing <*> nameR <*> pure False <*> adminR <*> managerR)
                 <*> ((,) <$> photoR <*> attribR)
 
     idPhotoContainer <- newIdent

@@ -339,7 +339,7 @@ formUserCards uid extra = do
 
   where
 
-      pairs (Entity cid _,Entity _ (User email _ _ _ _)) = (email, cid)
+      pairs (Entity cid _,Entity _ (User email _ _ _ _ _)) = (email, cid)
 
       md3radioFieldList :: [(Entity Card,Entity User)] -> Field Handler CardId
       md3radioFieldList cards = (radioField (optionsPairs (pairs <$> cards)))
@@ -370,7 +370,7 @@ $if null opts
 $else
   <div *{attrs}>
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _)) <- findEvent opt cards
+      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _)) <- findEvent opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

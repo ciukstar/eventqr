@@ -294,40 +294,39 @@ instance Yesod App where
     
     isAuthorized (DataR (CardQrImageR _)) _ = return Authorized
 
-    isAuthorized (DataR (DataEventsR _)) _ = setUltDestCurrent >> isAdmin
-    isAuthorized (DataR (DataEventNewR _)) _ = isAdmin
-    isAuthorized (DataR (DataEventR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventEditR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventDeleR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventScannerR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventRegistrationR _ _)) _ = isAdmin
-
+    isAuthorized (DataR (DataEventsR uid)) _ = setUltDestCurrent >> isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventNewR uid)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventEditR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventDeleR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventScannerR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventRegistrationR uid _)) _ = isManagerSelfOrAdmin uid
     
-    isAuthorized (DataR (DataEventPosterDeleR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventPosterR _ _)) _ = isAdmin
+    isAuthorized (DataR (DataEventPosterDeleR uid _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventPosterR uid _)) _ = isManagerSelfOrAdmin uid
         
-    isAuthorized (DataR (DataEventAttendeesR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeNewR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeDeleR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventAttendeeNotifyR {})) _ = isAdmin    
+    isAuthorized (DataR (DataEventAttendeesR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventAttendeeR uid _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventAttendeeNewR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventAttendeeDeleR uid _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventAttendeeNotifyR uid _ _)) _ = isManagerSelfOrAdmin uid
 
-    isAuthorized (DataR (DataEventCalendarR _ _)) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventsR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventNewR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventEditR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventDeleR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarScannerR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarRegistrationR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarR uid _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventsR uid _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventR uid _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventNewR uid _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventEditR uid _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventDeleR uid _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarScannerR uid _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarRegistrationR uid _ _ _)) _ = isManagerSelfOrAdmin uid
     
-    isAuthorized (DataR (DataEventCalendarEventPosterDeleR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventPosterR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventPosterDeleR uid _ _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventPosterR uid _ _ _)) _ = isManagerSelfOrAdmin uid
         
-    isAuthorized (DataR (DataEventCalendarEventAttendeesR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventAttendeeR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventAttendeeDeleR {})) _ = isAdmin
-    isAuthorized (DataR (DataEventCalendarEventAttendeeNotifyR {})) _ = isAdmin
+    isAuthorized (DataR (DataEventCalendarEventAttendeesR uid _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventAttendeeR uid _ _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventAttendeeDeleR uid _ _ _ _)) _ = isManagerSelfOrAdmin uid
+    isAuthorized (DataR (DataEventCalendarEventAttendeeNotifyR uid _ _ _ _)) _ = isManagerSelfOrAdmin uid
     
     
     
@@ -500,8 +499,25 @@ isAdmin :: Handler AuthResult
 isAdmin = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ _ True)) -> return Authorized
-        Just (Entity _ (User _ _ _ _ False)) -> unauthorizedI MsgAccessDeniedAdminsOnly
+        Just (Entity _ (User _ _ _ True _ _)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ True _)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ False _)) -> unauthorizedI MsgAccessDeniedAdminsOnly
+        Nothing -> unauthorizedI MsgSignInToAccessPlease
+
+
+isManagerSelfOrAdmin :: UserId -> Handler AuthResult
+isManagerSelfOrAdmin uid = do
+    user <- maybeAuth
+    case user of
+        Just (Entity _ (User _ _ _ True _ _)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ True _)) -> return Authorized
+        
+        Just (Entity uid' (User _ _ _ _ _ True))
+            | uid == uid' -> return Authorized
+            | otherwise -> unauthorizedI MsgAnotherAccountAccessProhibited
+            
+        Just (Entity _ (User _ _ _ False False False)) -> unauthorizedI MsgAccessDeniedManagerOrAdminOnly
+            
         Nothing -> unauthorizedI MsgSignInToAccessPlease
 
 
@@ -509,10 +525,18 @@ isAdministrator :: Handler Bool
 isAdministrator = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ _ True)) -> return True
-        Just (Entity _ (User _ _ _ _ False)) -> return False
+        Just (Entity _ (User _ _ _ _ True _)) -> return True
+        Just (Entity _ (User _ _ _ _ False _)) -> return False
         Nothing -> return False
     
+
+isEventManager :: Handler Bool
+isEventManager = do
+    user <- maybeAuth
+    case user of
+        Just (Entity _ (User _ _ _ _ _ True)) -> return True
+        Just (Entity _ (User _ _ _ _ _ False)) -> return False
+        Nothing -> return False
 
 
 -- | Access function to determine if a user is logged in.

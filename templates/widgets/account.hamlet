@@ -1,6 +1,6 @@
 
 
-$maybe Entity uid (User email _ uname _ _) <- user
+$maybe Entity uid (User email _ uname _ _ _) <- user
   $with unread <- unread
     <button.circle.transparent.no-elevate data-ui=#accountmenutrigger title=#{fromMaybe email uname}>
       <img src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>

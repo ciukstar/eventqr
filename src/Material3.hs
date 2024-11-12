@@ -64,8 +64,8 @@ md3fileWidget v = [whamlet|
 
 md3switchWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()
 md3switchWidget v = [whamlet|
-  <div.field.middle-align :isJust (fvErrors v):.invalid>
-    <nav>          
+  <div.field.no-margin.middle-align :isJust (fvErrors v):.invalid>
+    <nav.no-padding>          
       <label.switch>
         ^{fvInput v}
         <span style="padding-left:1rem">

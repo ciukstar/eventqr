@@ -29,7 +29,7 @@
       <figcaption>
         _{MsgNoNotificationsForYouAtTheMoment}.
   $else
-    $forall (Entity nid (Notification pid _ published subject _ status),Entity _ (User email _ uname _ _)) <- notifications
+    $forall (Entity nid (Notification pid _ published subject _ status),Entity _ (User email _ uname _ _ _)) <- notifications
       <a.row.padding.wave href=@?{(DataR $ UserNotificationR uid nid,[("status",pack $ show status)])}>
         <img.circle src=@{DataR $ UserPhotoR pid} loading=lazy alt=_{MsgPhoto}>
         <div.content.max>

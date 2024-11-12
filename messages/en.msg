@@ -1,3 +1,8 @@
+DataAdministrator: Data administrator
+EventManager: Event manager
+UserRoles: User roles
+AccessDeniedManagerOrAdminOnly: Only Event Managers and Data Administrators have access to this page. Please log in as an Event Manager or Data Administrator
+Manager: Manager
 FillInCard: Fill in the card
 CardDoesNotContainAdditionalInfo: The card does not contain any additional data to display
 NumberSign: ##
@@ -269,3 +274,5 @@ Doc002 href@Text: <a class="link" href=#{href} target=_blank>Project repository<
 Doc003 href@Text: Please note that the application currently running is a demo application. Any actions are allowed and encouraged. <a class="link" href=#{href} target=_blank>Report issues</a> on GitHub.
 Doc004: A superuser account is defined at deployment time. The superuser manages other users and grants or revokes administrator privileges to specific users.
 Doc005: Integration with external APIs
+Doc006: An event manager can create events, send notifications, assign participants only to those events that he manages.
+Doc007: Data administrators have full access to all events and data.

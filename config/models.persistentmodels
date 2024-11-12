@@ -60,6 +60,7 @@ User
     name Text Maybe
     super Bool
     admin Bool
+    manager Bool
     UniqueUser email
     deriving Typeable
     

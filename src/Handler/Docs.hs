@@ -16,11 +16,13 @@ import Foundation
       ( MsgAppName, MsgDocumentation, MsgIssueTracking, MsgSourceCode
       , MsgOverview, MsgUseCaseDiagram, MsgEntityRelationshipDiagram
       , MsgSuperuser, MsgUsername, MsgPassword, MsgEmail, MsgClientId
-      , MsgClientSecret, MsgGoogleSecretManager, MsgProjectId
+      , MsgClientSecret, MsgGoogleSecretManager, MsgProjectId, MsgUserRoles
+      , MsgDataAdministrator, MsgEventManager
       , MsgDoc000, MsgDoc001, MsgDoc002, MsgDoc003, MsgDoc004, MsgDoc005
+      , MsgDoc006, MsgDoc007
       )
     )
-    
+
 import Settings (widgetFile)
 import Settings.StaticFiles (img_EventQr_UCD_svg, img_EventQr_ERD_svg)
 

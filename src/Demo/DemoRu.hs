@@ -16,7 +16,7 @@ import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
     ( keyApiVapid, keyApiGmail
-    , User (User, userEmail, userPassword, userSuper, userAdmin, userName)
+    , User (User, userEmail, userPassword, userSuper, userAdmin, userName, userManager)
     , UserPhoto
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
       , userPhotoPhoto
@@ -77,6 +77,7 @@ fillDemoRu appSettings = do
                      , userName = Just "Буланова Любовь Михайловна"
                      , userSuper = False
                      , userAdmin = True
+                     , userManager = True
                      }
     uid1 <- insert user1
 
@@ -93,6 +94,7 @@ fillDemoRu appSettings = do
                      , userName = Just "Петров Иван Александрович"
                      , userSuper = False
                      , userAdmin = False
+                     , userManager = True
                      }
     uid2 <- insert user2
 
@@ -109,6 +111,7 @@ fillDemoRu appSettings = do
                      , userName = Just "Смирнов Андрей Васильевич"
                      , userSuper = False
                      , userAdmin = False
+                     , userManager = False
                      }
     uid3 <- insert user3
 
@@ -125,6 +128,7 @@ fillDemoRu appSettings = do
                      , userName = Just "Сергеева Александра Владимировна"
                      , userSuper = False
                      , userAdmin = False
+                     , userManager = False
                      }
     uid4 <- insert user4
 

@@ -17,7 +17,7 @@
         <figcaption>
           _{MsgUserHasNoCardsYet}.
     $else
-      $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _ _)) <- cards
+      $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _ _ _)) <- cards
         <a.row.padding.wave href=@{DataR $ UserCardR uid cid}>
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

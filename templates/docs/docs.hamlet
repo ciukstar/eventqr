@@ -19,18 +19,32 @@
 
 
   <section>
-    <h3.small>_{MsgSuperuser}
-    <dl>
+    <h3.small>_{MsgUserRoles}
 
-      <dt>_{MsgUsername}
-      <dd>
-        <code>&dollar;YESOD_SUPERUSER_USERNAME
+  <ul>
+    <li>
+      <div.bold.large-text>_{MsgEventManager}
+      <p>
+        _{MsgDoc006}
+        
+    <li>
+      <div.bold.large-text>_{MsgDataAdministrator}
+      <p>
+        _{MsgDoc007}
+        
+    <li>
+      <div.bold.large-text>_{MsgSuperuser}
+      <dl>
 
-      <dt>_{MsgPassword}
-      <dd>
-        <code>&dollar;YESOD_SUPERUSER_PASSWORD
+        <dt>_{MsgUsername}
+        <dd>
+          <code>&dollar;YESOD_SUPERUSER_USERNAME
 
-    <p.md-typescale-body-medium>_{MsgDoc004}
+        <dt>_{MsgPassword}
+        <dd>
+          <code>&dollar;YESOD_SUPERUSER_PASSWORD
+
+      <p>_{MsgDoc004}
 
   <section>
     <h3.small>_{MsgDoc005}

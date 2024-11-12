@@ -2,7 +2,7 @@
 ^{widgetTopbar (Just (DataR $ UserNotificationsR uid,stati)) (msgr MsgNotification) idOverlay (Just idDialogDelete) Nothing}
 
 <main.responsive.padding>
-  $maybe (Entity _ (Notification pid _ published subject msg _),Entity _ (User email _ uname _ _)) <- notification
+  $maybe (Entity _ (Notification pid _ published subject msg _),Entity _ (User email _ uname _ _ _)) <- notification
     <dl>
       <dt.bold.large-text>
         _{MsgMessageSubject}

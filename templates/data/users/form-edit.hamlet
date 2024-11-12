@@ -37,29 +37,8 @@
 
 
 $forall v <- [emailV, nameV]
-  <div.field.label.border.round :isJust (fvErrors v):.invalid>
-
-    ^{fvInput v}
-    <label>
-      #{fvLabel v}
-      $if fvRequired v
-        <sup>*
-
-    $maybe err <- fvErrors v
-      <span.error>#{err}
+  ^{md3widget v}
 
 
-$forall v <- [adminV]
-  <div.field.middle-align :isJust (fvErrors v):.invalid>
-    <nav>
-      <div.max>
-        <h6.small>
-          #{fvLabel v}
-          $if fvRequired v
-            <sup>*
-      <label.switch>
-        ^{fvInput v}
-        <span>
-
-      $maybe err <- fvErrors v
-        <span.error>#{err}
+$forall v <- [adminV, managerV]
+  ^{md3switchWidget v}

@@ -13,14 +13,25 @@ Event and Attendance Management
 *Use Case Diagram*
 ![Use Case Diagram](static/img/EventQr_UCD.svg)
 
-## Superuser
+## User roles
 
-* Username  
-  ```$YESOD_SUPERUSER_USERNAME```
-* Password  
-  ```$YESOD_SUPERUSER_PASSWORD```
+* Event manager  
+
+  An event manager can create events, send notifications, assign participants only to those events that he manages.
   
-A superuser account is defined at deployment time. The superuser manages other users and grants or revokes administrator privileges to specific users.
+* Data administrator  
+
+  Data administrators have full access to all events and data.
+
+
+* Superuser  
+
+  * Username  
+    ```$YESOD_SUPERUSER_USERNAME```
+  * Password  
+    ```$YESOD_SUPERUSER_PASSWORD```
+  
+  A superuser account is defined at deployment time. The superuser manages other users and grants or revokes administrator privileges to specific users.
 
 ## Integration with external APIs
 

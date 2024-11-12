@@ -3,7 +3,7 @@
 
 <main.responsive.no-padding>
 
-  $maybe (Entity cid _,Entity _ (User email _ uname _ _)) <- card
+  $maybe (Entity cid _,Entity _ (User email _ uname _ _ _)) <- card
     <dl.margin>
       <dt>
         <label.bold.medium-text>_{MsgCardNumber}

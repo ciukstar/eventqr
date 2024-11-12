@@ -62,9 +62,9 @@ import Data.Time.LocalTime
     )
 
 import Database.Esqueleto.Experimental
-    ( select, selectOne, from, table, orderBy, desc, where_, val
+    ( SqlQuery, SqlExpr, Value, select, selectOne, from, table
     , (^.), (==.), (:&) ((:&)), (>=.), (<.), (=.)
-    , innerJoin, on, asc, update, set
+    , innerJoin, on, asc, update, set, orderBy, desc, where_, val
     )
 
 import Database.Persist
@@ -117,7 +117,8 @@ import Foundation
     
 import Handler.Tokens (fetchRefreshToken, fetchAccessToken, fetchVapidKeys)
 
-import Material3 (daytimeLocalField, md3textareaWidget, md3widget, md3checkboxWidget, md3fileWidget)
+import Material3
+    ( daytimeLocalField, md3textareaWidget, md3widget, md3checkboxWidget, md3fileWidget)
 
 import Model
     ( msgSuccess, msgError, gmailSendEnpoint
@@ -131,7 +132,7 @@ import Model
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent
-      , PosterAttribution
+      , PosterAttribution, EventManager
       )
     )
 
@@ -591,10 +592,13 @@ formEventDay mid day event extra = do
 getDataEventCalendarEventsR :: UserId -> Month -> Day -> Handler Html
 getDataEventCalendarEventsR uid month day = do
 
+    user <- maybeAuth
+    
     tz <- appTimeZone . appSettings <$> getYesod
 
     events <- runDB $ select $ do
         x <- from $ table @Event
+        sliceByRole user (x ^. EventManager ==. val uid)
         where_ $ x ^. EventTime >=. val (localTimeToUTC tz (LocalTime day (TimeOfDay 0 0 0)))
         where_ $ x ^. EventTime <.  val (localTimeToUTC tz (LocalTime (addDays 1 day) (TimeOfDay 0 0 0)))
         return x
@@ -617,10 +621,13 @@ getDataEventCalendarR uid month = do
     let next = addMonths 1 month
     let prev = addMonths (-1) month
 
+    user <- maybeAuth
+    
     tz <- appTimeZone . appSettings <$> getYesod
 
     events <- groupByKey (localDay . utcToLocalTime tz . eventTime . entityVal) <$> runDB ( select $ do
         x <- from $ table @Event
+        sliceByRole user (x ^. EventManager ==. val uid)
         where_ $ x ^. EventTime >=. val (localTimeToUTC tz (LocalTime (periodFirstDay month) (TimeOfDay 0 0 0)))
         where_ $ x ^. EventTime <.  val (localTimeToUTC tz (LocalTime (periodFirstDay next) (TimeOfDay 0 0 0)))
         return x )
@@ -1041,7 +1048,7 @@ formAttendee eid attendee extra = do
 
   where
 
-      pairs (Entity cid _, Entity _ (User email _ name _ _)) = (fromMaybe email name, cid)
+      pairs (Entity cid _, Entity _ (User email _ name _ _ _)) = (fromMaybe email name, cid)
 
       md3radioFieldList :: [(Entity Card, Entity User)] -> Field Handler CardId
       md3radioFieldList cards = (radioField (optionsPairs (pairs <$> cards)))
@@ -1063,7 +1070,7 @@ $if null opts
 $else
   <div *{attrs} style="max-height:60svh;overflow-y:auto">
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _)) <- findCard opt cards
+      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _)) <- findCard opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -1424,8 +1431,11 @@ getDataEventsR uid = do
 
     month <- liftIO $ (\(y,m,_) -> YearMonth y m) . toGregorian . utctDay <$>  getCurrentTime
 
+    user <- maybeAuth
+
     events <- runDB $ select $ do
         x <- from $ table @Event
+        sliceByRole user (x ^. EventManager ==. val uid)
         orderBy [desc (x ^. EventTime)]
         return x
 
@@ -1435,3 +1445,11 @@ getDataEventsR uid = do
         setTitleI MsgEventsCatalogue
         idOverlay <- newIdent
         $(widgetFile "data/catalogue/catalogue")
+
+
+sliceByRole :: Maybe (Entity User) -> SqlExpr (Value Bool) -> SqlQuery () 
+sliceByRole user expr = case user of
+          Just (Entity _ (User _ _ _ True _ _)) -> return ()
+          Just (Entity _ (User _ _ _ _ True _)) -> return ()
+          Just (Entity _ (User _ _ _ _ _ True)) -> where_ expr
+          _otherwise -> where_ $ val False
