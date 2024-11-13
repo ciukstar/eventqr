@@ -5,13 +5,11 @@
 
   $maybe (Entity cid _,Entity _ (User email _ uname _ _ _)) <- card
     <dl.margin>
-      <dt>
-        <label.bold.medium-text>_{MsgCardNumber}
+      <dt.bold>_{MsgCardNumber}
       <dd>
         #{fromSqlKey cid}
       
-      <dt>
-        <label.bold.medium-text>_{MsgCardholder}
+      <dt.bold>_{MsgCardholder}
       <dd>
         <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
         $maybe name <- uname
@@ -19,15 +17,13 @@
         $nothing
           #{email}
 
-      $if not (null attrs)
-        <dl>
-          $forall Entity _ (Info _ name val) <- attrs
-            <dt>
-              <label.bold.medium-text>#{name}
-            <dd>
-              #{val}
-      $else
-        <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
+      $forall Entity _ (Info _ name val) <- attrs
+        <dt.bold>#{name}
+        <dd>
+          #{val}
+     
+    $if null attrs
+      <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
         
 
     <button.border.transparent.margin ##{idButtonShowDialogQrCode}>

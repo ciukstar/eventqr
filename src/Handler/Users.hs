@@ -59,7 +59,7 @@ import Foundation
       , MsgRead, MsgUnread, MsgFrom, MsgNotification, MsgMessage, MsgSent
       , MsgMessageSubject, MsgVapidRequiredToPushNotifications
       , MsgVapidCanBeGeneratedByAdmin, MsgYourOtherSubscriptions, MsgUnsubscribe
-      , MsgUnknownDevice, MsgUnsubscribeAreYouSure, MsgManager
+      , MsgUnknownDevice, MsgUnsubscribeAreYouSure, MsgManager, MsgSuperuserCannotBeDeleted
       )
     )
 
@@ -300,6 +300,17 @@ postUserDeleR uid = do
     ((fr,_),_) <- runFormPost formUserDelete
     case fr of
       FormSuccess () -> do
+          user <- runDB $ selectOne $ do
+              x <- from $ table @User
+              where_ $ x ^. UserId ==. val uid
+              return x
+
+          case user of
+            Just (Entity _ (User _ _ _ True _ _)) -> do
+                addMessageI msgError MsgSuperuserCannotBeDeleted
+                redirect $ DataR $ UserR uid
+            _otherwise -> return ()
+              
           runDB $ P.delete uid
           addMessageI msgSuccess MsgRecordDeleted
           redirect $ DataR UsersR
@@ -599,8 +610,7 @@ formUserEdit user extra = do
     idLabelPhoto <- newIdent
     idImgPhoto <- newIdent
 
-    let w = $(widgetFile "data/users/form-edit")
-    return (r,w)
+    return (r, $(widgetFile "data/users/form-edit"))
   where
       uniqueEmailField :: Field Handler Text
       uniqueEmailField = checkM uniqueEmail emailField

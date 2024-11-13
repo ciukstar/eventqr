@@ -16,8 +16,6 @@ $nothing
 
     $maybe _ <- backlink
     $nothing
-      ^{widgetTheme}
-
       ^{widgetLang LangR (rndr HomeR stati)}
 
       ^{widgetAccount}

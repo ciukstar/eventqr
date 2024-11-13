@@ -20,7 +20,7 @@ Info
     value Html
 
 Card
-    user UserId
+    user UserId OnDeleteCascade
     qr Text
     issued UTCTime
 
@@ -66,7 +66,7 @@ User
     
 Email
     email Text
-    userId UserId Maybe
+    userId UserId Maybe OnDeleteSetNull
     verkey Text Maybe
     UniqueEmail email
 

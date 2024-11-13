@@ -2,12 +2,15 @@
 -- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
 
 
-/calendar/#Month/#Day/events/#EventId/attendees/#AttendeeId CalendarEventAttendeeR     GET
-/calendar/#Month/#Day/events/#EventId/attendees             CalendarEventAttendeesR    GET
-/calendar/#Month/#Day/events/#EventId/register              CalendarEventRegistrationR GET POST
-/calendar/#Month/#Day/events/#EventId/scanner               CalendarEventScannerR      GET
-/calendar/#Month/#Day/events/#EventId                       CalendarEventR             GET
-/calendar/#Month/#Day/events                                CalendarEventsR            GET
+/calendar/#Month/#Day/events/#EventId/attendees/#AttendeeId                CalendarEventAttendeeR         GET
+/calendar/#Month/#Day/events/#EventId/attendees                            CalendarEventAttendeesR        GET
+/calendar/#Month/#Day/events/#EventId/users/#UserId/unregister             CalendarEventUserUnregisterR   POST
+/calendar/#Month/#Day/events/#EventId/users/#UserId/cards/#CardId/register CalendarEventUserCardRegisterR POST
+/calendar/#Month/#Day/events/#EventId/users/#UserId/register               CalendarEventUserRegisterR     GET POST
+/calendar/#Month/#Day/events/#EventId/register                             CalendarEventRegistrationR     GET POST
+/calendar/#Month/#Day/events/#EventId/scanner                              CalendarEventScannerR          GET
+/calendar/#Month/#Day/events/#EventId                                      CalendarEventR                 GET
+/calendar/#Month/#Day/events                                               CalendarEventsR                GET
 
 /calendar/#Month CalendarR GET
 
@@ -29,8 +32,6 @@
 / HomeR GET
 
 /docs DocsR GET
-
-/fetch FetchR GET
 
 /restore PwdResetR  GET
 /lang    LangR      POST
@@ -106,6 +107,9 @@
     /users/#UserId/notifications                      UserNotificationsR    GET
     /users/#UserId/photo                              UserPhotoR            GET
 
+
+    /accounts/#UserId/settings AccountSettingsR GET
+    /accounts/#UserId/profile  AccountProfileR  GET
 
     /tokens/vapid/hook  TokensVapidHookR  GET
     /tokens/vapid/clear TokensVapidClearR POST

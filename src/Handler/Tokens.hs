@@ -113,7 +113,7 @@ import Yesod.Form.Input (ireq, runInputGet)
 import Yesod.Form.Fields (optionsPairs, textField, emailField)
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
-    ( FormResult (FormSuccess), FieldView (fvInput, fvLabel, fvRequired)
+    ( FormResult (FormSuccess), FieldView (fvInput, fvLabel, fvRequired, fvId)
     , FieldSettings (FieldSettings, fsLabel, fsId, fsName, fsTooltip, fsAttrs)
     )
 
@@ -758,7 +758,7 @@ formGmail token extra = do
 
                <div.field.label.border.round>
                  ^{fvInput emailV}
-                 <label>
+                 <label for=#{fvId emailV}>
                    #{fvLabel emailV}
                    $if fvRequired emailV
                      <sup>*

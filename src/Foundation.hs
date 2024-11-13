@@ -245,6 +245,10 @@ instance Yesod App where
     isAuthorized (CalendarEventR {}) _ = return Authorized
     isAuthorized (CalendarEventScannerR {}) _ = return Authorized
     isAuthorized (CalendarEventRegistrationR {}) _ = return Authorized
+    isAuthorized (CalendarEventUserRegisterR _ _ _ uid) _ = isAuthenticatedSelf uid    
+    isAuthorized (CalendarEventUserCardRegisterR _ _ _ uid _) _ = isAuthenticatedSelf uid
+    isAuthorized (CalendarEventUserUnregisterR _ _ _ uid) _ = isAuthenticatedSelf uid
+    
     isAuthorized (CalendarEventAttendeesR {}) _ = return Authorized
     isAuthorized (CalendarEventAttendeeR {}) _ = return Authorized
     
@@ -255,10 +259,7 @@ instance Yesod App where
     
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
-    isAuthorized (StaticR _) _ = return Authorized
-
-    
-    isAuthorized FetchR _ = setUltDestCurrent >> return Authorized
+    isAuthorized (StaticR _) _ = return Authorized    
     
     isAuthorized r@(DataR TokensGmailR) _ = setUltDest r >> isAdmin
     isAuthorized (DataR TokensGmailClearR) _ = isAdmin
@@ -267,8 +268,10 @@ instance Yesod App where
     isAuthorized (DataR TokensVapidR) _ = isAdmin
     isAuthorized (DataR TokensVapidClearR) _ = isAdmin
     isAuthorized (DataR TokensVapidHookR) _ = isAdmin
+
+    isAuthorized (DataR (AccountProfileR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountSettingsR uid)) _ = isAuthenticatedSelf uid    
         
-    
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin
     isAuthorized (DataR UserNewR) _ = isAdmin
@@ -282,7 +285,6 @@ instance Yesod App where
     isAuthorized (DataR (UserSettingsR uid)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (UserSubscriptionsR uid)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (UserUnsubscribeR uid _)) _ = isAuthenticatedSelf uid
-    
     
     isAuthorized (DataR (UserCardsR _)) _ = isAdmin
     isAuthorized (DataR (UserCardR _ _)) _ = isAdmin

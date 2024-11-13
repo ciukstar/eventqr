@@ -1,0 +1,29 @@
+
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{HomeR}>
+      <i>arrow_back
+      
+    <h6.title.max>
+      _{MsgUserAccount}
+    
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a href=@{DataR $ AccountProfileR uid}>
+      _{MsgProfile}
+      
+    <a.active href=@{DataR $ AccountSettingsR uid}>
+      _{MsgSettings}
+    
+  <div.padding.page.active>
+
+    <div.field.middle-align>
+      <nav>
+        <label.switch.icon>
+          <input type=checkbox ##{idInputThemeMode}>
+          <span>
+            <i>dark_mode
+        <label.large-text.max for=#{idInputThemeMode}>
+          _{MsgTheme}

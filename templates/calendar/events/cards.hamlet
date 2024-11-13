@@ -1,0 +1,19 @@
+
+^{widgetTopbar (Just (CalendarEventR month day eid,[])) (msgr MsgCards) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <p.italic.margin>
+    _{MsgSelectCardToRegister}
+
+  <form method=post action=@{CalendarEventUserRegisterR month day eid uid} enctype=#{et}>
+    ^{fw}
+    <nav.right-align.margin>
+      <a.button.transparent href=@{CalendarEventR month day eid} role=button>
+        _{MsgCancel}
+        
+      <button type=submit>
+        _{MsgRegisterForEvent}
+        
+  ^{widgetSnackbar msgs}
+        

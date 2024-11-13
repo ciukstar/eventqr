@@ -35,12 +35,12 @@
   <form.reponsive method=post action=@{route}>
   
     <div.field.fill.label.round.border>
-      <input type=text name=username required ##{idInputUsername}>
-      <label>_{MsgUsername}
+      <input type=text name=username required ##{idInputUsername} autocomplete=email>
+      <label for=#{idInputUsername}>_{MsgUsername}
       
     <div.field.fill.label.round.border>
       <input type=password name=password required ##{idInputPassword}>
-      <label>_{MsgPassword}
+      <label for=#{idInputPassword}>_{MsgPassword}
       
     <button type=submit>
       _{MsgSignIn}

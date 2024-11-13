@@ -14,7 +14,7 @@
     
   <div.page.active>
     $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _)) <- attendees
-      <a.row.padding.no-margin href=@{EventAttendeeR eid aid}>
+      <a.row.padding.no-margin.wave href=@{EventAttendeeR eid aid}>
 
         <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 

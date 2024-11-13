@@ -1,5 +1,9 @@
 
-^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay (Just idDialogDelete) (Just $ DataR $ UserEditR uid)}
+$maybe Entity _ (User _ _ _ super _ _) <- user
+  $if super
+    ^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay Nothing (Just $ DataR $ UserEditR uid)}
+  $else
+    ^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay (Just idDialogDelete) (Just $ DataR $ UserEditR uid)}
 
 <main.responsive.no-padding>
 
@@ -13,36 +17,31 @@
   <div.page.active>
     $maybe Entity _ (User email _ uname super admin manager) <- user
       <dl.margin>
-        <dt>
-          <label.bold.large-text>_{MsgName}
-        <dd.margin>
+        <dt.bold>_{MsgName}
+        <dd.small-margin>
           $maybe name <- uname
             #{name}
 
-        <dt>
-          <label.bold.large-text>_{MsgEmail}
-        <dd.margin>
+        <dt.bold>_{MsgEmail}
+        <dd.small-margin>
           #{email}
 
-        <dt>
-          <label.bold.large-text>_{MsgSuperuser}
-        <dd.margin>
+        <dt.bold>_{MsgSuperuser}
+        <dd.small-margin>
           $if super
             _{MsgYes}
           $else
             _{MsgNo}
 
-        <dt>
-          <label.bold.large-text>_{MsgAdministrator}
-        <dd.margin>
+        <dt.bold>_{MsgAdministrator}
+        <dd.small-margin>
           $if admin
             _{MsgYes}
           $else
             _{MsgNo}
 
-        <dt>
-          <label.bold.large-text>_{MsgManager}
-        <dd.margin>
+        <dt.bold>_{MsgManager}
+        <dd.small-margin>
           $if manager
             _{MsgYes}
           $else

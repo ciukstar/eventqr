@@ -1,0 +1,49 @@
+
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{HomeR}>
+      <i>arrow_back
+      
+    <h6.title.max>
+      _{MsgUserAccount}
+    
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a.active href=@{DataR $ AccountProfileR uid}>
+      _{MsgProfile}
+      
+    <a href=@{DataR $ AccountSettingsR uid}>
+      _{MsgSettings}
+    
+  <div.padding.page.active>
+
+    $maybe Entity uid (User email _ uname _ admin manager) <- user
+              
+      <dl>
+        <dt.bold>_{MsgPhoto}
+        <dd.small-margin>
+          <figure>
+            <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        
+        <dt.bold>_{MsgName}
+        <dd.small-margin>
+          $maybe name <- uname
+            #{name}
+          $nothing
+            #{email}
+            
+        <dt.bold>_{MsgAdministrator}
+        <dd.small-margin>
+          $if admin
+            _{MsgYes}
+          $else
+            _{MsgNo}
+            
+        <dt.bold>_{MsgManager}
+        <dd.small-margin>
+          $if manager
+            _{MsgYes}
+          $else
+            _{MsgNo}

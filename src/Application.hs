@@ -52,7 +52,7 @@ import Handler.Common (getFaviconR, getRobotsR)
 import Handler.Docs ( getDocsR )
 
 import Handler.Home
-    ( getHomeR, getFetchR, getEventR
+    ( getHomeR, getEventR
     , getEventPosterR, getEventScannerR
     , getEventRegistrationR, postEventRegistrationR
     , getEventUserRegisterR, postEventUserRegisterR
@@ -67,7 +67,11 @@ import Handler.Calendar
     ( getCalendarR, getCalendarEventsR, getCalendarEventR, getCalendarEventAttendeesR
     , getCalendarEventAttendeeR
     , getCalendarEventScannerR
-    , getCalendarEventRegistrationR, postCalendarEventRegistrationR
+    , getCalendarEventRegistrationR
+    , postCalendarEventUserCardRegisterR
+    , getCalendarEventUserRegisterR, postCalendarEventUserRegisterR
+    , postCalendarEventRegistrationR
+    , postCalendarEventUserUnregisterR
     )
 
 import Handler.Catalogue
@@ -105,6 +109,9 @@ import Handler.Cards
     , postUserCardDeleR
     , getCardQrImageR
     )
+
+import Handler.Accounts
+    ( getAccountProfileR, getAccountSettingsR)
 
 import Handler.Users
     ( getUsersR, postUsersR

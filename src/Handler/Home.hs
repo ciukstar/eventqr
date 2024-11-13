@@ -8,7 +8,7 @@
 {-# LANGUAGE TupleSections #-}
 
 module Handler.Home
-  ( getHomeR, getFetchR
+  ( getHomeR
   , getEventR, getEventPosterR, getEventScannerR
   , getEventRegistrationR, postEventRegistrationR
   , getEventUserRegisterR, postEventUserRegisterR
@@ -21,16 +21,12 @@ module Handler.Home
   , sliceByRole
   ) where
 
-import qualified Control.Lens as L ( (^?) )
 import Control.Monad.IO.Class (liftIO)
 
-import Data.Aeson (decode)
-import qualified Data.Aeson as A (Value)
 import Data.Bifunctor (Bifunctor(second))
 import qualified Data.List as L (find)
 import qualified Data.List.Safe as LS (head)
 import Data.Maybe (isJust)
-import Data.Text (unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Calendar (toGregorian)
 import Data.Time.Calendar.Month (pattern YearMonth)
@@ -71,8 +67,9 @@ import Foundation
       , MsgUnsubscribeSuccessful, MsgYouDoNotHaveACardToRegisterYet
       , MsgConfirmPlease, MsgSubscriptionSuccessful, MsgSelectCardToRegister
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
-      , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgFillInCard
-      , MsgCardDoesNotContainAdditionalInfo, MsgNotYourQrCodeSorry, MsgNotManagerOfEventSorry
+      , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgNotYourQrCodeSorry
+      , MsgCardDoesNotContainAdditionalInfo, MsgNotManagerOfEventSorry
+      , MsgFillInCard
       )
     )
 
@@ -86,12 +83,10 @@ import Model
     , Poster (Poster)
     , EntityField
       ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
-      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent, CardIssued, EventManager
+      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent
+      , CardIssued, EventManager
       )
     )
-
-import Network.Wreq (get)
-import qualified Network.Wreq as WL (responseBody)
 
 import Settings (widgetFile)
 import Settings.StaticFiles (img_event_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
@@ -111,7 +106,7 @@ import Yesod.Core
 import Yesod.Core.Widget (setTitleI)
 import Yesod.Form.Input (runInputGet, ireq, iopt)
 import Yesod.Form.Fields
-    ( urlField, intField, hiddenField, radioField, textField, optionsPairs
+    ( intField, hiddenField, radioField, textField, optionsPairs
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
     )
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
@@ -676,12 +671,3 @@ sliceByRole user expr = case user of
           Just (Entity _ (User _ _ _ _ True _)) -> return ()
           Just (Entity _ (User _ _ _ _ _ True)) -> where_ expr
           _otherwise -> where_ $ val False
-
-
-getFetchR :: Handler TypedContent
-getFetchR = do
-    url <- runInputGet $ ireq urlField "url"
-    r <- liftIO $ get (unpack url)
-
-    selectRep $ do
-        provideJson (decode =<< (r L.^? WL.responseBody) :: Maybe A.Value)

@@ -67,13 +67,11 @@
                       #{email}
               <div>
                 <dl>
-                  <dt>
-                    <label.bold>_{MsgCardNumber}
+                  <dt.bold>_{MsgCardNumber}
                   <dd>
                     #{i}
       
-                  <dt>
-                    <label.bold>_{MsgIssueDate}
+                  <dt.bold>_{MsgIssueDate}
                   <dd>
                     $with dt <- show issued
                       <time.day datetime=#{dt}>
@@ -81,8 +79,7 @@
 
                 $if not (null attrs)
                   $forall Entity _ (Info _ name val) <- attrs
-                    <dt>
-                      <label.bold>#{name}
+                    <dt.bold>#{name}
                     <dd>
                       #{val}
                 $else

@@ -38,13 +38,56 @@
         <dd.small-margin>
           #{attendees}
 
-    <p ##{idActionQrScan}>
-      <a.button.margin href=@{CalendarEventScannerR month day eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
-        <i>qr_code_scanner
-        <span>_{MsgScanQrCode}
+    $maybe Entity uid (User _ _ _ super admin manager) <- user
+      <div ##{idActions}>
+        $if subscribed
+          <span.italic>_{MsgYouAreRegisteredForThisEvent}.
+          <div>
+            <button.transparent.link ##{idButtonUnsubscribe} data-ui=##{idOverlay}>
+              _{MsgUnsubscribe}
+              
+        $elseif length cards > 1
+          <a.button.fill href=@{CalendarEventUserRegisterR month day eid uid}>
+            <i>how_to_reg
+            <span>_{MsgRegisterForThisEvent}            
+            
+        $elseif length cards == 1
+          $maybe Entity cid _ <- LS.head cards
+            <form method=post action=@{CalendarEventUserCardRegisterR month day eid uid cid} enctype=#{et} 
+                  ##{idFormEventUserCardRegister}>
+              
+              ^{fw}
+              
+            <button.fill.max type=submit form=#{idFormEventUserCardRegister}>
+              <i>how_to_reg
+              <span>_{MsgRegisterForThisEvent}
+            
+        $else
+          <p.italic>_{MsgYouDoNotHaveACardToRegisterYet}
 
-      <label for=#{idButtonQrScan}>
-        _{MsgScanQrCodeAndLinkToEvent}.
+
+        $if (((super || admin) || manager) || not subscribed)
+          <a.button.fill href=@{CalendarEventScannerR month day eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+            <i>qr_code_scanner
+            <span>_{MsgRegisterWithQrCode}
+          
+
+
+      <div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+      <dialog ##{idDialogUnsubscribe}>
+        <h6>_{MsgConfirmPlease}
+        <div>
+          _{MsgUnsubscribeAreYouSure}
+
+        <nav.right-align>
+          <button.transparent type=button ##{idButtonCloseDialogUnsubscribe} data-ui=##{idOverlay}>
+            _{MsgCancel}
+
+          <form method=post action=@{CalendarEventUserUnregisterR month day eid uid} enctype=#{et0}>
+            ^{fw0}
+            <button type=submit>
+              _{MsgUnsubscribe}
         
 
   ^{widgetSnackbar msgs}

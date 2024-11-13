@@ -27,7 +27,7 @@
     <div.field.textarea.label.border.round :isJust (fvErrors attribV):.invalid>
 
       ^{fvInput attribV}
-      <label>
+      <label for=#{fvId attribV}>
         #{fvLabel attribV}
         $if fvRequired attribV
           <sup>*

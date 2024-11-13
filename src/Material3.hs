@@ -29,7 +29,7 @@ import Yesod.Form.Fields
     )
 import Yesod.Form.Types
     ( Field (fieldView)
-    , FieldView (fvErrors, fvInput, fvLabel, fvRequired)
+    , FieldView (fvErrors, fvInput, fvLabel, fvRequired, fvId)
     )
 
 
@@ -88,7 +88,7 @@ md3textareaWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m (
 md3textareaWidget v = [whamlet|
   <div.field.border.round.label.textarea :isJust (fvErrors v):.invalid>
     ^{fvInput v}
-    <label>
+    <label for=#{fvId v}>
       #{fvLabel v}
       $if fvRequired v
         <sup>*
@@ -101,7 +101,7 @@ md3selectWidget :: RenderMessage m FormMessage => FieldView m -> WidgetFor m ()
 md3selectWidget v = [whamlet|
   <div.field.label.suffix.border.round :isJust (fvErrors v):.invalid>
     ^{fvInput v}
-    <label>
+    <label for=#{fvId v}>
       #{fvLabel v}
       $if fvRequired v
         <sup>*
@@ -116,7 +116,7 @@ md3widget v = [whamlet|
   <div.field.label.border.round :isJust (fvErrors v):.invalid>
 
     ^{fvInput v}
-    <label>
+    <label for=#{fvId v}>
       #{fvLabel v}
       $if fvRequired v
         <sup>*

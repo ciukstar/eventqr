@@ -1,3 +1,7 @@
+Theme: Theme
+UserAccount: User account
+Profile: Profile
+SuperuserCannotBeDeleted: Superuser cannot be deleted
 NotManagerOfEventSorry: Sorry, you are not the manager of this event. You cannot register users for events you do not manage.
 NotYourQrCodeSorry: Sorry, this is not your QR code. You scanned the wrong QR code.
 DataAdministrator: Data administrator

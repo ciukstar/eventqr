@@ -21,6 +21,16 @@ $maybe Entity uid (User email _ uname _ _ _) <- user
           <div.max>
             <div>_{MsgNotifications}
 
+        <a.row href=@{DataR $ AccountProfileR uid}>
+          <i>badge
+          <div.max>
+            <div>_{MsgProfile}
+
+        <a.row href=@{DataR $ AccountSettingsR uid}>
+          <i>settings
+          <div.max>
+            <div>_{MsgSettings}
+
         <a.row href=@{AuthR LogoutR}>
           <i>logout
           <div.max>
@@ -28,9 +38,5 @@ $maybe Entity uid (User email _ uname _ _ _) <- user
     
     
 $nothing
-  <a.button.s.small.circle href=@{AuthR LoginR} title=_{MsgSignIn}>
-    <i>login
-  <a.button.m.medium.circle href=@{AuthR LoginR} title=_{MsgSignIn}>
-    <i>login
-  <a.button.l.large.circle href=@{AuthR LoginR} title=_{MsgSignIn}>
+  <a.button.circle.no-elevate href=@{AuthR LoginR} title=_{MsgSignIn}>
     <i>login
