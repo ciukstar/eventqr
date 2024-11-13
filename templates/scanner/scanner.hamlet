@@ -3,5 +3,5 @@
 
 <main.responsive>
     
-  ^{widgetScanner AttendeeRegistrationR}
+  ^{widgetScanner $ AttendeeRegistrationR uid}
 

@@ -26,11 +26,11 @@
     <summary.wave.padding>
       <span.small-margin>
         <i>style
-        $maybe _ <- userId
+        $maybe _ <- user
           <div.badge.border.text-secondary>#{show (length cards)}
       <span>_{MsgMyCards}
       
-    $maybe uid <- userId
+    $maybe Entity uid _ <- user
       $if null cards
         <figure.null.margin.pading>
           <i.extra>folder_open
@@ -110,17 +110,19 @@ $if not (null msgs)
 
 <nav.bottom>
 
-  <a ##{idButtonUpcomingEvents} href=# role=button title=_{MsgUpcomingEvents}>
+  <a ##{idButtonUpcomingEvents} href=# role=button title=_{MsgUpcomingEvents} role=button>
     <i>event_note
     <span>_{MsgEvents}
 
-  <a ##{idButtonSearchEvents} href=# role=button title=_{MsgSearch}>
+  <a ##{idButtonSearchEvents} href=# role=button title=_{MsgSearch} role=button>
     <i>search
     <span>_{MsgSearch}
 
-  <a ##{idButtonQrScanner} href=@{ScanQrR} title=_{MsgScanQrCode}>
-    <i>qr_code_scanner
-    <span>_{MsgScan}
+  $maybe Entity uid (User _ _ _ super admin manager) <- user
+    $if (super || admin) || manager
+      <a ##{idButtonQrScanner} href=@{ScanQrR uid} title=_{MsgScanQrCode} role=button>
+        <i>qr_code_scanner
+        <span>_{MsgScan}
 
 
 <dialog.bottom.no-padding ##{idDialogUpcomingEvents}>

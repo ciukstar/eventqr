@@ -13,38 +13,26 @@
       _{MsgAttendees}
     
   <div.page.active>
-    $forall (Entity aid (Attendee _ _ rdate), Entity cid _, Entity uid (User email _ uname _ _ _)) <- attendees
-      $with i <- show $ fromSqlKey cid
-        <dialog #idDialogQrCode#{i}>
-          <h5>_{MsgQrCode}
-          <div>
-            <figure>
-              <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+    $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _)) <- attendees
+      <a.row.padding.no-margin href=@{EventAttendeeR eid aid}>
 
-          <nav.right-align>
-            <button.transparent.link onclick="closeDialogQrCode(document.getElementById('idDialogQrCode#{i}'))">
-              _{MsgClose}
+        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
-        <div.row.padding.no-margin>
+        <div.content.max>
+          <div.headline.large-text>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
 
-          <a href=@{EventAttendeeR eid aid}>
-            <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+          <div.supporting-text.small-text>
+            _{MsgRegistrationDate}
+          <div.supporting-text.small-text>
+            $with dt <- show rdate
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
 
-          <div.content.max>
-            <a.headline.link.large-text href=@{EventAttendeeR eid aid}>
-              $maybe name <- uname
-                #{name}
-              $nothing
-                #{email}
-              
-            <div.supporting-text.small-text>
-              _{MsgRegistrationDate}
-            <div.supporting-text.small-text>
-              $with dt <- show rdate
-                <time.full-datetime datetime=#{dt}>
-                  #{dt}
-
-          <button.circle.tertiary onclick="showDialogQrCode(document.getElementById('idDialogQrCode#{i}'))">
-            <i>qr_code
-        <hr>
+        <i>arrow_forward_ios
+          
+      <hr>
     

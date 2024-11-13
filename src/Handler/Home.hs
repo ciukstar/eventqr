@@ -18,6 +18,7 @@ module Handler.Home
   , getScanQrR
   , getAttendeeRegistrationR, postAttendeeRegistrationR
   , getApiEventsR
+  , sliceByRole
   ) where
 
 import qualified Control.Lens as L ( (^?) )
@@ -36,10 +37,10 @@ import Data.Time.Calendar.Month (pattern YearMonth)
 import Data.Time.Clock (getCurrentTime, UTCTime (utctDay))
 
 import Database.Esqueleto.Experimental
-    ( SqlExpr, Value (unValue), select, selectOne, from, table, where_, val
+    ( SqlQuery, SqlExpr, Value (unValue), select, selectOne, from, table
     , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
     , innerJoin, on, orderBy, asc, subSelectCount, like, limit, lower_
-    , delete, subSelectList, in_
+    , delete, subSelectList, in_, where_, val
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -71,7 +72,7 @@ import Foundation
       , MsgConfirmPlease, MsgSubscriptionSuccessful, MsgSelectCardToRegister
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
       , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgFillInCard
-      , MsgCardDoesNotContainAdditionalInfo
+      , MsgCardDoesNotContainAdditionalInfo, MsgNotYourQrCodeSorry, MsgNotManagerOfEventSorry
       )
     )
 
@@ -85,7 +86,7 @@ import Model
     , Poster (Poster)
     , EntityField
       ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
-      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent, CardIssued
+      , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent, CardIssued, EventManager
       )
     )
 
@@ -100,7 +101,7 @@ import Text.Cassius (cassius)
 import Text.Hamlet (Html)
 import Text.Julius (rawJS, juliusFile)
 
-import Yesod.Auth (YesodAuth(maybeAuthId), Route (LoginR))
+import Yesod.Auth (Route (LoginR), maybeAuth)
 import Yesod.Core
     ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep
     , provideJson, getMessageRender, newIdent, whamlet, addMessageI, redirect
@@ -143,10 +144,10 @@ getApiEventsR = do
     selectRep $ provideJson events
 
 
-postAttendeeRegistrationR :: Handler Html
-postAttendeeRegistrationR = do
+postAttendeeRegistrationR :: UserId -> Handler Html
+postAttendeeRegistrationR mid = do
 
-    ((fr,_),_) <- runFormPost $ formAttendeeRegistration Nothing
+    ((fr,_),_) <- runFormPost $ formAttendeeRegistration mid Nothing
 
     case fr of
       FormSuccess (eid,cid) -> do
@@ -157,13 +158,14 @@ postAttendeeRegistrationR = do
                                    }
           addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
           redirect HomeR
+          
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
           redirect HomeR
 
 
-getAttendeeRegistrationR :: Handler Html
-getAttendeeRegistrationR = do
+getAttendeeRegistrationR :: UserId -> Handler Html
+getAttendeeRegistrationR mid = do
 
     cid <- toSqlKey <$> runInputGet (ireq intField "cid")
 
@@ -173,7 +175,7 @@ getAttendeeRegistrationR = do
         where_ $ x ^. CardId ==. val cid
         return (x,u)
 
-    (fw,et) <- generateFormPost $ formAttendeeRegistration (fst <$> card)
+    (fw,et) <- generateFormPost $ formAttendeeRegistration mid (fst <$> card)
 
     msgr <- getMessageRender
     defaultLayout $ do
@@ -182,16 +184,18 @@ getAttendeeRegistrationR = do
         $(widgetFile "upcoming/attendees/registration/registration")
 
 
-formAttendeeRegistration :: Maybe (Entity Card) -> Form (EventId, CardId)
-formAttendeeRegistration card extra = do
+formAttendeeRegistration :: UserId -> Maybe (Entity Card) -> Form (EventId, CardId)
+formAttendeeRegistration mid card extra = do
 
     (cidR,cidV) <- mreq hiddenField "" (entityKey <$> card)
 
     now <- liftIO getCurrentTime
+    user <- maybeAuth
 
     events <- liftHandler $ runDB $ select $ do
         x <- from $ table @Event
         where_ $ x ^. EventTime >=. val now
+        sliceByRole user (x ^. EventManager ==. val mid)
         orderBy [asc (x ^. EventTime)]
         return x
 
@@ -244,8 +248,8 @@ $else
           }
 
 
-getScanQrR :: Handler Html
-getScanQrR = do
+getScanQrR :: UserId -> Handler Html
+getScanQrR uid = do
 
     msgr <- getMessageRender
     defaultLayout $ do
@@ -432,6 +436,19 @@ getEventRegistrationR eid = do
         where_ $ x ^. EventId ==. val eid
         return x
 
+    user <- maybeAuth
+
+    case (user,card,event) of
+      (Just (Entity uid (User _ _ _ False False False)),Just (_,Entity uid' _),_) | uid /= uid' -> do
+                addMessageI msgError MsgNotYourQrCodeSorry
+                redirect $ EventR eid
+          
+      (Just (Entity uid (User _ _ _ False False True)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
+                addMessageI msgError MsgNotManagerOfEventSorry
+                redirect $ EventR eid
+          
+      _otherwise -> return ()
+
     (fw,et) <- generateFormPost $ formRegistration event (fst <$> card)
 
     msgr <- getMessageRender
@@ -514,7 +531,7 @@ getEventScannerR eid = do
 getEventR :: EventId -> Handler Html
 getEventR eid = do
 
-    userId <- maybeAuthId
+    user <- maybeAuth
 
     event <- (second unValue <$>) <$> runDB ( selectOne $ do
         x <- from $ table @Event
@@ -527,18 +544,18 @@ getEventR eid = do
         where_ $ x ^. EventId ==. val eid
         return (x,attendees) )
 
-    subscribed <- case userId of
+    subscribed <- case user of
       Nothing -> return False
-      Just uid -> isJust <$> runDB ( selectOne $ do
+      Just (Entity uid _) -> isJust <$> runDB ( selectOne $ do
           x :& c <- from $ table @Attendee
               `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
           where_ $ x ^. AttendeeEvent ==. val eid
           where_ $ c ^. CardUser ==. val uid
           return x )
 
-    cards <- case userId of
+    cards <- case user of
       Nothing -> return []
-      Just uid -> runDB $ select $ do
+      Just (Entity uid _) -> runDB $ select $ do
           x <- from $ table @Card
           where_ $ x ^. CardUser ==. val uid
           return x
@@ -557,7 +574,7 @@ getEventR eid = do
         idButtonUnsubscribe <- newIdent
         idDialogUnsubscribe <- newIdent
         idButtonCloseDialogUnsubscribe <- newIdent
-        when (isJust userId && subscribed)
+        when (isJust user && subscribed)
             $ toWidget $(juliusFile "templates/upcoming/unregister.julius")
         $(widgetFile "upcoming/event")
 
@@ -600,11 +617,11 @@ getHomeR = do
         limit 100
         return (x, attendees) )
 
-    userId <- maybeAuthId
+    user <- maybeAuth
     cards <- do
-        cards <- case userId of
+        cards <- case user of
           Nothing -> return []
-          Just uid -> runDB $ select $ do
+          Just (Entity uid _) -> runDB $ select $ do
               x :& u <- from $ table @Card
                  `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
               where_ $ x ^. CardUser  ==. val uid
@@ -651,6 +668,14 @@ getEventPosterR eid = do
     case photo of
       Just (Entity _ (Poster _ mime bs _)) -> return $ TypedContent (encodeUtf8 mime) $ toContent bs
       Nothing -> redirect $ StaticR img_event_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg
+
+
+sliceByRole :: Maybe (Entity User) -> SqlExpr (Value Bool) -> SqlQuery ()
+sliceByRole user expr = case user of
+          Just (Entity _ (User _ _ _ True _ _)) -> return ()
+          Just (Entity _ (User _ _ _ _ True _)) -> return ()
+          Just (Entity _ (User _ _ _ _ _ True)) -> where_ expr
+          _otherwise -> where_ $ val False
 
 
 getFetchR :: Handler TypedContent

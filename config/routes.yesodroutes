@@ -11,8 +11,8 @@
 
 /calendar/#Month CalendarR GET
 
-/scanner/attendee/register AttendeeRegistrationR GET POST
-/scanner                   ScanQrR               GET
+/scanner/#UserId/attendee/register AttendeeRegistrationR GET POST
+/scanner/#UserId                   ScanQrR               GET
 
 /events/#EventId/attendees/#AttendeeId                EventAttendeeR         GET
 /events/#EventId/attendees                            EventAttendeesR        GET

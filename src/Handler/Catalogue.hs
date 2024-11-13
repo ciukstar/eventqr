@@ -62,7 +62,7 @@ import Data.Time.LocalTime
     )
 
 import Database.Esqueleto.Experimental
-    ( SqlQuery, SqlExpr, Value, select, selectOne, from, table
+    ( select, selectOne, from, table
     , (^.), (==.), (:&) ((:&)), (>=.), (<.), (=.)
     , innerJoin, on, asc, update, set, orderBy, desc, where_, val
     )
@@ -71,6 +71,8 @@ import Database.Persist
     ( Entity (Entity, entityKey), delete, entityVal, replace, insert_, upsertBy)
 import qualified Database.Persist as P ((=.))
 import Database.Persist.Sql (toSqlKey)
+
+import Handler.Home (sliceByRole)
 
 import Foundation
     ( App (appSettings, appHttpManager), Handler, Form
@@ -96,7 +98,7 @@ import Foundation
       , MsgScanQrCodeAndLinkToEvent, MsgClose, MsgQrCode, MsgCancel, MsgDele
       , MsgDeleteAreYouSure, MsgConfirmPlease, MsgRecordDeleted, MsgInvalidFormData
       , MsgSave, MsgRecordAdded, MsgRecordEdited, MsgIssueDate, MsgRegistrationDate
-      , MsgNoCardsRegisteredYet, MsgAttendee, MsgCalendar, MsgList
+      , MsgNoCardsRegisteredYet, MsgAttendee, MsgCalendar, MsgList, MsgManager
       , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgNoEventsForThisMonth, MsgPrevious, MsgNext, MsgTotalEventsForThisMonth
       , MsgNoEventsForThisDayYet, MsgEvents, MsgNoAttendeesForThisEventYet
@@ -114,7 +116,7 @@ import Foundation
       , MsgProvideRecipientEmailPlease
       )
     )
-    
+
 import Handler.Tokens (fetchRefreshToken, fetchAccessToken, fetchVapidKeys)
 
 import Material3
@@ -188,7 +190,7 @@ postDataEventCalendarEventAttendeeNotifyR :: UserId -> Month -> Day -> EventId -
 postDataEventCalendarEventAttendeeNotifyR uid month day eid aid = do
 
     publisher <- maybeAuth
-    
+
     attendee <- runDB $ selectOne $ do
         x :& e :& c :& u <- from $ table @Attendee
             `innerJoin` table @Event `on` (\(x :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
@@ -199,37 +201,37 @@ postDataEventCalendarEventAttendeeNotifyR uid month day eid aid = do
 
     (fw0,et0) <- generateFormPost formAttendeeRemove
     ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
-    
+
     case (fr1,(publisher,attendee)) of
       (FormSuccess ((subj, msg), ((True, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           postMessage eid attendee subj msg
           logNotification pid rid subj msg
           postEmail email subj msg
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       (FormSuccess ((subj, msg), ((True, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           postMessage eid attendee subj msg
           logNotification pid rid subj msg
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       (FormSuccess ((subj, msg), ((True, False),(True,Just email))),_) -> do
           postMessage eid attendee subj msg
           postEmail email subj msg
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       (FormSuccess ((subj, msg), ((True, False),(False,_))),_) -> do
           postMessage eid attendee subj msg
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       (FormSuccess ((subj, msg), ((False, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           postEmail email subj msg
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       (FormSuccess ((subj, msg), ((False, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       (FormSuccess ((subj, msg), ((False, False),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           postEmail email subj msg
@@ -242,7 +244,7 @@ postDataEventCalendarEventAttendeeNotifyR uid month day eid aid = do
       (FormSuccess (_, (_,(True,Nothing))),_) -> do
           addMessageI msgError MsgProvideRecipientEmailPlease
           redirect $ DataR $ DataEventCalendarEventAttendeeR uid month day eid aid
-          
+
       _otherwise -> do
           msgr <- getMessageRender
           msgs <- getMessages
@@ -296,7 +298,7 @@ getDataEventCalendarEventAttendeeR uid month day eid aid = do
 
         idOverlay <- newIdent
         idDialogDelete <- newIdent
-        idButtonShowDialogNotify <- newIdent 
+        idButtonShowDialogNotify <- newIdent
         idButtonShowDialogQrCode <- newIdent
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
@@ -593,7 +595,7 @@ getDataEventCalendarEventsR :: UserId -> Month -> Day -> Handler Html
 getDataEventCalendarEventsR uid month day = do
 
     user <- maybeAuth
-    
+
     tz <- appTimeZone . appSettings <$> getYesod
 
     events <- runDB $ select $ do
@@ -622,7 +624,7 @@ getDataEventCalendarR uid month = do
     let prev = addMonths (-1) month
 
     user <- maybeAuth
-    
+
     tz <- appTimeZone . appSettings <$> getYesod
 
     events <- groupByKey (localDay . utcToLocalTime tz . eventTime . entityVal) <$> runDB ( select $ do
@@ -666,7 +668,7 @@ postDataEventAttendeeDeleR uid eid aid = do
 getAccessToken :: Handler (Either AppMessage (Text,Text))
 getAccessToken = do
     (rtoken,sender) <- fetchRefreshToken
-    case (rtoken,sender) of       
+    case (rtoken,sender) of
       (Just rt, Just sendby) -> do
           at <- fetchAccessToken rt
           case at of
@@ -676,7 +678,7 @@ getAccessToken = do
       (Nothing,_) -> return $ Left MsgRefreshTokenIsNotInitialized
 
       (Just _,Nothing) -> return $ Left MsgUnknownAccountForSendingEmail
-    
+
 
 
 sendEmail :: Text -> Text -> Text -> Text -> Html -> Handler (Either Text ())
@@ -728,7 +730,7 @@ postDataEventAttendeeNotifyR :: UserId -> EventId -> AttendeeId -> Handler Html
 postDataEventAttendeeNotifyR uid eid aid = do
 
     publisher <- maybeAuth
-    
+
     attendee <- runDB $ selectOne $ do
         x :& e :& c :& u <- from $ table @Attendee
             `innerJoin` table @Event `on` (\(x :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
@@ -739,37 +741,37 @@ postDataEventAttendeeNotifyR uid eid aid = do
 
     (fw0,et0) <- generateFormPost formAttendeeRemove
     ((fr1,fw1),et1) <- runFormPost $ formAttendeeNotify ((\(_,(e,(_,u))) -> (e,u)) <$> attendee)
-    
+
     case (fr1,(publisher,attendee)) of
       (FormSuccess ((subj, msg), ((True, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           postMessage eid attendee subj msg
           logNotification pid rid subj msg
           postEmail email subj msg
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       (FormSuccess ((subj, msg), ((True, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           postMessage eid attendee subj msg
           logNotification pid rid subj msg
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       (FormSuccess ((subj, msg), ((True, False),(True,Just email))),_) -> do
           postMessage eid attendee subj msg
           postEmail email subj msg
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       (FormSuccess ((subj, msg), ((True, False),(False,_))),_) -> do
           postMessage eid attendee subj msg
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       (FormSuccess ((subj, msg), ((False, True),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           postEmail email subj msg
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       (FormSuccess ((subj, msg), ((False, True),(False,_))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       (FormSuccess ((subj, msg), ((False, False),(True,Just email))),(Just (Entity pid _),Just (_,(_,(_,Entity rid _))))) -> do
           logNotification pid rid subj msg
           postEmail email subj msg
@@ -782,7 +784,7 @@ postDataEventAttendeeNotifyR uid eid aid = do
       (FormSuccess (_, (_,(True,Nothing))),_) -> do
           addMessageI msgError MsgProvideRecipientEmailPlease
           redirect $ DataR $ DataEventAttendeeR uid eid aid
-          
+
       _otherwise -> do
           msgr <- getMessageRender
           msgs <- getMessages
@@ -1350,9 +1352,10 @@ getDataEventR :: UserId -> EventId -> Handler Html
 getDataEventR uid eid = do
 
     event <- runDB $ selectOne $ do
-        x <- from $ table @Event
+        x :& m <- from $ table @Event
+            `innerJoin` table @User `on` (\(x :& m) -> x ^. EventManager ==. m ^. UserId)
         where_ $ x ^. EventId ==. val eid
-        return x
+        return (x,m)
 
     (fw0,et0) <- generateFormPost formEventDelete
 
@@ -1445,11 +1448,3 @@ getDataEventsR uid = do
         setTitleI MsgEventsCatalogue
         idOverlay <- newIdent
         $(widgetFile "data/catalogue/catalogue")
-
-
-sliceByRole :: Maybe (Entity User) -> SqlExpr (Value Bool) -> SqlQuery () 
-sliceByRole user expr = case user of
-          Just (Entity _ (User _ _ _ True _ _)) -> return ()
-          Just (Entity _ (User _ _ _ _ True _)) -> return ()
-          Just (Entity _ (User _ _ _ _ _ True)) -> where_ expr
-          _otherwise -> where_ $ val False

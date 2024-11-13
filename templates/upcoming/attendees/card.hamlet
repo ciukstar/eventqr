@@ -36,10 +36,16 @@
 
 
     <dialog ##{idDialogQrCode}>
-      <h5>_{MsgQrCode}
+      <h6>_{MsgQrCode}
       <div>
         <figure>
           <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+          <figcaption>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+            
 
       <nav.right-align>
         <button.transparent.link ##{idButtonCloseDialogQrCode}>

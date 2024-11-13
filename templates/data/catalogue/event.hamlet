@@ -14,24 +14,35 @@
       _{MsgAttendees}
     
   <div.padding.page.active>
-    $maybe Entity _ (Event _ time name descr) <- event
+    $maybe (Entity _ (Event _ time name descr),Entity mid (User email _ mname _ _ _)) <- event
       <dl>
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgName}
         <dd>
           #{name}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgTime}
         <dd>
           $with dt <- show time
             <time.full-datetime datetime=#{dt}>
               #{dt}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgDescription}
         <dd>
           #{descr}
+
+        <dt.bold>
+          _{MsgManager}
+        <dd>
+          <figure.manager>
+            <img.circle src=@{DataR $ UserPhotoR mid} alt=_{MsgPhoto} loading=lazy>
+            <figcaption>
+              $maybe name <- mname
+                #{name}
+              $nothing
+                #{email}
 
     <p ##{idActionQrScan}>
       <a.button.margin href=@{DataR $ DataEventScannerR uid eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>

@@ -2,16 +2,11 @@
 main
 
     .page
-    
-        dialog
-        
-            figure
-                text-align: center
 
-        div.row
+        a.row
           .content
               display: inline-grid
-          a.headline
+          .headline
               display: inline-block
               white-space: nowrap
               overflow: hidden

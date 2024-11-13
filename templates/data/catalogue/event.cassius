@@ -8,6 +8,10 @@ main
         dl
             dt + dd
                 margin-bottom: 1rem
+                figure.manager
+                    display: flex
+                    align-items: center
+                    column-gap: 1rem
 
         ##{idActionQrScan}
             display: flex

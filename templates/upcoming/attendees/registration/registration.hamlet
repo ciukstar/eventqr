@@ -16,7 +16,7 @@
     <div.small-text>
       _{MsgSelectAnEventToRegisterPlease}.
 
-    <form method=post action=@{AttendeeRegistrationR} enctype=#{et}>
+    <form method=post action=@{AttendeeRegistrationR mid} enctype=#{et}>
       ^{fw}
       
       <div.form-actions>
@@ -24,7 +24,7 @@
         <button.margin type=submit>
           _{MsgRegister}
 
-        <a.link href=@{ScanQrR}>
+        <a.link href=@{ScanQrR mid}>
           _{MsgScanAgain}
 
         <a.link href=@{HomeR}>

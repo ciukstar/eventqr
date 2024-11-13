@@ -235,8 +235,8 @@ instance Yesod App where
     isAuthorized (EventUserCardRegisterR _ uid _) _ = isAuthenticatedSelf uid
     isAuthorized (EventUserUnregisterR _ uid) _ = isAuthenticatedSelf uid
     
-    isAuthorized ScanQrR _ = return Authorized
-    isAuthorized AttendeeRegistrationR _ = return Authorized
+    isAuthorized (ScanQrR uid) _ = isManagerSelfOrAdmin uid
+    isAuthorized (AttendeeRegistrationR uid) _ = isManagerSelfOrAdmin uid
     
     isAuthorized ApiEventsR _ = return Authorized        
     

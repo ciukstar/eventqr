@@ -39,7 +39,7 @@
         <dd>
           #{attendees}
 
-    $maybe uid <- userId
+    $maybe Entity uid (User _ _ _ super admin manager) <- user
       <div ##{idActions}>
         $if subscribed
           <span.italic>_{MsgYouAreRegisteredForThisEvent}.
@@ -50,11 +50,7 @@
         $elseif length cards > 1
           <a.button.fill href=@{EventUserRegisterR eid uid}>
             <i>how_to_reg
-            <span>_{MsgRegisterForThisEvent}
-
-          <a.button.fill href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
-            <i>qr_code_scanner
-            <span>_{MsgRegisterWithQrCode}
+            <span>_{MsgRegisterForThisEvent}            
             
         $elseif length cards == 1
           $maybe Entity cid _ <- LS.head cards
@@ -63,13 +59,15 @@
             <button.fill.max type=submit form=#{idFormEventUserCardRegister}>
               <i>how_to_reg
               <span>_{MsgRegisterForThisEvent}
-
-          <a.button.fill href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
-            <i>qr_code_scanner
-            <span>_{MsgRegisterWithQrCode}
             
         $else
           <p.italic>_{MsgYouDoNotHaveACardToRegisterYet}
+
+
+        $if (((super || admin) || manager) || not subscribed)
+          <a.button.fill href=@{EventScannerR eid} title=_{MsgScanQrCodeAndLinkToEvent} ##{idButtonQrScan}>
+            <i>qr_code_scanner
+            <span>_{MsgRegisterWithQrCode}
           
 
 
