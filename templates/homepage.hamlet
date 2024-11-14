@@ -123,7 +123,7 @@ $if not (null msgs)
 
 
 <dialog.bottom.no-padding ##{idDialogUpcomingEvents}>
-  <h5.small.row.padding>
+  <h6.row.padding>
     <div.max>
       _{MsgUpcomingEvents}
     
@@ -131,23 +131,45 @@ $if not (null msgs)
       <i>close
       
   <div.dialog-content>
-    $forall (Entity eid (Event _ time name _), attendees) <- upcoming
-      <a.row.padding.surface-container.wave href=@{EventR eid}>
-        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
-        <div.content.max>
+    $maybe Entity _ (User _ _ _ _ _ manager) <- user
+      $if manager
+
+        <form method=get action=@{HomeR} ##{idFormUpcomingFilter}>
         
-          <h6.headline.large-text>
-            #{name}
-            
-          $with dt <- show time
-            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
-              #{dt}
-            <div.supporting-text.small-text>
-              _{MsgAttendees}: #{attendees}
+        <button.chip.fill.round.small-margin type=submit name=mine value=true form=#{idFormUpcomingFilter}>
+          $if mine
+            <i>done
+          <span>_{MsgMyEvents}
+          <div.badge.none.tertiary>#{mineN}
+   
+        <button.chip.fill.round.small-margin type=submit name=mine value=false form=#{idFormUpcomingFilter}>
+          $if not mine
+            <i>done
+          <span>_{MsgAll}
+          <div.badge.none.tertiary>#{allN}
 
-        <i>arrow_forward_ios
+    <nav ##{idNavEventList}>
+      $if null upcoming
+        <div.italic.padding>
+          _{MsgNoUpcomingEventsYet}
+      $else
+        $forall (Entity eid (Event _ time name _), attendees) <- upcoming
+          <a.row.padding.surface-container.wave href=@{EventR eid}>
+            <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
+            <div.content.max>
 
-      <hr>
+              <h6.headline.large-text>
+                #{name}
+
+              $with dt <- show time
+                <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+                  #{dt}
+                <div.supporting-text.small-text>
+                  _{MsgAttendees}: #{attendees}
+
+            <i>arrow_forward_ios
+
+          <hr>
 
       
 <dialog.bottom.no-padding ##{idDialogSearchEvents}>

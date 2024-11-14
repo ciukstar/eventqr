@@ -1,0 +1,94 @@
+
+
+
+document.getElementById(#{idFormUpcomingFilter}).addEventListener('submit', e => {
+  e.preventDefault();
+  
+  const params = new URLSearchParams(new FormData(e.target, e.submitter));
+  const url = `${e.target.action}?${params}`;
+  
+  fetch(url, {
+    headers: {'Accept': 'application/json'}
+  }).then(data => data.json()).then(function (events) {
+
+    Array.from(e.target.elements['mine']).map(
+      x => x.querySelector('i')
+    ).filter(x => !!x).forEach(x => { x.remove(); });
+    
+    e.submitter.prepend((() => {
+      const i = document.createElement('i');
+      i.textContent = 'done';
+      return i;
+    }) ());
+    
+    const eventList = document.getElementById(#{idNavEventList});
+    
+    if (events.length > 0) {
+
+      eventList.replaceChildren( ... events.flatMap(([x,attendees]) => {
+        const item = document.createElement('a');
+        item.href = `/events/${x.id}`;
+        item.className = 'row padding surface-container wave';
+
+        const start = document.createElement('img');
+        start.className = 'large round';
+        start.setAttribute('src',`/events/${x.id}/poster`);
+        start.setAttribute('loading','lazy');
+        start.setAttribute('alt',#{msgr MsgPoster});
+
+        const content = document.createElement('div');
+        content.className = 'content max';
+
+        const headline = document.createElement('h6');
+        headline.className = 'headline large-text';
+        headline.textContent = x.name;
+
+        const supporting = document.createElement('time');
+        supporting.className = 'full-datetime supporting-text small-text';
+        supporting.datetime = x.time;
+        supporting.textContent = new Date(x.time).toLocaleDateString(
+          navigator.language,
+          { year: 'numeric',
+            month: 'short',
+            weekday: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric'
+          }
+        );
+
+        const thirdLine = document.createElement('div');
+        thirdLine.className = 'supporting-text small-text';
+        thirdLine.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
+
+        const end = document.createElement('i');
+        end.textContent = 'arrow_forward_ios';
+
+        content.appendChild(headline);
+        content.appendChild(supporting);
+        content.appendChild(thirdLine);
+
+        item.appendChild(start);
+        item.appendChild(content);
+        item.appendChild(end);
+
+        const divider = document.createElement('hr');
+        return [item,divider];
+
+      }));
+
+    } else {
+
+      eventList.replaceChildren((() => {
+        const msg = document.createElement('div');
+        msg.className = 'italic padding';
+        msg.textContent = #{msgr MsgNoEventsFound};
+        return msg;
+      })());
+
+    }
+
+    history.replaceState(null,"",url);
+    
+  });
+});

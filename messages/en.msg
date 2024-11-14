@@ -1,3 +1,6 @@
+All: All
+MyEvents: My events
+AllEvents: All events
 Theme: Theme
 UserAccount: User account
 Profile: Profile

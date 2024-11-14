@@ -21,12 +21,13 @@ module Handler.Home
   , sliceByRole
   ) where
 
+import Control.Monad (when, unless, forM)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(second))
 import qualified Data.List as L (find)
 import qualified Data.List.Safe as LS (head)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Calendar (toGregorian)
 import Data.Time.Calendar.Month (pattern YearMonth)
@@ -36,7 +37,7 @@ import Database.Esqueleto.Experimental
     ( SqlQuery, SqlExpr, Value (unValue), select, selectOne, from, table
     , (^.), (>=.), (==.), (:&) ((:&)), (++.), (%), (||.)
     , innerJoin, on, orderBy, asc, subSelectCount, like, limit, lower_
-    , delete, subSelectList, in_, where_, val
+    , delete, subSelectList, in_, where_, val, countRows, Entity (entityVal)
     )
 import Database.Persist (Entity (Entity), entityKey, insert_)
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
@@ -53,7 +54,7 @@ import Foundation
     , DataR (UserPhotoR, CardQrImageR)
     , AppMessage
       ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard, MsgSignIn
-      , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent
+      , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent, MsgAll
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
@@ -63,7 +64,7 @@ import Foundation
       , MsgCardholder, MsgCardNumber, MsgNumberOfAttendees, MsgScanner
       , MsgRegistrationForEvent, MsgNoEventsFound, MsgPoster, MsgEventStartTime
       , MsgRegisterForThisEvent, MsgRegisterWithQrCode, MsgUnsubscribe
-      , MsgYouAreRegisteredForThisEvent, MsgUnsubscribeAreYouSure
+      , MsgYouAreRegisteredForThisEvent, MsgUnsubscribeAreYouSure, MsgMyEvents
       , MsgUnsubscribeSuccessful, MsgYouDoNotHaveACardToRegisterYet
       , MsgConfirmPlease, MsgSubscriptionSuccessful, MsgSelectCardToRegister
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
@@ -77,7 +78,7 @@ import Model
     ( msgSuccess, msgError
     , EventId, Event (Event)
     , CardId, Card (Card)
-    , UserId, User (User)
+    , UserId, User (User, userManager)
     , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info)
     , Poster (Poster)
@@ -101,19 +102,18 @@ import Yesod.Core
     ( TypedContent (TypedContent), Yesod(defaultLayout), getMessages, selectRep
     , provideJson, getMessageRender, newIdent, whamlet, addMessageI, redirect
     , MonadHandler (liftHandler), ToContent (toContent), ToWidget (toWidget)
-    , handlerToWidget
+    , handlerToWidget, provideRep
     )
 import Yesod.Core.Widget (setTitleI)
 import Yesod.Form.Input (runInputGet, ireq, iopt)
 import Yesod.Form.Fields
     ( intField, hiddenField, radioField, textField, optionsPairs
-    , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
+    , Option (optionInternalValue, optionExternalValue), OptionList (olOptions), boolField
     )
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types
     (FieldView(fvInput), FormResult (FormSuccess), Field (fieldView))
 import Yesod.Persist.Core (YesodPersist(runDB))
-import Control.Monad (when, unless, forM)
 
 
 getApiEventsR :: Handler TypedContent
@@ -582,12 +582,44 @@ formEventUserRegister :: Form ()
 formEventUserRegister extra = return (pure (), [whamlet|^{extra}|])
 
 
-getHomeR :: Handler Html
+getHomeR :: Handler TypedContent
 getHomeR = do
 
     now <- liftIO getCurrentTime
     let month = (\(y,m,_) -> YearMonth y m) . toGregorian . utctDay $ now
+    
+    user <- maybeAuth
 
+    cards <- do
+        cards <- case user of
+          Nothing -> return []
+          Just (Entity uid _) -> runDB $ select $ do
+              x :& u <- from $ table @Card
+                 `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
+              where_ $ x ^. CardUser  ==. val uid
+              orderBy [asc (x ^. CardIssued)]
+              return (x,u)
+
+        forM cards $ \c@(Entity cid _,_) -> (c,) <$> runDB ( select $ do
+            x <- from $ table @Info
+            where_ $ x ^. InfoCard ==. val cid
+            return x )
+
+    mine <- fromMaybe True <$> runInputGet (iopt boolField "mine")
+
+    mineN <- case user of
+          Just (Entity mid (User _ _ _ _ _ True)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+              x <- from $ table @Event
+              where_ $ x ^. EventManager ==. val mid
+              where_ $ x ^. EventTime >=. val now
+              return countRows )
+          _otherwise -> return 0
+
+    allN <- maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+              x <- from $ table @Event
+              where_ $ x ^. EventTime >=. val now
+              return countRows )
+    
     upcoming <- (second unValue <$>) <$> runDB ( select $ do
         x <- from $ table @Event
 
@@ -596,6 +628,10 @@ getHomeR = do
                 a <- from $ table @Attendee
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
 
+        case (user,mine) of
+          (Just (Entity mid (User _ _ _ _ _ True)), True) -> where_ $ x ^. EventManager ==. val mid
+          _otherwise -> return ()
+        
         where_ $ x ^. EventTime >=. val now
         orderBy [asc (x ^. EventTime)]
         return (x, attendees) )
@@ -612,46 +648,36 @@ getHomeR = do
         limit 100
         return (x, attendees) )
 
-    user <- maybeAuth
-    cards <- do
-        cards <- case user of
-          Nothing -> return []
-          Just (Entity uid _) -> runDB $ select $ do
-              x :& u <- from $ table @Card
-                 `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
-              where_ $ x ^. CardUser  ==. val uid
-              orderBy [asc (x ^. CardIssued)]
-              return (x,u)
+    selectRep $ do
+        provideJson upcoming
+        
+        provideRep $ do
+            msgr <- getMessageRender
+            msgs <- getMessages
+            defaultLayout $ do
+                setTitleI MsgAppName
 
-        forM cards $ \c@(Entity cid _,_) -> (c,) <$> runDB ( select $ do
-            x <- from $ table @Info
-            where_ $ x ^. InfoCard ==. val cid
-            return x )
+                idOverlay <- newIdent
+                idMain <- newIdent
+                idNavEventList <- newIdent
+                idDialogQrCode <- newIdent
 
+                idButtonUpcomingEvents <- newIdent
+                idDialogUpcomingEvents <- newIdent
+                idButtonCloseDialogUpcomingEvents <- newIdent
+                idFormUpcomingFilter <- newIdent
 
-    msgr <- getMessageRender
-    msgs <- getMessages
-    defaultLayout $ do
-        setTitleI MsgAppName
+                idButtonSearchEvents <- newIdent
+                idDialogSearchEvents <- newIdent
+                idButtonCloseDialogSearchEvents <- newIdent
+                idListSearchSearchEventsResult <- newIdent
+                idInputSearchEvents <- newIdent
 
-        idOverlay <- newIdent
-        idMain <- newIdent
+                idButtonQrScanner <- newIdent
 
-        idDialogQrCode <- newIdent
-
-        idButtonUpcomingEvents <- newIdent
-        idDialogUpcomingEvents <- newIdent
-        idButtonCloseDialogUpcomingEvents <- newIdent
-
-        idButtonSearchEvents <- newIdent
-        idDialogSearchEvents <- newIdent
-        idButtonCloseDialogSearchEvents <- newIdent
-        idListSearchSearchEventsResult <- newIdent
-        idInputSearchEvents <- newIdent
-
-        idButtonQrScanner <- newIdent
-
-        $(widgetFile "homepage")
+                when (maybe False (userManager . entityVal) user)
+                    $ toWidget $(juliusFile "templates/upcoming/submit.julius")
+                $(widgetFile "homepage")
 
 
 getEventPosterR :: EventId -> Handler TypedContent

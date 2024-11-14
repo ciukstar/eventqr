@@ -17,17 +17,24 @@ main
 
 ##{idDialogUpcomingEvents}
     z-index: 101
+    h6.row.padding div.max
+        white-space: nowrap
+        overflow: hidden
+        text-overflow: ellipsis
+        
     .dialog-content
         max-height: calc(100svh - (40px + 2 * 16px))
         overflow-y: auto
-
-        a.row
-            .content
-                display: inline-grid
-            .headline
-                white-space: nowrap
-                overflow: hidden
-                text-overflow: ellipsis
+        
+        ##{idNavEventList}
+            display: block
+            a.row
+                .content
+                    display: inline-grid
+                .headline
+                    white-space: nowrap
+                    overflow: hidden
+                    text-overflow: ellipsis
         
 
 ##{idDialogSearchEvents}

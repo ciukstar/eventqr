@@ -1,3 +1,6 @@
+All: Все
+MyEvents: Мои мероприятия
+AllEvents: Все мероприятия
 Theme: Тема
 UserAccount: Учетная запись пользователя
 Profile: Профиль
