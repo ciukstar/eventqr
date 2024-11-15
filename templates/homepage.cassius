@@ -12,6 +12,13 @@ main
         align-self: center
         line-height: 1
 
+    a.button.fill
+        margin: 0 2rem
+
+    details summary
+        list-style: none
+        padding: 1rem 2rem
+
     figure.null, figure.qrcode
         text-align: center
 
@@ -39,18 +46,23 @@ main
 
 ##{idDialogSearchEvents}
     z-index: 101
-    
-##{idListSearchSearchEventsResult}
-    max-height: calc(100svh - (24px + 2 * 16px) - (56px + 2 * 8px))
-    overflow-y: auto
+        
+    .dialog-content
+        max-height: calc(100svh - (40px + 2 * 16px))
+        overflow-y: auto
 
-    a.row
-        .content
-            display: inline-grid
-        .headline
-            white-space: nowrap
-            overflow: hidden
-            text-overflow: ellipsis
+        ##{idNavSearchEventsResult}
+            display: block
+            max-height: calc(100svh - 2 * (24px + 2 * 18px) - (56px + 2 * 8px))
+            overflow-y: auto
+
+            a.row
+                .content
+                    display: inline-grid
+                .headline
+                    white-space: nowrap
+                    overflow: hidden
+                    text-overflow: ellipsis
     
 
 ##{idButtonCloseDialogSearchEvents}

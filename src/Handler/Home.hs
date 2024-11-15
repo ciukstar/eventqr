@@ -70,7 +70,7 @@ import Foundation
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
       , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgNotYourQrCodeSorry
       , MsgCardDoesNotContainAdditionalInfo, MsgNotManagerOfEventSorry
-      , MsgFillInCard
+      , MsgFillInCard, MsgMyVisitingSchedule, MsgUpcoming
       )
     )
 
@@ -121,6 +121,10 @@ getApiEventsR = do
 
     query <- runInputGet $ iopt textField "q"
 
+    mine <- fromMaybe False <$> runInputGet (iopt boolField "mine")
+
+    user <- maybeAuth
+
     events <- (second unValue <$>) <$> runDB ( select $ do
         x <- from $ table @Event
 
@@ -128,6 +132,10 @@ getApiEventsR = do
             attendees = subSelectCount $ do
                 a <- from $ table @Attendee
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
+
+        case (user,mine) of
+          (Just (Entity mid (User _ _ _ _ _ True)), True) -> where_ $ x ^. EventManager ==. val mid
+          _otherwise -> return ()
 
         case query of
           Just q -> where_ $ ( lower_ (x ^. EventName) `like` ((%) ++. lower_ (val q) ++. (%)) )
@@ -607,7 +615,7 @@ getHomeR = do
 
     mine <- fromMaybe True <$> runInputGet (iopt boolField "mine")
 
-    mineN <- case user of
+    nMineUpcoming <- case user of
           Just (Entity mid (User _ _ _ _ _ True)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
               x <- from $ table @Event
               where_ $ x ^. EventManager ==. val mid
@@ -615,9 +623,20 @@ getHomeR = do
               return countRows )
           _otherwise -> return 0
 
-    allN <- maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+    nAllUpcoming <- maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
               x <- from $ table @Event
               where_ $ x ^. EventTime >=. val now
+              return countRows )
+
+    nMineEvents <- case user of
+          Just (Entity mid (User _ _ _ _ _ True)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+              x <- from $ table @Event
+              where_ $ x ^. EventManager ==. val mid
+              return countRows )
+          _otherwise -> return 0
+
+    nAllEvents <- maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+              _ <- from $ table @Event
               return countRows )
     
     upcoming <- (second unValue <$>) <$> runDB ( select $ do
@@ -659,6 +678,7 @@ getHomeR = do
 
                 idOverlay <- newIdent
                 idMain <- newIdent
+                idDetailsMyCards <- newIdent
                 idNavEventList <- newIdent
                 idDialogQrCode <- newIdent
 
@@ -670,7 +690,8 @@ getHomeR = do
                 idButtonSearchEvents <- newIdent
                 idDialogSearchEvents <- newIdent
                 idButtonCloseDialogSearchEvents <- newIdent
-                idListSearchSearchEventsResult <- newIdent
+                idFormSearhFilter <- newIdent
+                idNavSearchEventsResult <- newIdent
                 idInputSearchEvents <- newIdent
 
                 idButtonQrScanner <- newIdent

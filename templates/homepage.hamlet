@@ -6,9 +6,6 @@
   <h5.intro.small.center-align>
     _{MsgWelcomeTo} _{MsgAppName}
 
-  <a.button.margin href=@{CalendarR month}>
-    _{MsgEventsCalendar}
-
   <table.stats.small-space.right-align.align-center>
     <tbody>
       <tr>
@@ -22,13 +19,23 @@
         <td.large-text>
           #{(.) sum (fmap snd) $ upcoming}
 
-  <details>
-    <summary.wave.padding>
-      <span.small-margin>
+  <a.button.fill href=@{CalendarR month}>
+    <i>calendar_month
+    <span>_{MsgEventsCalendar}
+
+  $maybe Entity uid _ <- user
+    <a.button.fill href=#>
+      <i>schedule
+      <span>_{MsgMyVisitingSchedule}
+
+  <details ##{idDetailsMyCards}>
+    <summary.row.wave>
+      <div>
         <i>style
         $maybe _ <- user
           <div.badge.border.text-secondary>#{show (length cards)}
-      <span>_{MsgMyCards}
+      <div.max>_{MsgMyCards}
+      <i>expand_more
       
     $maybe Entity uid _ <- user
       $if null cards
@@ -93,9 +100,9 @@
                     <i.no-round>qr_code
       
     $nothing
-      <div style="text-align:center">
+      <div.padding.center-align>
         <p>
-          _{MsgLoginToSeeYourCardsPlease}
+          _{MsgLoginToSeeYourCardsPlease}.
         <a.button.fill href=@{AuthR LoginR} title=_{MsgSignIn}>
           _{MsgSignIn}
          
@@ -109,7 +116,7 @@ $if not (null msgs)
 
   <a ##{idButtonUpcomingEvents} href=# role=button title=_{MsgUpcomingEvents} role=button>
     <i>event_note
-    <span>_{MsgEvents}
+    <span>_{MsgUpcoming}
 
   <a ##{idButtonSearchEvents} href=# role=button title=_{MsgSearch} role=button>
     <i>search
@@ -140,13 +147,13 @@ $if not (null msgs)
           $if mine
             <i>done
           <span>_{MsgMyEvents}
-          <div.badge.none.tertiary>#{mineN}
+          <div.badge.none.tertiary>#{nMineUpcoming}
    
         <button.chip.fill.round.small-margin type=submit name=mine value=false form=#{idFormUpcomingFilter}>
           $if not mine
             <i>done
           <span>_{MsgAll}
-          <div.badge.none.tertiary>#{allN}
+          <div.badge.none.tertiary>#{nAllUpcoming}
 
     <nav ##{idNavEventList}>
       $if null upcoming
@@ -177,25 +184,43 @@ $if not (null msgs)
     <i>drag_handle
   <button.transparent.circle ##{idButtonCloseDialogSearchEvents}>
     <i>close
+    
+  <div.dialog-content>
+    $maybe Entity _ (User _ _ _ _ _ manager) <- user
+      $if manager
 
-  <div ##{idListSearchSearchEventsResult}>
-    $forall (Entity eid (Event _ time name _), attendees) <- events
-      <a.row.padding.surface-container.wave href=@{EventR eid}>
-        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
-        <div.content.max>
-          <h6.headline.large-text>
-            #{name}
-            
-          $with dt <- show time
-            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
-              #{dt}
-          <div.supporting-text.small-text>
-            _{MsgAttendees}: #{attendees}
+        <form method=get action=@{ApiEventsR} ##{idFormSearhFilter}>
+        
+        <button.chip.fill.round.small-margin type=submit name=mine value=true form=#{idFormSearhFilter}>
+          $if mine
+            <i>done
+          <span>_{MsgMyEvents}
+          <div.badge.none.tertiary>#{nMineEvents}
+   
+        <button.chip.fill.round.small-margin type=submit name=mine value=false form=#{idFormSearhFilter}>
+          $if not mine
+            <i>done
+          <span>_{MsgAll}
+          <div.badge.none.tertiary>#{nAllEvents}
 
-        <i>arrow_forward_ios
+    <nav ##{idNavSearchEventsResult}>
+      $forall (Entity eid (Event _ time name _), attendees) <- events
+        <a.row.padding.surface-container.wave href=@{EventR eid}>
+          <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
+          <div.content.max>
+            <h6.headline.large-text>
+              #{name}
 
-      <hr>
+            $with dt <- show time
+              <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+                #{dt}
+            <div.supporting-text.small-text>
+              _{MsgAttendees}: #{attendees}
+
+          <i>arrow_forward_ios
+
+        <hr>
 
   <div.field.large.prefix.round.border.no-elevate.small-margin>
     <i.front>search
-    <input type=search ##{idInputSearchEvents} placeholder=_{MsgSearchEvents}>
+    <input type=search ##{idInputSearchEvents} placeholder=_{MsgSearchEvents} form=#{idFormSearhFilter}>

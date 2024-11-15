@@ -1,3 +1,5 @@
+Upcoming: Upcoming
+MyVisitingSchedule: My visiting schedule
 All: All
 MyEvents: My events
 AllEvents: All events

@@ -139,6 +139,74 @@ fillDemoRu appSettings = do
                         , userPhotoAttribution = Just freepik
                         }
 
+    pass5 <- liftIO $ saltPass "oalekseeva"
+    let user5 = User { userEmail = "oalekseeva@mail.ru"
+                     , userPassword = Just pass5
+                     , userName = Just "Ольга Алексеева"
+                     , userSuper = False
+                     , userAdmin = False
+                     , userManager = False
+                     }
+    uid5 <- insert user5
+
+    liftIO (BS.readFile "demo/user_5.avif") >>= \bs ->
+      insert_ UserPhoto { userPhotoUser = uid5
+                        , userPhotoMime = "image/avif"
+                        , userPhotoPhoto = bs
+                        , userPhotoAttribution = Just freepik
+                        }
+
+    pass6 <- liftIO $ saltPass "lglazkov"
+    let user6 = User { userEmail = "lglazkov@mail.ru"
+                     , userPassword = Just pass6
+                     , userName = Just "Леонтий Глазков"
+                     , userSuper = False
+                     , userAdmin = False
+                     , userManager = False
+                     }
+    uid6 <- insert user6
+
+    liftIO (BS.readFile "demo/user_6.avif") >>= \bs ->
+      insert_ UserPhoto { userPhotoUser = uid6
+                        , userPhotoMime = "image/avif"
+                        , userPhotoPhoto = bs
+                        , userPhotoAttribution = Just freepik
+                        }
+
+    pass7 <- liftIO $ saltPass "obezrukov"
+    let user7 = User { userEmail = "obezrukov@mail.ru"
+                     , userPassword = Just pass7
+                     , userName = Just "Остап Безруков"
+                     , userSuper = False
+                     , userAdmin = False
+                     , userManager = False
+                     }
+    uid7 <- insert user7
+
+    liftIO (BS.readFile "demo/user_7.avif") >>= \bs ->
+      insert_ UserPhoto { userPhotoUser = uid7
+                        , userPhotoMime = "image/avif"
+                        , userPhotoPhoto = bs
+                        , userPhotoAttribution = Just freepik
+                        }
+
+    pass8 <- liftIO $ saltPass "vyashina"
+    let user8 = User { userEmail = "vyashina@mail.ru"
+                     , userPassword = Just pass8
+                     , userName = Just "Вера Яшина"
+                     , userSuper = False
+                     , userAdmin = False
+                     , userManager = False
+                     }
+    uid8 <- insert user8
+
+    liftIO (BS.readFile "demo/user_8.avif") >>= \bs ->
+      insert_ UserPhoto { userPhotoUser = uid8
+                        , userPhotoMime = "image/avif"
+                        , userPhotoPhoto = bs
+                        , userPhotoAttribution = Just freepik
+                        }
+
     let logoVK :: Text
         logoVK = "https://upload.wikimedia.org/wikipedia/commons/2/21/VK.com-logo.svg"
     let logoOk :: Text
@@ -357,12 +425,48 @@ fillDemoRu appSettings = do
                      }
 
     eid4 <- insert $ Event { eventManager = uid1
-                           , eventTime = addUTCTime (4 * day) now
+                           , eventTime = addUTCTime ((-2) * day + (-2) * hour) now
                            , eventName = "Заседание правления"
                            , eventDescr = "Заседание совета директоров, затем дискотека"
                            }
     liftIO (BS.readFile "demo/board_meeting_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid4
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
+
+    eid5 <- insert $ Event { eventManager = uid1
+                           , eventTime = addUTCTime (1 * day + 1 * hour) now
+                           , eventName = "Празднование знаменательной даты"
+                           , eventDescr = "Празднование знаменательной даты, затем дискотека"
+                           }
+    liftIO (BS.readFile "demo/milestone_celebration.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid5
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
+
+    eid6 <- insert $ Event { eventManager = uid1
+                           , eventTime = addUTCTime (2 * day + 2 * hour) now
+                           , eventName = "Деловой семинар"
+                           , eventDescr = "Деловой семинар, затем дискотека"
+                           }
+    liftIO (BS.readFile "demo/business_seminar_1.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid6
+                     , posterMime = "image/avif"
+                     , posterPhoto = bs
+                     , posterAttribution = Just freepik
+                     }
+
+    eid7 <- insert $ Event { eventManager = uid1
+                           , eventTime = addUTCTime (3 * day + 3 * hour) now
+                           , eventName = "Мероприятие по сбору средств"
+                           , eventDescr = "Мероприятие по сбору средств, затем дискотека"
+                           }
+    liftIO (BS.readFile "demo/fundraising_1.avif") >>= \bs ->
+      insert_ Poster { posterEvent = eid7
                      , posterMime = "image/avif"
                      , posterPhoto = bs
                      , posterAttribution = Just freepik

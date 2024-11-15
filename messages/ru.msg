@@ -1,3 +1,5 @@
+Upcoming: Предстоящие
+MyVisitingSchedule: Мой график посещений
 All: Все
 MyEvents: Мои мероприятия
 AllEvents: Все мероприятия

@@ -27,6 +27,11 @@ Array.from(
 });
 
 
+document.getElementById(#{idDetailsMyCards}).addEventListener('toggle', e => {
+  e.target.querySelector('summary > i').textContent = e.target.open ? 'expand_less' : 'expand_more';
+});
+
+
 document.getElementById(#{idButtonUpcomingEvents}).addEventListener('click', e => {
   e.preventDefault();
   document.getElementById(#{idOverlay}).classList.add('active');
@@ -52,13 +57,17 @@ document.getElementById(#{idButtonCloseDialogSearchEvents}).addEventListener('cl
 
 
 const searchSheet = document.getElementById(#{idDialogSearchEvents});
-const listSearch = document.getElementById(#{idListSearchSearchEventsResult});
+const listSearch = document.getElementById(#{idNavSearchEventsResult});
+
 
 document.getElementById(#{idInputSearchEvents}).addEventListener('input', debounce( function (e) {
 
   listSearch.replaceChildren(progress());
+
+  const params = new URL(window.location).searchParams;
+  params.set('q', e.target.value);
   
-  fetch(new URL(`@{ApiEventsR}?q=${e.target.value}`).href,{
+  fetch(new URL(`@{ApiEventsR}?${params}`).href,{
     headers: {'Accept': 'application/json'}
   }).then(data => data.json()).then(function (events) {
 
@@ -68,48 +77,62 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
         const item = document.createElement('a');
         item.href = `/events/${x.id}`;
         item.className = 'row padding surface-container wave';
+        
+        item.appendChild((() => {
+          const start = document.createElement('img');
+          start.className = 'large round';
+          start.setAttribute('src',`/events/${x.id}/poster`);
+          start.setAttribute('loading','lazy');
+          start.setAttribute('alt',#{msgr MsgPoster});
+          return start;
+        }) ());
 
-        const start = document.createElement('img');
-        start.className = 'large round';
-        start.setAttribute('src',`/events/${x.id}/poster`);
-        start.setAttribute('loading','lazy');
-        start.setAttribute('alt',#{msgr MsgPoster});
 
-        const content = document.createElement('div');
-        content.className = 'content max';
+        item.appendChild((() => {
 
-        const headline = document.createElement('h6');
-        headline.className = 'headline large-text';
-        headline.textContent = x.name;
+          const content = document.createElement('div');
+          content.className = 'content max';
+          
+          content.appendChild((() => {
+            const headline = document.createElement('h6');
+            headline.className = 'headline large-text';
+            headline.textContent = x.name;
+            return headline;
+          }) ());
 
-        const supporting = document.createElement('time');
-        supporting.className = 'full-datetime supporting-text small-text';
-        supporting.datetime = x.time;
-        supporting.textContent = new Date(x.time).toLocaleDateString(
-          navigator.language,
-          { year: 'numeric',
-            month: 'short',
-            weekday: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric'
-          }
-        );
-
-        const thirdLine = document.createElement('div');
-        thirdLine.className = 'supporting-text small-text';
-        thirdLine.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
-
-        const end = document.createElement('i');
-        end.textContent = 'arrow_forward_ios';
-
-        content.appendChild(headline);
-        content.appendChild(supporting);
-        content.appendChild(thirdLine);
-
-        item.appendChild(start);
-        item.appendChild(content);
-        item.appendChild(end);
+          content.appendChild((() => {
+            const supporting = document.createElement('time');
+            supporting.className = 'full-datetime supporting-text small-text';
+            supporting.datetime = x.time;
+            supporting.textContent = new Date(x.time).toLocaleDateString(
+              navigator.language,
+              { year: 'numeric',
+                month: 'short',
+                weekday: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric'
+              }
+            );
+            return supporting;
+          }) ());
+          
+          content.appendChild((() => {
+            const supporting = document.createElement('div');
+            supporting.className = 'supporting-text small-text';
+            supporting.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
+            return supporting;
+          }) ());
+          
+          return content;
+          
+        }) ());
+        
+        item.appendChild((() => {
+          const end = document.createElement('i');
+          end.textContent = 'arrow_forward_ios';
+          return end;
+        }) ());
 
         const divider = document.createElement('hr');
         return [item,divider];
@@ -132,7 +155,7 @@ document.getElementById(#{idInputSearchEvents}).addEventListener('input', deboun
 }, 500));
 
 
-[ [#{idDialogSearchEvents}, #{idListSearchSearchEventsResult}]
+[ [#{idDialogSearchEvents}, #{idNavSearchEventsResult}]
 ].map(
   xs => xs.map(x => document.getElementById(x))
 ).map(
