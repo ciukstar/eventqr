@@ -259,6 +259,9 @@ instance Yesod App where
     
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
+    isAuthorized SitemapR _ = return Authorized
+    isAuthorized WebAppManifestR _ = return Authorized
+    
     isAuthorized (StaticR _) _ = return Authorized    
     
     isAuthorized r@(DataR TokensGmailR) _ = setUltDest r >> isAdmin
@@ -270,7 +273,12 @@ instance Yesod App where
     isAuthorized (DataR TokensVapidHookR) _ = isAdmin
 
     isAuthorized (DataR (AccountProfileR uid)) _ = isAuthenticatedSelf uid
-    isAuthorized (DataR (AccountSettingsR uid)) _ = isAuthenticatedSelf uid    
+    isAuthorized (DataR (AccountSettingsR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventScheduleR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventR uid _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventUnregisterR uid _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventAttendeesR uid _)) _ = isAuthenticatedSelf uid
+            
         
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin
@@ -278,11 +286,12 @@ instance Yesod App where
     isAuthorized (DataR (UserR _)) _ = isAdmin
     isAuthorized (DataR UsersR) _ = setUltDestCurrent >> isAdmin
     isAuthorized (DataR (UserPhotoR _)) _ = return Authorized
-    isAuthorized (DataR (UserNotificationsR uid)) _ = isAuthenticatedSelf uid
-    isAuthorized (DataR (UserNotificationR uid _)) _ = isAuthenticatedSelf uid
-    isAuthorized (DataR (UserNotificationDeleR uid _)) _ = isAuthenticatedSelf uid
+    
+    isAuthorized (DataR (AccountNotificationsR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountNotificationR uid _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountNotificationDeleR uid _)) _ = isAuthenticatedSelf uid
         
-    isAuthorized (DataR (UserSettingsR uid)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountPushSettingsR uid)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (UserSubscriptionsR uid)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (UserUnsubscribeR uid _)) _ = isAuthenticatedSelf uid
     
@@ -293,7 +302,7 @@ instance Yesod App where
     isAuthorized (DataR (UserCardEditR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardNewFieldR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardDeleR _ _)) _ = isAdmin
-    
+        
     isAuthorized (DataR (CardQrImageR _)) _ = return Authorized
 
     isAuthorized (DataR (DataEventsR uid)) _ = setUltDestCurrent >> isManagerSelfOrAdmin uid

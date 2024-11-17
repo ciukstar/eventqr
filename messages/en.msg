@@ -1,3 +1,5 @@
+YouDoNotHaveEventsToAttendYet: You don't have any events planned to attend yet
+Schedule: Schedule
 Upcoming: Upcoming
 MyVisitingSchedule: My visiting schedule
 All: All
@@ -277,6 +279,7 @@ Username: Username
 SignOut: Sign out
 SignIn: Sign in
 Home: Home
+MetaDescription: Event and Attendance Management
 AppName: EventQr
 
 Doc000: Event and Attendance Management

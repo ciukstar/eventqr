@@ -1,7 +1,6 @@
 -- By default this file is used by `parseRoutesFile` in Foundation.hs
 -- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
 
-
 /calendar/#Month/#Day/events/#EventId/attendees/#AttendeeId                CalendarEventAttendeeR         GET
 /calendar/#Month/#Day/events/#EventId/attendees                            CalendarEventAttendeesR        GET
 /calendar/#Month/#Day/events/#EventId/users/#UserId/unregister             CalendarEventUserUnregisterR   POST
@@ -40,13 +39,30 @@
 /static StaticR Static appStatic
 /auth   AuthR   Auth   getAuth
 
-/sw.js       ServiceWorkerR GET
-/favicon.ico FaviconR       GET
-/robots.txt  RobotsR        GET
+/sw.js         ServiceWorkerR GET
+
+/manifest.json WebAppManifestR GET
+/sitemap.xml   SitemapR        GET
+/favicon.ico   FaviconR        GET
+/robots.txt    RobotsR         GET
 
 
 /data DataR:
 
+    /users/#UserId/subscriptions/#PushSubscriptionId/unsubscribe UserUnsubscribeR   POST
+    /users/#UserId/subscriptions                                 UserSubscriptionsR POST
+
+    /accounts/#UserId/settings/push                      AccountPushSettingsR     GET
+    /accounts/#UserId/notifications/#NotificationId/dele AccountNotificationDeleR POST
+    /accounts/#UserId/notifications/#NotificationId      AccountNotificationR     GET
+    /accounts/#UserId/notifications                      AccountNotificationsR    GET
+    
+    /accounts/#UserId/events/#EventId/attendees  AccountEventAttendeesR  GET
+    /accounts/#UserId/events/#EventId/unregister AccountEventUnregisterR POST
+    /accounts/#UserId/events/#EventId            AccountEventR           GET
+    /accounts/#UserId/schedule                   AccountEventScheduleR   GET
+    /accounts/#UserId/settings                   AccountSettingsR        GET
+    /accounts/#UserId/profile                    AccountProfileR         GET
 
     /c/#UserId/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/notify DataEventCalendarEventAttendeeNotifyR POST
     /c/#UserId/#Month/calendar/#Day/events/#EventId/attendees/#AttendeeId/dele   DataEventCalendarEventAttendeeDeleR   POST
@@ -98,18 +114,7 @@
     /users/#UserId      UserR     GET POST
     /users              UsersR    GET POST
     
-    /users/#UserId/subscriptions/#PushSubscriptionId/unsubscribe UserUnsubscribeR   POST
-    /users/#UserId/subscriptions                                 UserSubscriptionsR POST
-
-    /users/#UserId/settings                           UserSettingsR         GET
-    /users/#UserId/notifications/#NotificationId/dele UserNotificationDeleR POST
-    /users/#UserId/notifications/#NotificationId      UserNotificationR     GET
-    /users/#UserId/notifications                      UserNotificationsR    GET
     /users/#UserId/photo                              UserPhotoR            GET
-
-
-    /accounts/#UserId/settings AccountSettingsR GET
-    /accounts/#UserId/profile  AccountProfileR  GET
 
     /tokens/vapid/hook  TokensVapidHookR  GET
     /tokens/vapid/clear TokensVapidClearR POST

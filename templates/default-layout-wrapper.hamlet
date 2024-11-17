@@ -14,6 +14,7 @@ $doctype 5
     <link href=@{StaticR css_beer_min_css} rel="stylesheet">
 
     <link rel=icon type="image/x-icon" href=@{FaviconR}>
+    <link rel=manifest href=@{WebAppManifestR}>
 
     ^{pageHead pc}
     

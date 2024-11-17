@@ -48,7 +48,7 @@ import System.Log.FastLogger
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
-import Handler.Common (getFaviconR, getRobotsR)
+import Handler.Common (getFaviconR, getRobotsR, getSitemapR, getWebAppManifestR)
 import Handler.Docs ( getDocsR )
 
 import Handler.Home
@@ -111,16 +111,21 @@ import Handler.Cards
     )
 
 import Handler.Accounts
-    ( getAccountProfileR, getAccountSettingsR)
+    ( getAccountProfileR, getAccountSettingsR, getAccountEventScheduleR
+    , getAccountEventR
+    , getAccountNotificationsR, getAccountNotificationR
+    , postAccountNotificationDeleR
+    , getAccountPushSettingsR
+    , postUserSubscriptionsR, postUserUnsubscribeR
+    , postAccountEventUnregisterR
+    , getAccountEventAttendeesR
+    )
 
 import Handler.Users
     ( getUsersR, postUsersR
     , getUserR, postUserR
     , getUserNewR, getUserEditR, postUserDeleR
     , getUserPhotoR
-    , getUserNotificationsR, getUserNotificationR, postUserNotificationDeleR
-    , getUserSettingsR
-    , postUserSubscriptionsR, postUserUnsubscribeR
     )
 
 import Handler.Tokens

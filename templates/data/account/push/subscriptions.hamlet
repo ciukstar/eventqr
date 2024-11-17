@@ -1,5 +1,5 @@
   
-^{widgetTopbar (Just (DataR $ UserNotificationsR uid,[])) (msgr MsgSettings) idOverlay Nothing Nothing}
+^{widgetTopbar (Just (DataR $ AccountNotificationsR uid,[])) (msgr MsgSettings) idOverlay Nothing Nothing}
 
 <main.responsive>
   

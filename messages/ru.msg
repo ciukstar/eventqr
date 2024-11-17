@@ -1,3 +1,5 @@
+YouDoNotHaveEventsToAttendYet: У вас пока нет запланированных мероприятий для посещения
+Schedule: Расписание
 Upcoming: Предстоящие
 MyVisitingSchedule: Мой график посещений
 All: Все
@@ -277,6 +279,7 @@ Username: Логин
 SignOut: Выйти
 SignIn: Войти
 Home: Главная
+MetaDescription: Управление мероприятиями и посещаемостью
 AppName: EventQr
 
 Doc000: Управление мероприятиями и посещаемостью

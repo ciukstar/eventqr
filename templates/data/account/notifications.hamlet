@@ -7,12 +7,12 @@
     <h6.title.max>
       _{MsgNotifications}
       
-    <a.button.circle.transparent href=@{DataR $ UserSettingsR uid} title=_{MsgSettings} ##{idAnchorSettings}>
+    <a.button.circle.transparent href=@{DataR $ AccountPushSettingsR uid} title=_{MsgSettings} ##{idAnchorSettings}>
       <i>settings
 
 <main.responsive.no-padding>
 
-  <form method=get action=@{DataR $ UserNotificationsR uid} ##{idFormSearch}>
+  <form method=get action=@{DataR $ AccountNotificationsR uid} ##{idFormSearch}>
 
   $forall (s, label) <- [(NotificationStatusUnread, MsgUnread), (NotificationStatusRead, MsgRead)]
     $if pure s == status
@@ -30,7 +30,7 @@
         _{MsgNoNotificationsForYouAtTheMoment}.
   $else
     $forall (Entity nid (Notification pid _ published subject _ status),Entity _ (User email _ uname _ _ _)) <- notifications
-      <a.row.padding.wave href=@?{(DataR $ UserNotificationR uid nid,[("status",pack $ show status)])}>
+      <a.row.padding.wave href=@?{(DataR $ AccountNotificationR uid nid,[("status",pack $ show status)])}>
         <img.circle src=@{DataR $ UserPhotoR pid} loading=lazy alt=_{MsgPhoto}>
         <div.content.max>
 

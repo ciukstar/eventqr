@@ -1,5 +1,5 @@
 
-^{widgetTopbar (Just (DataR $ UserNotificationsR uid,stati)) (msgr MsgNotification) idOverlay (Just idDialogDelete) Nothing}
+^{widgetTopbar (Just (DataR $ AccountNotificationsR uid,stati)) (msgr MsgNotification) idOverlay (Just idDialogDelete) Nothing}
 
 <main.responsive.padding>
   $maybe (Entity _ (Notification pid _ published subject msg _),Entity _ (User email _ uname _ _ _)) <- notification
@@ -42,7 +42,7 @@
     <button.transparent.link data-ui=##{idOverlay}
       onclick="document.getElementById('#{idDialogDelete}').close()">
       _{MsgCancel}
-    <form method=post action=@{DataR $ UserNotificationDeleR uid nid} enctype=#{et0}>
+    <form method=post action=@{DataR $ AccountNotificationDeleR uid nid} enctype=#{et0}>
       ^{fw0}
       <button.primary type=submit>
         _{MsgDele}

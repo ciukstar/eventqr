@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="144"
+   viewBox="0 -960 5760 5760"
+   width="144"
+   fill="#013048"
+   version="1.1"
+   id="svg866"
+   sodipodi:docname="logo_144x144.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs870" />
+  <sodipodi:namedview
+     id="namedview868"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="4.1041667"
+     inkscape:cx="72.730964"
+     inkscape:cy="51.654822"
+     inkscape:window-width="1920"
+     inkscape:window-height="1003"
+     inkscape:window-x="0"
+     inkscape:window-y="40"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg866" />
+  <path
+     d="m 2880,3360 q 122.4,0 205.2,-82.8 82.8,-82.8 82.8,-205.2 0,-122.4 -82.8,-205.2 -82.8,-82.8 -205.2,-82.8 -122.4,0 -205.2,82.8 -82.8,82.8 -82.8,205.2 0,122.4 82.8,205.2 82.8,82.8 205.2,82.8 z m 0,-1152 q 122.4,0 205.2,-82.8 82.8,-82.8 82.8,-205.2 0,-122.4 -82.8,-205.2 -82.8,-82.8 -205.2,-82.8 -122.4,0 -205.2,82.8 -82.8,82.8 -82.8,205.2 0,122.4 82.8,205.2 82.8,82.8 205.2,82.8 z m 0,-1152 q 122.4,0 205.2,-82.8 Q 3168,890.4 3168,768 3168,645.6 3085.2,562.8 3002.4,480 2880,480 q -122.4,0 -205.2,82.8 -82.8,82.8 -82.8,205.2 0,122.4 82.8,205.2 82.8,82.8 205.2,82.8 z M 5184,4224 H 576 Q 338.4,4224 169.2,4054.8 0,3885.6 0,3648 V 2496 q 237.6,0 406.8,-169.2 Q 576,2157.6 576,1920 576,1682.4 406.8,1513.2 237.6,1344 0,1344 V 192 Q 0,-45.6 169.2,-214.8 338.4,-384 576,-384 h 4608 q 237.6,0 406.8,169.2 Q 5760,-45.6 5760,192 v 1152 q -237.6,0 -406.8,169.2 -169.2,169.2 -169.2,406.8 0,237.6 169.2,406.8 169.2,169.2 406.8,169.2 v 1152 q 0,237.6 -169.2,406.8 Q 5421.6,4224 5184,4224 Z m 0,-576 V 2913.6 Q 4917.6,2755.2 4762.8,2492.4 4608,2229.6 4608,1920 q 0,-309.6 154.8,-572.4 154.8,-262.8 421.2,-421.2 V 192 H 576 v 734.4 q 266.4,158.4 421.2,421.2 154.8,262.8 154.8,572.4 0,309.6 -154.8,572.4 Q 842.4,2755.2 576,2913.6 V 3648 Z M 2880,1920 Z"
+     id="path864"
+     style="stroke-width:7.2" />
+</svg>

@@ -9,7 +9,7 @@ $maybe Entity uid (User email _ uname _ _ _) <- user
                   
       <menu.left.no-wrap #accountmenutrigger>
 
-        <a.row href=@{DataR $ UserNotificationsR uid}>
+        <a.row href=@{DataR $ AccountNotificationsR uid}>
    
           $if unread > 0
             <span>

@@ -24,7 +24,7 @@
     <span>_{MsgEventsCalendar}
 
   $maybe Entity uid _ <- user
-    <a.button.fill href=#>
+    <a.button.fill href=@{DataR $ AccountEventScheduleR uid}>
       <i>schedule
       <span>_{MsgMyVisitingSchedule}
 

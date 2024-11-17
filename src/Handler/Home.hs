@@ -51,10 +51,10 @@ import Foundation
       , EventAttendeeR, EventScannerR
       , ApiEventsR, DataR, StaticR, EventPosterR
       )
-    , DataR (UserPhotoR, CardQrImageR)
+    , DataR (UserPhotoR, CardQrImageR, AccountEventScheduleR)
     , AppMessage
       ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard, MsgSignIn
-      , MsgUpcomingEvents, MsgEvents, MsgSearch, MsgEvent, MsgAll
+      , MsgUpcomingEvents, MsgSearch, MsgEvent, MsgAll
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
