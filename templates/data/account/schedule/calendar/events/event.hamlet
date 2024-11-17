@@ -56,7 +56,7 @@
         <button.transparent type=button ##{idButtonCloseDialogUnsubscribe} data-ui=##{idOverlay}>
           _{MsgCancel}
 
-        <form method=post action=@{DataR $ AccountEventUnregisterR uid eid} enctype=#{et0}>
+        <form method=post action=@{DataR $ AccountEventScheduleCalendarUnregisterR uid month day eid} enctype=#{et0}>
           ^{fw0}
           <button type=submit>
             _{MsgUnsubscribe}

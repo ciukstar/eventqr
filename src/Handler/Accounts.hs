@@ -16,6 +16,7 @@ module Handler.Accounts
   , getAccountEventScheduleCalendarR
   , getAccountEventScheduleCalendarEventsR
   , getAccountEventScheduleCalendarEventR
+  , postAccountEventScheduleCalendarUnregisterR
   , getAccountEventScheduleCalendarEventAttendeesR
   ) where
 
@@ -62,6 +63,7 @@ import Foundation
       , AccountProfileR, AccountEventUnregisterR, AccountEventAttendeesR
       , AccountEventScheduleCalendarR, AccountEventScheduleCalendarEventsR
       , AccountEventScheduleCalendarEventR
+      , AccountEventScheduleCalendarUnregisterR
       , AccountEventScheduleCalendarEventAttendeesR
       )
     , AppMessage
@@ -146,6 +148,27 @@ getAccountEventScheduleCalendarEventAttendeesR uid month day eid = do
         setTitleI MsgAttendees
         idOverlay <- newIdent
         $(widgetFile "data/account/schedule/calendar/attendees/attendees")
+
+
+postAccountEventScheduleCalendarUnregisterR :: UserId -> Month -> Day -> EventId -> Handler Html
+postAccountEventScheduleCalendarUnregisterR uid month day eid = do
+    ((fr0,_),_) <- runFormPost formEventUserUnregister
+    case fr0 of
+      FormSuccess () -> do
+          runDB $ delete $ do
+              x <- from $ table @Attendee
+              where_ $ x ^. AttendeeEvent ==. val eid
+              where_ $ x ^. AttendeeCard `in_` subSelectList ( do
+                  c <- from $ table @Card
+                  where_ $ c ^. CardUser ==. val uid
+                  return $ c ^. CardId )
+
+          addMessageI msgSuccess MsgUnsubscribeSuccessful
+          redirect $ DataR $ AccountEventScheduleCalendarEventsR uid month day
+
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ DataR $ AccountEventScheduleCalendarEventR uid month day eid
 
 
 getAccountEventScheduleCalendarEventR :: UserId -> Month -> Day -> EventId -> Handler Html
@@ -299,7 +322,7 @@ postAccountEventUnregisterR uid eid = do
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
-          redirect $ DataR $ AccountEventScheduleR uid
+          redirect $ DataR $ AccountEventR uid eid
 
 
 getAccountEventR :: UserId -> EventId -> Handler Html

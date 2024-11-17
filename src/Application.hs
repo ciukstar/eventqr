@@ -122,6 +122,7 @@ import Handler.Accounts
     , getAccountEventScheduleCalendarR
     , getAccountEventScheduleCalendarEventsR
     , getAccountEventScheduleCalendarEventR
+    , postAccountEventScheduleCalendarUnregisterR
     , getAccountEventScheduleCalendarEventAttendeesR
     )
 

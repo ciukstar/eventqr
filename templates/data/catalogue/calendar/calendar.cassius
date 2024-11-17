@@ -16,7 +16,7 @@ main
            gap: 0.5rem
            padding: 0 0.5rem
            grid-template-columns: repeat(7,1fr)
-           grid-template-rows: repeat(8,1fr)
+           grid-template-rows: auto auto repeat(5,minmax(3rem,1fr)) minmax(3rem,auto)
            grid-template-areas: "head head head head head head head"
            div.header
                grid-area: head

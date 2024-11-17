@@ -1,3 +1,4 @@
+EventAndParticipantManagement: Управление мероприятиями и участниками
 YouDoNotHaveEventsToAttendYet: У вас пока нет запланированных мероприятий для посещения
 Schedule: Расписание
 Upcoming: Предстоящие

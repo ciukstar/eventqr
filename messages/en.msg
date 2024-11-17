@@ -1,3 +1,4 @@
+EventAndParticipantManagement: Event and Participant Management
 YouDoNotHaveEventsToAttendYet: You don't have any events planned to attend yet
 Schedule: Schedule
 Upcoming: Upcoming

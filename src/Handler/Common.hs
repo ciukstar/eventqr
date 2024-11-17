@@ -21,13 +21,17 @@ import Prelude ((*))
 import Foundation
     ( Handler
     , Route (HomeR, StaticR, DocsR)
-    , AppMessage (MsgAppName, MsgMetaDescription, MsgCalendar)
+    , AppMessage
+      ( MsgAppName, MsgMetaDescription, MsgSearchEvents, MsgEventsCalendar
+      , MsgEventAndParticipantManagement
+      )
     )
 
 import Settings.StaticFiles
     ( img_logo_144x144_svg
     , img_screenshot_1_narrow_png, img_screenshot_1_wide_png
     , img_screenshot_2_narrow_png, img_screenshot_2_wide_png
+    , img_screenshot_3_narrow_png, img_screenshot_3_wide_png
     )
 
 import Yesod.Core.Content
@@ -37,6 +41,7 @@ import Yesod.Core.Handler
 import Yesod.Core.Json (array, provideJson)
 import Yesod.Sitemap
     (sitemap, SitemapUrl (SitemapUrl), SitemapChangeFreq (Monthly))
+
     
 getWebAppManifestR :: Handler TypedContent
 getWebAppManifestR = do
@@ -66,25 +71,37 @@ getWebAppManifestR = do
                                           , "sizes" .= String "446x800"
                                           , "type" .= String "image/png"
                                           , "form_factor" .= String "narrow"
-                                          , "label" .= msgr MsgAppName
+                                          , "label" .= msgr MsgSearchEvents
                                           ]
                                  , object [ "src" .= urlr (StaticR img_screenshot_1_wide_png)
                                           , "sizes" .= String "1920x931"
                                           , "type" .= String "image/png"
                                           , "form_factor" .= String "wide"
-                                          , "label" .= msgr MsgAppName
+                                          , "label" .= msgr MsgSearchEvents
                                           ]
                                  , object [ "src" .= urlr (StaticR img_screenshot_2_narrow_png)
                                           , "sizes" .= String "446x800"
                                           , "type" .= String "image/png"
                                           , "form_factor" .= String "narrow"
-                                          , "label" .= msgr MsgCalendar
+                                          , "label" .= msgr MsgEventsCalendar
                                           ]
                                  , object [ "src" .= urlr (StaticR img_screenshot_2_wide_png)
                                           , "sizes" .= String "1920x931"
                                           , "type" .= String "image/png"
                                           , "form_factor" .= String "wide"
-                                          , "label" .= msgr MsgCalendar
+                                          , "label" .= msgr MsgEventsCalendar
+                                          ]
+                                 , object [ "src" .= urlr (StaticR img_screenshot_3_narrow_png)
+                                          , "sizes" .= String "471x827"
+                                          , "type" .= String "image/png"
+                                          , "form_factor" .= String "narrow"
+                                          , "label" .= msgr MsgEventAndParticipantManagement
+                                          ]
+                                 , object [ "src" .= urlr (StaticR img_screenshot_3_wide_png)
+                                          , "sizes" .= String "1920x931"
+                                          , "type" .= String "image/png"
+                                          , "form_factor" .= String "wide"
+                                          , "label" .= msgr MsgEventAndParticipantManagement
                                           ]
                                  ]
         ]
