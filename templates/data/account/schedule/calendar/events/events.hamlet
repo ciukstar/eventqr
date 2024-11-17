@@ -1,0 +1,48 @@
+
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{DataR $ AccountEventScheduleCalendarR uid month}>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgEvents}
+
+<main.responsive.no-padding>
+
+  <nav.top-margin.bottom-margin>
+    <form method=get action=@{DataR $ AccountEventScheduleCalendarEventsR uid month day} ##{idFormFilter}>
+
+    <button.chip.round type=submit form=#{idFormFilter} :not allEvents:.fill>
+      $if not allEvents
+        <i>done
+      <span>_{MsgUpcoming}
+
+    <button.chip.round type=submit name=all value=true form=#{idFormFilter} :allEvents:.fill>
+      $if allEvents
+        <i>done
+      <span>_{MsgAll}
+
+  $if null events
+    <div.italic.padding>
+      _{MsgYouDoNotHaveEventsToAttendYet}
+  $else
+    $forall (_,(_,(Entity eid (Event _ time name _), attendees))) <- events
+      <a.row.padding.wave href=@{DataR $ AccountEventScheduleCalendarEventR uid month day eid}>
+        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
+        <div.content.max>
+
+          <h6.headline.large-text>
+            #{name}
+
+          $with dt <- show time
+            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+              #{dt}
+            <div.supporting-text.small-text>
+              _{MsgAttendees}: #{attendees}
+
+        <i>arrow_forward_ios
+
+      <hr>
+
+
+  ^{widgetSnackbar msgs}

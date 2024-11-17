@@ -56,6 +56,13 @@
     /accounts/#UserId/notifications/#NotificationId/dele AccountNotificationDeleR POST
     /accounts/#UserId/notifications/#NotificationId      AccountNotificationR     GET
     /accounts/#UserId/notifications                      AccountNotificationsR    GET
+
+    
+    
+    /accounts/#UserId/schedule/#Month/calendar/#Day/events/#EventId/attendees AccountEventScheduleCalendarEventAttendeesR GET
+    /accounts/#UserId/schedule/#Month/calendar/#Day/events/#EventId           AccountEventScheduleCalendarEventR          GET
+    /accounts/#UserId/schedule/#Month/calendar/#Day/events                    AccountEventScheduleCalendarEventsR         GET
+    /accounts/#UserId/schedule/#Month/calendar                                AccountEventScheduleCalendarR               GET
     
     /accounts/#UserId/events/#EventId/attendees  AccountEventAttendeesR  GET
     /accounts/#UserId/events/#EventId/unregister AccountEventUnregisterR POST

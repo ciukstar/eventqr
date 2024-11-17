@@ -278,7 +278,11 @@ instance Yesod App where
     isAuthorized (DataR (AccountEventR uid _)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (AccountEventUnregisterR uid _)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (AccountEventAttendeesR uid _)) _ = isAuthenticatedSelf uid
-            
+    isAuthorized (DataR (AccountEventScheduleCalendarR uid _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventScheduleCalendarEventsR uid _ _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventScheduleCalendarEventR uid _ _ _)) _ = isAuthenticatedSelf uid
+    isAuthorized (DataR (AccountEventScheduleCalendarEventAttendeesR uid _ _ _)) _ = isAuthenticatedSelf uid
+                            
         
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin

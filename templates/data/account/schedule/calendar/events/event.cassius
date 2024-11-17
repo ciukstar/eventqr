@@ -1,0 +1,22 @@
+
+main
+    .page.active
+    
+        display: flex
+        flex-direction: column
+        
+        figure
+            text-align: center
+            img
+                border-radius: 1rem
+
+        dl
+            dt + dd
+                margin-bottom: 1rem
+
+        ##{idActions}
+            display: flex
+            flex-direction: column
+            text-align: center
+            row-gap: 1rem
+    

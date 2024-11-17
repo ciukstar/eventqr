@@ -1,0 +1,65 @@
+
+^{widgetTopbar (Just (DataR $ AccountEventScheduleCalendarEventsR uid month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a.active href=@{DataR $ AccountEventScheduleCalendarEventR uid month day eid}>
+      _{MsgDetails}
+      
+    <a href=@{DataR $ AccountEventScheduleCalendarEventAttendeesR uid month day eid}>
+      _{MsgAttendees}
+    
+  <div.padding.page.active>
+
+    $maybe (Entity _ (Event _ time name descr),attendees) <- event
+      <figure>
+        <img src=@{EventPosterR eid} height=128 loading=lazy alt=_{MsgPoster}>
+      
+      <dl>
+        <dt.bold.large-text>
+          _{MsgName}
+        <dd>
+          #{name}
+
+        <dt.bold.large-text>
+          _{MsgEventStartTime}
+        <dd>
+          $with dt <- show time
+            <time.full-datetime datetime=#{dt}>
+              #{dt}
+
+        <dt.bold.large-text>
+          _{MsgDescription}
+        <dd>
+          #{descr}
+
+        <dt.bold.large-text>
+          _{MsgNumberOfAttendees}
+        <dd>
+          #{attendees}
+
+
+    <div ##{idActions}>
+      <button.transparent.link ##{idButtonUnsubscribe} data-ui=##{idOverlay}>
+        _{MsgUnsubscribe}
+
+
+    <div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+    <dialog ##{idDialogUnsubscribe}>
+      <h6>_{MsgConfirmPlease}
+      <div>
+        _{MsgUnsubscribeAreYouSure}
+
+      <nav.right-align>
+        <button.transparent type=button ##{idButtonCloseDialogUnsubscribe} data-ui=##{idOverlay}>
+          _{MsgCancel}
+
+        <form method=post action=@{DataR $ AccountEventUnregisterR uid eid} enctype=#{et0}>
+          ^{fw0}
+          <button type=submit>
+            _{MsgUnsubscribe}
+        
+  ^{widgetSnackbar msgs}
+        

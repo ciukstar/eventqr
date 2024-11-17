@@ -1,0 +1,36 @@
+
+<div.overlay ##{idOverlay}>
+
+^{widgetTopbar (Just (DataR $ AccountEventScheduleCalendarEventsR uid month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a href=@{DataR $ AccountEventScheduleCalendarEventR uid month day eid}>
+      _{MsgDetails}
+      
+    <a.active href=@{DataR $ AccountEventScheduleCalendarEventAttendeesR uid month day eid}>
+      _{MsgAttendees}
+    
+  <div.page.active>
+    $forall (Entity _ (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _)) <- attendees
+      <div.row.padding.no-margin>
+
+        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+        <div.content.max>
+          <div.headline.large-text>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+
+          <div.supporting-text.small-text>
+            _{MsgRegistrationDate}
+          <div.supporting-text.small-text>
+            $with dt <- show rdate
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
+          
+      <hr>
+    

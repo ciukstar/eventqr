@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Handler.Accounts
   ( getAccountProfileR, getAccountSettingsR
@@ -12,6 +13,10 @@ module Handler.Accounts
   , postUserSubscriptionsR, postUserUnsubscribeR
   , postAccountEventUnregisterR
   , getAccountEventAttendeesR
+  , getAccountEventScheduleCalendarR
+  , getAccountEventScheduleCalendarEventsR
+  , getAccountEventScheduleCalendarEventR
+  , getAccountEventScheduleCalendarEventAttendeesR
   ) where
 
 import ClassyPrelude (readMay, isJust)
@@ -20,14 +25,26 @@ import Control.Monad.IO.Class (liftIO)
 
 import Data.Aeson (toJSON)
 import Data.Bifunctor (Bifunctor(second))
+import qualified Data.List as L (length)
+import Data.Map (Map, fromListWith)
+import qualified Data.Map as M (foldr, lookup)
 import Data.Maybe (fromMaybe)
 import Data.Text (pack) 
 import Data.Text.Encoding (decodeUtf8)
-import Data.Time.Clock (getCurrentTime)
+import Data.Time.Calendar
+    ( Day, DayPeriod (periodFirstDay), DayOfWeek (Monday)
+    , toGregorian, weekFirstDay, addDays
+    )
+import Data.Time.Calendar.Month (Month, pattern YearMonth, addMonths)
+import Data.Time.Clock (getCurrentTime, utctDay)
+import Data.Time.LocalTime
+    ( localTimeToUTC, LocalTime (LocalTime, localDay), TimeOfDay (TimeOfDay)
+    , utcToLocalTime
+    )
 
 import Database.Esqueleto.Experimental
     ( SqlExpr, Value (unValue), selectOne, select, from, table, where_, val
-    , (^.), (==.), (:&) ((:&)), (>=.), (=.), (!=.)
+    , (^.), (==.), (:&) ((:&)), (>=.), (=.), (!=.), (<.)
     , innerJoin, on, subSelectCount, orderBy, asc
     , update, set, delete, in_, subSelectList
     )
@@ -36,13 +53,16 @@ import qualified Database.Persist as P (delete, (=.))
 import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
-    ( Handler, Form, widgetSnackbar, widgetTopbar
+    ( Handler, Form, App (appSettings), widgetSnackbar, widgetTopbar
     , Route (HomeR, DataR, EventPosterR)
     , DataR
       ( AccountEventScheduleR, AccountEventR, AccountSettingsR, UserPhotoR
       , AccountPushSettingsR, AccountNotificationR, AccountNotificationsR
       , AccountNotificationDeleR, UserUnsubscribeR, UserSubscriptionsR
       , AccountProfileR, AccountEventUnregisterR, AccountEventAttendeesR
+      , AccountEventScheduleCalendarR, AccountEventScheduleCalendarEventsR
+      , AccountEventScheduleCalendarEventR
+      , AccountEventScheduleCalendarEventAttendeesR
       )
     , AppMessage
       ( MsgUserAccount, MsgYes, MsgNo, MsgSettings, MsgProfile, MsgName
@@ -57,7 +77,9 @@ import Foundation
       , MsgUnsubscribeAreYouSure, MsgUnsubscribeSuccessful, MsgSubscriptionSuccessful
       , MsgUnsubscribe, MsgEnableNotificationsPlease, MsgNotificationsHaveBeenDisabled
       , MsgEvent, MsgNumberOfAttendees, MsgEventStartTime, MsgDetails, MsgDescription
-      , MsgRegistrationDate
+      , MsgRegistrationDate, MsgList, MsgCalendar, MsgPrevious, MsgNext
+      , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
+      , MsgTotalEventsForThisMonth, MsgTotalAttendees, MsgNoEventsForThisMonth, MsgEvents
       )
     )
 
@@ -69,7 +91,7 @@ import Model
     ( keyThemeMode, msgSuccess, msgError
     , UserId, User (User)
     , Attendee (Attendee)
-    , EventId, Event (Event), Card
+    , EventId, Event (Event, eventTime), Card
     , NotificationId, Notification (Notification)
     , NotificationStatus (NotificationStatusUnread, NotificationStatusRead)
     , PushSubscription
@@ -86,7 +108,7 @@ import Model
       )
     )
 
-import Settings (widgetFile)
+import Settings (widgetFile, AppSettings (appTimeZone))
 
 import Text.Hamlet (Html)
 
@@ -95,10 +117,9 @@ import Web.WebPush (VAPIDKeys, vapidPublicKeyBytes)
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessages, getMessageRender
     , YesodRequest (reqGetParams), getRequest, addMessageI, redirect
-    , SomeMessage (SomeMessage), lookupHeader
+    , SomeMessage (SomeMessage), lookupHeader, getYesod
     )
 import Yesod.Core.Widget (whamlet)
-import Yesod.Persist.Core (YesodPersist(runDB))
 import Yesod.Form.Input (runInputGet, iopt)
 import Yesod.Form.Fields (boolField, textField, hiddenField, checkBoxField)
 import Yesod.Form.Functions (generateFormPost, runFormPost, mreq)
@@ -107,6 +128,140 @@ import Yesod.Form.Types
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     , FieldView (fvId, fvInput)
     )
+import Yesod.Persist.Core (YesodPersist(runDB))
+
+
+getAccountEventScheduleCalendarEventAttendeesR :: UserId -> Month -> Day -> EventId -> Handler Html
+getAccountEventScheduleCalendarEventAttendeesR uid month day eid = do
+
+    attendees <- runDB $ select $ do
+        x :& c :& u <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @User `on` (\(_ :& c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. AttendeeEvent ==. val eid
+        return (x,c,u)
+
+    msgr <- getMessageRender
+    defaultLayout $ do
+        setTitleI MsgAttendees
+        idOverlay <- newIdent
+        $(widgetFile "data/account/schedule/calendar/attendees/attendees")
+
+
+getAccountEventScheduleCalendarEventR :: UserId -> Month -> Day -> EventId -> Handler Html
+getAccountEventScheduleCalendarEventR uid month day eid = do
+
+    event <- (second unValue <$>) <$> runDB ( selectOne $ do
+        x <- from $ table @Event
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. x ^. EventId
+
+        where_ $ x ^. EventId ==. val eid
+        return (x,attendees) )
+
+    (fw0,et0) <- generateFormPost formEventUserUnregister
+
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgEvent
+        idOverlay <- newIdent
+        idActions <- newIdent
+        idButtonUnsubscribe <- newIdent
+        idDialogUnsubscribe <- newIdent
+        idButtonCloseDialogUnsubscribe <- newIdent
+        $(widgetFile "data/account/schedule/calendar/events/event")
+
+
+getAccountEventScheduleCalendarEventsR :: UserId -> Month -> Day -> Handler Html
+getAccountEventScheduleCalendarEventsR uid month day = do
+
+    allEvents <- fromMaybe False <$> runInputGet ( iopt boolField "all" )
+
+    tz <- appTimeZone . appSettings <$> getYesod
+    now <- liftIO getCurrentTime
+    
+    events <- (second (second (second unValue)) <$>) <$> runDB ( select $ do
+        x :& c :& e <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @Event `on` (\(x :& _ :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. e ^. EventId
+                
+        where_ $ c ^. CardUser ==. val uid
+
+        unless allEvents $ where_ $ e ^. EventTime >=. val now
+        
+        where_ $ e ^. EventTime >=. val (localTimeToUTC tz (LocalTime day (TimeOfDay 0 0 0)))
+        where_ $ e ^. EventTime <.  val (localTimeToUTC tz (LocalTime (addDays 1 day) (TimeOfDay 0 0 0)))
+        
+        orderBy [asc (e ^. EventTime)]
+        return (x,(c,(e,attendees))) )
+    
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgEvents
+        idFormFilter <- newIdent
+        $(widgetFile "data/account/schedule/calendar/events/events")
+
+
+getAccountEventScheduleCalendarR :: UserId -> Month -> Handler Html
+getAccountEventScheduleCalendarR uid month = do
+    stati <- reqGetParams <$> getRequest
+    
+    let start = weekFirstDay Monday (periodFirstDay month)
+    let end = addDays 41 start
+    let page = [start .. end]
+    let next = addMonths 1 month
+    let prev = addMonths (-1) month
+
+    allEvents <- fromMaybe False <$> runInputGet ( iopt boolField "all" )
+    tz <- appTimeZone . appSettings <$> getYesod
+    now <- liftIO getCurrentTime
+
+    events <- groupByKey (dayAt tz) . (second unValue <$>) <$> runDB ( select $ do
+        _ :& c :& e <- from $ table @Attendee
+            `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
+            `innerJoin` table @Event `on` (\(x :& _ :& e) -> x ^. AttendeeEvent ==. e ^. EventId)
+
+        let attendees :: SqlExpr (Value Int)
+            attendees = subSelectCount $ do
+                a <- from $ table @Attendee
+                where_ $ a ^. AttendeeEvent ==. e ^. EventId
+
+        where_ $ c ^. CardUser ==. val uid
+
+        unless allEvents $ where_ $ e ^. EventTime >=. val now
+        
+        where_ $ e ^. EventTime >=. val (localTimeToUTC tz (LocalTime (periodFirstDay month) (TimeOfDay 0 0 0)))
+        where_ $ e ^. EventTime <.  val (localTimeToUTC tz (LocalTime (periodFirstDay next) (TimeOfDay 0 0 0)))
+        return (e,attendees) )
+
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgMyVisitingSchedule
+
+        idFormFilter <- newIdent
+        idCalendarPage <- newIdent
+        idCalendarLegend <- newIdent
+        
+        $(widgetFile "data/account/schedule/calendar/calendar")
+
+  where
+      
+      total :: Map k [(a,Int)] -> (Int,Int)
+      total = M.foldr (\xs (a,b) -> (L.length xs + a, sum (snd <$> xs) + b)) (0,0)
+      
+      dayAt tz = localDay . utcToLocalTime tz . eventTime . entityVal . fst
+      
+      groupByKey :: Ord k => (v -> k) -> [v] -> Map k [v]
+      groupByKey f = fromListWith (<>) . fmap (\x -> (f x,[x]))
 
 
 getAccountEventAttendeesR :: UserId -> EventId -> Handler Html
@@ -123,7 +278,7 @@ getAccountEventAttendeesR uid eid = do
     defaultLayout $ do
         setTitleI MsgAttendees
         idOverlay <- newIdent
-        $(widgetFile "data/account/attendees/attendees") 
+        $(widgetFile "data/account/attendees/attendees")
 
 
 postAccountEventUnregisterR :: UserId -> EventId -> Handler Html
@@ -185,6 +340,7 @@ getAccountEventScheduleR uid = do
     allEvents <- fromMaybe False <$> runInputGet ( iopt boolField "all" )
 
     now <- liftIO getCurrentTime
+    let month = (\(y,m,_) -> YearMonth y m) . toGregorian . utctDay $ now
     
     events <- (second (second (second unValue)) <$>) <$> runDB ( select $ do
         x :& c :& e <- from $ table @Attendee

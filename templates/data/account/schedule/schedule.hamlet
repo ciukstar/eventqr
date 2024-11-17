@@ -9,40 +9,51 @@
 
 <main.responsive.no-padding>
 
-  <nav>
-    <form method=get action=@{DataR $ AccountEventScheduleR uid} ##{idFormFilter}>
-
-    <button.chip.round type=submit form=#{idFormFilter} :not allEvents:.fill>
-      $if not allEvents
-        <i>done
-      <span>_{MsgUpcoming}
-
-    <button.chip.round type=submit name=all value=true form=#{idFormFilter} :allEvents:.fill>
-      $if allEvents
-        <i>done
-      <span>_{MsgAll}
-
-  $if null events
-    <div.italic.padding>
-      _{MsgYouDoNotHaveEventsToAttendYet}
-  $else
-    $forall (_,(_,(Entity eid (Event _ time name _), attendees))) <- events
-      <a.row.padding.wave href=@{DataR $ AccountEventR uid eid}>
-        <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
-        <div.content.max>
-
-          <h6.headline.large-text>
-            #{name}
-
-          $with dt <- show time
-            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
-              #{dt}
-            <div.supporting-text.small-text>
-              _{MsgAttendees}: #{attendees}
-
-        <i>arrow_forward_ios
-
-      <hr>
-
+  <div.tabs.min>
+    <a.active.vertical href=@{DataR $ AccountEventScheduleR uid}>
+      <i>list
+      <span>_{MsgList}
       
-  ^{widgetSnackbar msgs}
+    <a.vertical href=@{DataR $ AccountEventScheduleCalendarR uid month}>
+      <i>calendar_month
+      <span>_{MsgCalendar}
+    
+  <div.page.active.no-margin.no-padding>
+
+    <nav.top-margin.bottom-margin>
+      <form method=get action=@{DataR $ AccountEventScheduleR uid} ##{idFormFilter}>
+
+      <button.chip.round type=submit form=#{idFormFilter} :not allEvents:.fill>
+        $if not allEvents
+          <i>done
+        <span>_{MsgUpcoming}
+
+      <button.chip.round type=submit name=all value=true form=#{idFormFilter} :allEvents:.fill>
+        $if allEvents
+          <i>done
+        <span>_{MsgAll}
+
+    $if null events
+      <div.italic.padding>
+        _{MsgYouDoNotHaveEventsToAttendYet}
+    $else
+      $forall (_,(_,(Entity eid (Event _ time name _), attendees))) <- events
+        <a.row.padding.wave href=@{DataR $ AccountEventR uid eid}>
+          <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
+          <div.content.max>
+
+            <h6.headline.large-text>
+              #{name}
+
+            $with dt <- show time
+              <time.full-datetime.supporting-text.small-text datetime=#{dt}>
+                #{dt}
+              <div.supporting-text.small-text>
+                _{MsgAttendees}: #{attendees}
+
+          <i>arrow_forward_ios
+
+        <hr>
+
+
+    ^{widgetSnackbar msgs}

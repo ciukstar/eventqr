@@ -1,0 +1,95 @@
+
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{HomeR}>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgSchedule}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a.vertical href=@{DataR $ AccountEventScheduleR uid}>
+      <i>list
+      <span>_{MsgList}
+      
+    <a.active.vertical href=@{DataR $ AccountEventScheduleCalendarR uid month}>
+      <i>calendar_month
+      <span>_{MsgCalendar}
+    
+  <div.page.active.no-margin.no-padding>
+
+    <nav.top-margin.bottom-margin>
+      <form method=get action=@{DataR $ AccountEventScheduleCalendarR uid month} ##{idFormFilter}>
+
+      <button.chip.round type=submit form=#{idFormFilter} :not allEvents:.fill>
+        $if not allEvents
+          <i>done
+        <span>_{MsgUpcoming}
+
+      <button.chip.round type=submit name=all value=true form=#{idFormFilter} :allEvents:.fill>
+        $if allEvents
+          <i>done
+        <span>_{MsgAll}
+
+    <div.calendar ##{idCalendarPage}>
+      <div.header>
+        <a.button.circle.transparent href=@?{(DataR $ AccountEventScheduleCalendarR uid prev,stati)}
+          rel=nofollow aria-label=_{MsgPrevious}>
+          
+          <i>arrow_back_ios_new
+          
+        $with m <- show month
+          <time.month-of-year datetime=#{m}>
+            #{m}
+            
+        <a.button.circle.transparent href=@?{(DataR $ AccountEventScheduleCalendarR uid next,stati)}
+          rel=nofollow aria-label=_{MsgNext}>
+          
+          <i>arrow_forward_ios
+
+      $forall wd <- [MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun]
+        <div.col-header>
+          _{wd}
+
+      $forall i <- [0,1,2,3,4,5]
+        $forall day <- take 7 (drop (i * 7) page)
+          $with (y,m,d) <- toGregorian day
+            $if (==) month (YearMonth y m)
+              $maybe xs <- M.lookup day events
+                <a.cell.tertiary-container rel=nofollow
+                  href=@?{(DataR $ AccountEventScheduleCalendarEventsR uid month day,stati)}>
+                  
+                  <time.day-of-month datetime=#{show day}>
+                    <small>#{d}
+                  <div>
+                    <b>
+                      #{length xs}
+                    <span>
+                      <div.badge.border.secondary-border.secondary-text.bottom.right>
+                        <small>#{sum $ snd <$> xs}
+              $nothing
+                <a.cell.secondary-container rel=nofollow
+                  href=@?{(DataR $ AccountEventScheduleCalendarEventsR uid month day,stati)}>
+                  
+                  <time.day-of-month datetime=#{show day}>
+                    <small>#{d}
+            $else
+              <div>
+
+    <div ##{idCalendarLegend}>
+      $if null events
+        <span.small-text>_{MsgNoEventsForThisMonth}.
+      $else
+        $with (n,m) <- total events
+          <div>
+            <span.small-text>_{MsgTotalEventsForThisMonth}: #
+            <b>#{n}
+          <div>
+            <span.small-text>_{MsgTotalAttendees}: #
+            <span>
+              <span.badge.border.secondary-border.secondary-text.bottom.right>
+                <small>#{m}
+
+    ^{widgetSnackbar msgs}

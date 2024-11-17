@@ -1,0 +1,14 @@
+
+main
+
+    .page
+
+        a.row
+          .content
+              display: inline-grid
+          .headline
+              display: inline-block
+              white-space: nowrap
+              overflow: hidden
+              text-overflow: ellipsis
+            

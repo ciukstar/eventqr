@@ -119,6 +119,10 @@ import Handler.Accounts
     , postUserSubscriptionsR, postUserUnsubscribeR
     , postAccountEventUnregisterR
     , getAccountEventAttendeesR
+    , getAccountEventScheduleCalendarR
+    , getAccountEventScheduleCalendarEventsR
+    , getAccountEventScheduleCalendarEventR
+    , getAccountEventScheduleCalendarEventAttendeesR
     )
 
 import Handler.Users
