@@ -9,41 +9,83 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Foundation where
 
 import Control.Monad.Logger (LogSource)
+import Control.Lens ((^?), (?~))
+import qualified Control.Lens as L ((^.))
 
 import Import.NoFoundation
 
+import Data.Aeson.Lens (key, AsValue(_String))
+import qualified Data.ByteString.Base64.Lazy as B64L (encode)
 import qualified Data.CaseInsensitive as CI
+import Data.Function ((&))
 import Data.Kind (Type)
 import qualified Data.List.Safe as LS (head)
 import qualified Data.Text as T (intercalate)
 import qualified Data.Text.Encoding as TE
 import Data.Time.Calendar.Month (Month)
+import qualified Data.Text.Lazy.Encoding as TLE (encodeUtf8)
 
 import Database.Esqueleto.Experimental
     ( SqlExpr, selectOne, from, table, where_, val, select, unionAll_, not_
     , (^.)
-    , countRows, unValue
+    , countRows, unValue, asc, orderBy, valList, in_
     )
 import qualified Database.Esqueleto.Experimental as E ((==.), Value)
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
 
+
+import Network.Mail.Mime
+    ( Part(Part, partType, partEncoding, partDisposition, partContent, partHeaders)
+    , Mail
+      ( mailTo, mailHeaders, mailParts), emptyMail
+    , Address (Address), Encoding (None), Disposition (DefaultDisposition)
+    , PartContent (PartContent), renderMail'
+    )
+import Network.Wreq (post, postWith, FormParam ((:=)), defaults, auth, oauth2Bearer)
+import qualified Network.Wreq as WL (responseBody, responseStatus, statusCode)
+
+import System.Directory (doesFileExist)
+import System.IO (readFile')
+
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Email.Validate (emailAddress, localPart)
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
+import Text.Julius (juliusFile)
+import Text.Shakespeare.Text (stext)
 
+import qualified Yesod.Auth.Email as AE
+import Yesod.Auth.Email
+    ( authEmail, registerR, loginR, forgotPasswordR, setpassR
+    , emailCredsId, emailCredsAuthId, emailCredsStatus, emailCredsVerkey, emailCredsEmail
+    , EmailCreds (EmailCreds)
+    , Email, Identifier, EmailCreds, SaltedPass, VerKey, VerUrl
+    , YesodAuthEmail
+      ( AuthEmailId, getEmail, getEmailCreds, setPassword, getPassword
+      , verifyAccount, needOldPassword, setVerifyKey, getVerifyKey, sendVerifyEmail
+      )
+    )
 import Yesod.Auth.HashDB (authHashDBWithForm)
+import Yesod.Auth.OAuth2.Google (oauth2GoogleScopedWidget)
 import Yesod.Auth.Message
-    ( AuthMessage(InvalidLogin), defaultMessage, englishMessage, russianMessage )
+    ( defaultMessage, englishMessage, russianMessage
+    , AuthMessage
+      ( InvalidLogin, LoginTitle, RegisterLong, ConfirmationEmailSentTitle, SetPassTitle
+      , NewPass, CurrentPassword, ConfirmPass, PasswordResetTitle, Register, EnterEmail
+      , SetPass, PasswordResetPrompt, SendPasswordResetEmail
+      ) )
 import Yesod.Core.Types (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Form.I18n.English (englishFormMessage)
 import Yesod.Form.I18n.Russian (russianFormMessage)
-import Text.Julius (juliusFile)
+import Material3 (md3widget)
 
 
 -- | The foundation datatype for your application. This can be a good place to
@@ -455,10 +497,27 @@ instance YesodAuth App where
     logoutDest _ = HomeR
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer :: App -> Bool
-    redirectToReferer _ = False
+    redirectToReferer _ = True
 
-    authenticate :: (MonadHandler m, HandlerSite m ~ App)
-                 => Creds App -> m (AuthenticationResult App)
+    authLayout :: (MonadHandler m, HandlerSite m ~ App) => WidgetFor App () -> m Html
+    authLayout w = liftHandler $ do
+        defaultLayout $ do
+            setTitleI MsgSignIn
+            $(widgetFile "auth/layout")
+
+    loginHandler :: AuthHandler App Html
+    loginHandler = do
+        app <- getYesod
+        tp <- getRouteToParent
+        rndr <- getUrlRender
+        backlink <- fromMaybe (rndr HomeR) <$> lookupSession keyUtlDest
+        let indexes = [1..] 
+        authLayout $ do
+            setTitleI LoginTitle
+            idButtonBack <- newIdent
+            $(widgetFile "auth/login")
+
+    authenticate :: (MonadHandler m, HandlerSite m ~ App) => Creds App -> m (AuthenticationResult App)
     authenticate (Creds _plugin ident _extra) = liftHandler $ do
         user <- runDB $ selectOne $ do
             x <- from $ table @User
@@ -469,13 +528,395 @@ instance YesodAuth App where
                 Nothing -> UserError InvalidLogin
 
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins _app = [authHashDBWithForm formLogin (Just . UniqueUser)]
+    authPlugins app = [ oauth2GoogleScopedWidget $(widgetFile "auth/google") ["email","openid","profile"]
+                        (googleApiConfClientId . appGoogleApiConf . appSettings $ app)
+                        (googleApiConfClientSecret . appGoogleApiConf . appSettings $ app)
+                      , authEmail
+                      -- , authHashDBWithForm formLogin (Just . UniqueUser)
+                      ]
 
     renderAuthMessage :: App -> [Text] -> AuthMessage -> Text
     renderAuthMessage _ [] = defaultMessage
     renderAuthMessage _ ("en":_) = englishMessage
     renderAuthMessage _ ("ru":_) = russianMessage
     renderAuthMessage app (_:xs) = renderAuthMessage app xs
+
+
+instance YesodAuthEmail App where
+    type AuthEmailId App = UserId
+
+    forgotPasswordHandler :: AuthHandler App Html
+    forgotPasswordHandler = do
+        (fw,et) <- liftHandler $ generateFormPost formForgotPassword
+        parent <- getRouteToParent
+        msgs <- getMessages
+        authLayout $ do
+            setTitleI PasswordResetTitle
+            idFormForgotPassword <- newIdent
+            $(widgetFile "auth/forgot") 
+      where
+          formForgotPassword :: Form Text
+          formForgotPassword extra = do
+              rndr <- getMessageRender
+              (r,v) <- mreq emailField FieldSettings
+                  { fsLabel = SomeMessage MsgEmailAddress
+                  , fsId = Just "forgotPassword", fsName = Just "email", fsTooltip = Nothing
+                  , fsAttrs = [("label", rndr MsgEmailAddress)]
+                  } Nothing
+              return (r,[whamlet|#{extra}^{fvInput v}|])
+
+    setPasswordHandler :: Bool -> AuthHandler App TypedContent
+    setPasswordHandler old = do
+        parent <- getRouteToParent
+        msgs <- getMessages
+        selectRep $ provideRep $ authLayout $ do
+            setTitleI SetPassTitle 
+            idFormSetPassWrapper <- newIdent
+            idFormSetPass <- newIdent
+            (fw,et) <- liftHandler $ generateFormPost formSetPassword
+            $(widgetFile "auth/password")
+      where
+          formSetPassword :: Form (Text,Text,Text)
+          formSetPassword extra = do
+              rndr <- getMessageRender
+              (currR,currV) <- mreq passwordField FieldSettings
+                  { fsLabel = SomeMessage CurrentPassword
+                  , fsTooltip = Nothing
+                  , fsId = Just "currentPassword"
+                  , fsName = Just "current"
+                  , fsAttrs = [("label", rndr CurrentPassword)]
+                  } Nothing
+              (newR,newV) <- mreq passwordField FieldSettings
+                  { fsLabel = SomeMessage NewPass
+                  , fsTooltip = Nothing
+                  , fsId = Just "newPassword"
+                  , fsName = Just "new"
+                  , fsAttrs = [("label", rndr NewPass)]
+                  } Nothing
+              (confR,confV) <- mreq passwordField FieldSettings
+                  { fsLabel = SomeMessage ConfirmPass
+                  , fsTooltip = Nothing
+                  , fsId = Just "confirmPassword"
+                  , fsName = Just "confirm"
+                  , fsAttrs = [("label", rndr ConfirmPass)]
+                  } Nothing
+
+              let r = (,,) <$> currR <*> newR <*> confR
+              let w = do
+                      toWidget [cassius|
+                                       ##{fvId currV}, ##{fvId newV}, ##{fvId confV}
+                                         align-self: stretch
+                                       |]
+                      [whamlet|
+                              #{extra}
+                              $if old
+                                ^{fvInput currV}
+                              ^{fvInput newV}
+                              ^{fvInput confV}
+                              |]
+              return (r,w)
+
+
+    confirmationEmailSentResponse :: AE.Email -> AuthHandler App TypedContent
+    confirmationEmailSentResponse email = do
+        parent <- getRouteToParent
+        msgs <- getMessages
+        selectRep $ provideRep $ authLayout $ do
+            setTitleI ConfirmationEmailSentTitle
+            $(widgetFile "auth/confirmation")
+
+    registerHandler :: AuthHandler App Html
+    registerHandler = do
+        (fw,et) <- liftHandler $ generateFormPost formRegEmailForm
+        parent <- getRouteToParent
+        msgs <- getMessages
+        authLayout $ do
+            setTitleI RegisterLong
+            formRegisterWrapper <- newIdent
+            formRegister <- newIdent
+            $(widgetFile "auth/register")
+      where
+          formRegEmailForm :: Form Text
+          formRegEmailForm extra = do
+              renderMsg <- getMessageRender
+              (emailR,emailV) <- mreq emailField FieldSettings
+                  { fsLabel = SomeMessage MsgEmailAddress
+                  , fsId = Just "email", fsName = Just "email", fsTooltip = Nothing
+                  , fsAttrs = [("label", renderMsg MsgEmailAddress)]
+                  } Nothing
+              let w = [whamlet|
+                          #{extra}
+                          ^{fvInput emailV}
+                      |]
+              return (emailR,w)
+
+
+    emailLoginHandler :: (Route Auth -> Route App) -> Widget
+    emailLoginHandler parent = do
+
+        (fw,et) <- liftHandler $ generateFormPost formEmailLogin
+        msgs <- getMessages
+
+        idFormEmailLoginWarpper <- newIdent
+        idFormEmailLogin <- newIdent
+
+        $(widgetFile "auth/email") 
+
+      where
+          formEmailLogin :: Form (Text,Text)
+          formEmailLogin extra = do
+              (emailR,emailV) <- mreq emailField FieldSettings
+                  { fsLabel = SomeMessage MsgEmailAddress
+                  , fsTooltip = Nothing, fsId = Just "email", fsName = Just "email"
+                  , fsAttrs = []
+                  } Nothing
+              (passR,passV) <- mreq passwordField FieldSettings
+                  { fsLabel = SomeMessage MsgPassword
+                  , fsTooltip = Nothing, fsId = Just "password", fsName = Just "password"
+                  , fsAttrs = []
+                  } Nothing
+              let r = (,) <$> emailR <*> passR
+                  w = do
+
+                      users <- liftHandler $ runDB ( select $ do
+                          x <- from $ table @User
+                          where_ $ x ^. UserAuthType `in_` valList [UserAuthTypeEmail,UserAuthTypePassword]
+                          where_ $ not_ $ x ^. UserSuper
+                          orderBy [asc (x ^. UserId)]
+                          return x )
+
+                      supers <- liftHandler $ runDB ( select $ do
+                          x <- from $ table @User
+                          where_ $ x ^. UserAuthType `in_` valList [UserAuthTypeEmail,UserAuthTypePassword]
+                          where_ $ x ^. UserSuper
+                          orderBy [asc (x ^. UserId)]
+                          return x )
+
+                      let accounts = users <> supers
+                      toWidget [julius|
+                          Array.from(
+                            document.getElementById('idButtonAccountsMenu').querySelectorAll('a.row')
+                          ).forEach(x => {
+                            x.addEventListener('click',e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              document.getElementById(#{fvId emailV}).value = x.dataset.email;
+                              document.getElementById(#{fvId passV}).value = x.dataset.pass;
+                              document.getElementById('idButtonAccountsMenu').click();
+                            });
+                          });
+                      |]
+                      [whamlet|
+                           <nav.right-align>
+                             <button.border.transparent type=button data-ui=#demoAccountsMenu #idButtonAccountsMenu>
+                               <i.no-round>demography
+                               <span>_{MsgDemoUserAccounts}
+                               <i>arrow_drop_down
+                               <menu #demoAccountsMenu>
+                                 $forall Entity uid (User email _ uname super admin manager _ _ _) <- accounts
+                                   $with pass <- maybe "" (TE.decodeUtf8 . localPart) (emailAddress $ TE.encodeUtf8 email)
+                                     <a.row href=# data-email=#{email} data-pass=#{pass}>
+                                       <img.circle.small src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>
+                                       <div.max>
+                                         $maybe name <- uname
+                                           <h6.small>#{name}
+                                         $nothing
+                                           <h6.small>#{email}
+                                         <div.small-text>
+                                           $if super
+                                             <p.upper>_{MsgSuperuser}
+                                           $elseif admin
+                                             <p.upper>_{MsgAdministrator}
+                                           $elseif manager
+                                             <p.upper>_{MsgManager}
+                                           $else
+                                             <p.lower>_{MsgUser}
+
+                           #{extra}
+
+                           ^{md3widget emailV}
+                           ^{md3widget passV}
+                      |]
+              return (r,w)
+
+
+    afterPasswordRoute :: App -> Route App
+    afterPasswordRoute _ = HomeR
+
+
+    addUnverified :: AE.Email -> VerKey -> AuthHandler App (AuthEmailId App)
+    addUnverified email vk = liftHandler $ runDB $ insert
+        (User email Nothing Nothing  False False False UserAuthTypeEmail (Just vk) False)
+
+
+    sendVerifyEmail :: AE.Email -> VerKey -> VerUrl -> AuthHandler App ()
+    sendVerifyEmail email _ verurl = do
+
+        renderMsg <- getMessageRender
+
+        tokenInfo <- liftHandler $ runDB $ selectOne $ do
+            x <- from $ table @Token
+            where_ $ x ^. TokenApi E.==. val keyApiGmail
+            return x
+
+        secretExists <- liftIO $ doesFileExist $ unpack secretVolumeRefreshTokenGmail
+
+        (rtoken,sender) <- case (tokenInfo,secretExists) of
+          (Just (Entity tid (Token _ StoreTypeDatabase)),_) -> do
+              refresh <- liftHandler $ (unValue <$>) <$> runDB ( selectOne $ do
+                  x <- from $ table @Store
+                  where_ $ x ^. StoreToken E.==. val tid
+                  where_ $ x ^. StoreKey E.==. val secretRefreshTokenGmail
+                  return $ x ^. StoreVal )
+              sender <- liftHandler $ (unValue <$>) <$> runDB ( selectOne $ do
+                  x <- from $ table @Store
+                  where_ $ x ^. StoreToken E.==. val tid
+                  where_ $ x ^. StoreKey E.==. val keySendby
+                  return $ x ^. StoreVal )
+              return (refresh,sender)
+
+          (Just (Entity _ (Token _ StoreTypeSession)),_) -> do
+                refresh <- lookupSession secretRefreshTokenGmail
+                sender <- lookupSession keySendby
+                return (refresh,sender)
+
+          (Just (Entity tid (Token _ StoreTypeGoogleSecretManager)),True) -> do
+
+              refresh <- liftIO $ readFile' $ unpack secretVolumeRefreshTokenGmail
+
+              sender <- liftHandler $ (unValue <$>) <$> runDB ( selectOne $ do
+                  x <- from $ table @Store
+                  where_ $ x ^. StoreToken E.==. val tid
+                  where_ $ x ^. StoreKey E.==. val keySendby
+                  return $ x ^. StoreVal )
+
+              return (Just (pack refresh),sender)
+
+          (_,True) -> do
+              refresh <- liftIO $ readFile' $ unpack secretVolumeRefreshTokenGmail
+              return (Just (pack refresh),Just "me")
+
+          _otherwise -> return (Nothing,Nothing)
+
+        atoken <- case rtoken of
+          Just refresh -> do
+              settings <- appSettings <$> getYesod
+
+              r <- liftIO $ post "https://oauth2.googleapis.com/token"
+                  [ "refresh_token" := refresh
+                  , "client_id" := (googleApiConfClientId . appGoogleApiConf $ settings)
+                  , "client_secret" := (googleApiConfClientSecret . appGoogleApiConf $ settings)
+                  , "grant_type" := ("refresh_token" :: Text)
+                  ]
+
+              return $ r ^? WL.responseBody . key "access_token" . _String
+          Nothing -> return Nothing
+
+        case (atoken,sender) of
+          (Just at,Just sendby) -> do
+
+              let mail = (emptyMail $ Address Nothing "noreply")
+                      { mailTo = [Address Nothing email]
+                      , mailHeaders = [("Subject", renderMsg MsgVerifyYourEmailAddress)]
+                      , mailParts = [[textPart, htmlPart]]
+                      }
+                    where
+                      textPart = Part
+                          { partType = "text/plain; charset=utf-8"
+                          , partEncoding = None
+                          , partDisposition = DefaultDisposition
+                          , partContent = PartContent $ TLE.encodeUtf8 [stext|
+                              _{MsgAppName}
+
+                              _{MsgConfirmEmailPlease}.
+
+                              #{verurl}
+
+                              _{MsgThankYou}.
+                              |]
+                          , partHeaders = []
+                          }
+                      htmlPart = Part
+                          { partType = "text/html; charset=utf-8"
+                          , partEncoding = None
+                          , partDisposition = DefaultDisposition
+                          , partContent = PartContent $ renderHtml [shamlet|
+                              <h1>
+                                #{renderMsg MsgAppName}
+                              <p>
+                                #{renderMsg MsgConfirmEmailPlease}.
+                              <p>
+                                <a href=#{verurl}>#{verurl}
+                              <p>
+                                #{renderMsg MsgThankYou}.
+                              |]
+                          , partHeaders = []
+                          }
+
+              raw <- liftIO $ TE.decodeUtf8 . toStrict . B64L.encode <$> renderMail' mail
+
+              let opts = defaults & auth ?~ oauth2Bearer (TE.encodeUtf8 at)
+              response <- liftIO $ tryAny $ postWith
+                  opts (gmailSendEnpoint $ unpack sendby) (object ["raw" .= raw])
+
+              case response of
+                Left e@(SomeException _) -> case fromException e of
+                  Just (HttpExceptionRequest _ (StatusCodeException r' _bs)) -> do
+                      case r' L.^. WL.responseStatus . WL.statusCode of
+                        401 -> do
+                            liftIO $ print response
+                        403 -> do
+                            liftIO $ print response
+                        _   -> do
+                            liftIO $ print response
+                  _other -> do
+                      liftIO $ print response
+                Right _ok -> return ()
+          _otherwise -> do
+              curr <- getCurrentRoute
+              addMessageI msgError MsgGmailAccountNotSet
+              redirect $ fromMaybe HomeR curr
+
+
+    getVerifyKey :: AuthEmailId App -> AuthHandler App (Maybe VerKey)
+    getVerifyKey = liftHandler . runDB . fmap (userVerkey =<<) . get
+
+    setVerifyKey :: AuthEmailId App -> VerKey -> AuthHandler App ()
+    setVerifyKey uid k = liftHandler $ runDB $ update uid [UserVerkey =. Just k]
+
+    needOldPassword :: AuthId App -> AuthHandler App Bool
+    needOldPassword _ = return False
+
+    verifyAccount :: AuthEmailId App -> AuthHandler App (Maybe (AuthId App))
+    verifyAccount uid = liftHandler $ runDB $ do
+        mu <- get uid
+        case mu of
+          Nothing -> return Nothing
+          Just _ -> do
+              update uid [UserVerified =. True, UserVerkey =. Nothing]
+              return $ Just uid
+
+    getPassword :: AuthId App -> AuthHandler App (Maybe SaltedPass)
+    getPassword = liftHandler . runDB . fmap (userPassword =<<) . get
+
+    setPassword :: AuthId App -> SaltedPass -> AuthHandler App ()
+    setPassword uid pass = liftHandler $ runDB $ update uid [UserPassword =. Just pass]
+
+    getEmailCreds :: Identifier -> AuthHandler App (Maybe (EmailCreds App))
+    getEmailCreds email = liftHandler $ runDB $ do
+        mu <- getBy $ UniqueUser email
+        case mu of
+          Nothing -> return Nothing
+          Just (Entity uid u) -> return $ Just EmailCreds
+              { emailCredsId = uid
+              , emailCredsAuthId = Just uid
+              , emailCredsStatus = isJust $ userPassword u
+              , emailCredsVerkey = userVerkey u
+              , emailCredsEmail = email
+              }
+
+    getEmail :: AuthEmailId App -> AuthHandler App (Maybe Yesod.Auth.Email.Email)
+    getEmail = liftHandler . runDB . fmap (fmap userEmail) . get
     
 
 formLogin :: Route App -> Widget
@@ -494,9 +935,7 @@ formLogin route = do
               return x
         )
     
-    msgr <- getMessageRender
     msgs <- getMessages
-    idOverlay <- newIdent
     idInputUsername <- newIdent
     idInputPassword <- newIdent
     $(widgetFile "auth/form")
@@ -515,9 +954,9 @@ isAdmin :: Handler AuthResult
 isAdmin = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ True _ _)) -> return Authorized
-        Just (Entity _ (User _ _ _ _ True _)) -> return Authorized
-        Just (Entity _ (User _ _ _ _ False _)) -> unauthorizedI MsgAccessDeniedAdminsOnly
+        Just (Entity _ (User _ _ _ True _ _ _ _ _)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ True _ _ _ _)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ False _ _ _ _)) -> unauthorizedI MsgAccessDeniedAdminsOnly
         Nothing -> unauthorizedI MsgSignInToAccessPlease
 
 
@@ -525,14 +964,14 @@ isManagerSelfOrAdmin :: UserId -> Handler AuthResult
 isManagerSelfOrAdmin uid = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ True _ _)) -> return Authorized
-        Just (Entity _ (User _ _ _ _ True _)) -> return Authorized
+        Just (Entity _ (User _ _ _ True _ _ _ _ _)) -> return Authorized
+        Just (Entity _ (User _ _ _ _ True _ _ _ _)) -> return Authorized
         
-        Just (Entity uid' (User _ _ _ _ _ True))
+        Just (Entity uid' (User _ _ _ _ _ True _ _ _))
             | uid == uid' -> return Authorized
             | otherwise -> unauthorizedI MsgAnotherAccountAccessProhibited
             
-        Just (Entity _ (User _ _ _ False False False)) -> unauthorizedI MsgAccessDeniedManagerOrAdminOnly
+        Just (Entity _ (User _ _ _ False False False _ _ _)) -> unauthorizedI MsgAccessDeniedManagerOrAdminOnly
             
         Nothing -> unauthorizedI MsgSignInToAccessPlease
 
@@ -541,8 +980,8 @@ isAdministrator :: Handler Bool
 isAdministrator = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ _ True _)) -> return True
-        Just (Entity _ (User _ _ _ _ False _)) -> return False
+        Just (Entity _ (User _ _ _ _ True _ _ _ _)) -> return True
+        Just (Entity _ (User _ _ _ _ False _ _ _ _)) -> return False
         Nothing -> return False
     
 
@@ -550,8 +989,8 @@ isEventManager :: Handler Bool
 isEventManager = do
     user <- maybeAuth
     case user of
-        Just (Entity _ (User _ _ _ _ _ True)) -> return True
-        Just (Entity _ (User _ _ _ _ _ False)) -> return False
+        Just (Entity _ (User _ _ _ _ _ True _ _ _)) -> return True
+        Just (Entity _ (User _ _ _ _ _ False _ _ _)) -> return False
         Nothing -> return False
 
 

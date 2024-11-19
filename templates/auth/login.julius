@@ -1,0 +1,8 @@
+
+[sessionStorage.getItem(#{keyBacklinkAuth})].filter(x => !!x).forEach(x => {
+  document.getElementById(#{idButtonBack}).href = sessionStorage.getItem(#{keyBacklinkAuth});
+});
+
+document.getElementById(#{idButtonBack}).addEventListener('click', e => {
+  sessionStorage.removeItem(#{keyBacklinkAuth});
+});

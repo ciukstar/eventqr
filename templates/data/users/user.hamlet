@@ -1,5 +1,5 @@
 
-$maybe Entity _ (User _ _ _ super _ _) <- user
+$maybe Entity _ (User _ _ _ super _ _ _ _ _) <- user
   $if super
     ^{widgetTopbar (Just (DataR UsersR,[])) (msgr MsgUser) idOverlay Nothing (Just $ DataR $ UserEditR uid)}
   $else
@@ -15,7 +15,7 @@ $maybe Entity _ (User _ _ _ super _ _) <- user
       _{MsgCards}
     
   <div.page.active>
-    $maybe Entity _ (User email _ uname super admin manager) <- user
+    $maybe Entity _ (User email _ uname super admin manager _ _ _) <- user
       <dl.margin>
         <dt.bold>_{MsgName}
         <dd.small-margin>

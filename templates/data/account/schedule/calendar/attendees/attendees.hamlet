@@ -13,7 +13,7 @@
       _{MsgAttendees}
     
   <div.page.active>
-    $forall (Entity _ (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _)) <- attendees
+    $forall (Entity _ (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _ _ _ _)) <- attendees
       <div.row.padding.no-margin>
 
         <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

@@ -134,7 +134,7 @@ getApiEventsR = do
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
 
         case (user,mine) of
-          (Just (Entity mid (User _ _ _ _ _ True)), True) -> where_ $ x ^. EventManager ==. val mid
+          (Just (Entity mid (User _ _ _ _ _ True _ _ _)), True) -> where_ $ x ^. EventManager ==. val mid
           _otherwise -> return ()
 
         case query of
@@ -346,7 +346,7 @@ formUserCards uid extra = do
 
   where
 
-      pairs (Entity cid _,Entity _ (User email _ _ _ _ _)) = (email, cid)
+      pairs (Entity cid _,Entity _ (User email _ _ _ _ _ _ _ _)) = (email, cid)
 
       md3radioFieldList :: [(Entity Card,Entity User)] -> Field Handler CardId
       md3radioFieldList cards = (radioField (optionsPairs (pairs <$> cards)))
@@ -377,7 +377,7 @@ $if null opts
 $else
   <div *{attrs}>
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _)) <- findEvent opt cards
+      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _ _ _ _)) <- findEvent opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -442,11 +442,11 @@ getEventRegistrationR eid = do
     user <- maybeAuth
 
     case (user,card,event) of
-      (Just (Entity uid (User _ _ _ False False False)),Just (_,Entity uid' _),_) | uid /= uid' -> do
+      (Just (Entity uid (User _ _ _ False False False _ _ _)),Just (_,Entity uid' _),_) | uid /= uid' -> do
                 addMessageI msgError MsgNotYourQrCodeSorry
                 redirect $ EventR eid
           
-      (Just (Entity uid (User _ _ _ False False True)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
+      (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
                 addMessageI msgError MsgNotManagerOfEventSorry
                 redirect $ EventR eid
           
@@ -616,7 +616,7 @@ getHomeR = do
     mine <- fromMaybe True <$> runInputGet (iopt boolField "mine")
 
     nMineUpcoming <- case user of
-          Just (Entity mid (User _ _ _ _ _ True)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+          Just (Entity mid (User _ _ _ _ _ True _ _ _)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
               x <- from $ table @Event
               where_ $ x ^. EventManager ==. val mid
               where_ $ x ^. EventTime >=. val now
@@ -629,7 +629,7 @@ getHomeR = do
               return countRows )
 
     nMineEvents <- case user of
-          Just (Entity mid (User _ _ _ _ _ True)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
+          Just (Entity mid (User _ _ _ _ _ True _ _ _)) -> maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
               x <- from $ table @Event
               where_ $ x ^. EventManager ==. val mid
               return countRows )
@@ -648,7 +648,7 @@ getHomeR = do
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
 
         case (user,mine) of
-          (Just (Entity mid (User _ _ _ _ _ True)), True) -> where_ $ x ^. EventManager ==. val mid
+          (Just (Entity mid (User _ _ _ _ _ True _ _ _)), True) -> where_ $ x ^. EventManager ==. val mid
           _otherwise -> return ()
         
         where_ $ x ^. EventTime >=. val now
@@ -714,7 +714,7 @@ getEventPosterR eid = do
 
 sliceByRole :: Maybe (Entity User) -> SqlExpr (Value Bool) -> SqlQuery ()
 sliceByRole user expr = case user of
-          Just (Entity _ (User _ _ _ True _ _)) -> return ()
-          Just (Entity _ (User _ _ _ _ True _)) -> return ()
-          Just (Entity _ (User _ _ _ _ _ True)) -> where_ expr
+          Just (Entity _ (User _ _ _ True _ _ _ _ _)) -> return ()
+          Just (Entity _ (User _ _ _ _ True _ _ _ _)) -> return ()
+          Just (Entity _ (User _ _ _ _ _ True _ _ _)) -> where_ expr
           _otherwise -> where_ $ val False

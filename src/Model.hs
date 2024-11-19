@@ -67,6 +67,12 @@ import Text.Blaze.Html ( toHtml )
 import Data.Text.Lazy (toStrict)
 
 
+data AuthenticationType = UserAuthTypePassword
+                        | UserAuthTypeEmail
+                        | UserAuthTypeGoogle
+    deriving (Show, Read, Eq, Ord)
+derivePersistField "AuthenticationType"
+
 
 data NotificationStatus = NotificationStatusUnread | NotificationStatusRead
     deriving (Show, Read, Eq, Ord)
@@ -197,6 +203,11 @@ paramTheme = "theme"
 eventChangeTheme :: Text
 eventChangeTheme = "changetheme"
 
+keyBacklinkAuth :: Text
+keyBacklinkAuth = "backlinkAuth"
+
+keyUtlDest :: Text
+keyUtlDest = "_ULT"
 
 nominalDiffTimeToHours :: NominalDiffTime -> Double
 nominalDiffTimeToHours =

@@ -195,6 +195,9 @@ makeFoundation appSettings = do
                      , userSuper = True
                      , userAdmin = True
                      , userManager = True
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
 
         demo <- liftIO $ getEnv "YESOD_DEMO_LANG"

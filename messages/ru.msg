@@ -1,3 +1,19 @@
+PasswordRecovery: Восстановление пароля
+CreatePassword: Создание пароля
+EmailVerification: Проверка электронной почты
+VerifyEmailPlease: Пожалуйста, подтвердите вашу электронную почту
+JustSentEmailTo: Мы только что отправили электронное письмо на
+ClickToVerifyAccount: Нажмите ссылку в письме, чтобы подтвердить свою учетную запись
+DidNotGetEmail: Не получили письмо?
+ResendEmail: Отправить письмо повторно
+ForgotYourPassword: Забыли пароль?
+DoNotHaveAnAccount: У вас нет учетной записи?
+CreateAccount: Зарегистрироваться
+GmailAccountNotSet: Аккаунт Gmail не установлен. Инициализируйте токены.
+ThankYou: Спасибо
+ConfirmEmailPlease: Пожалуйста, подтвердите свой адрес электронной почты, нажав на ссылку ниже
+VerifyYourEmailAddress: Проверьте свой адрес электронной почты
+SignInWithGoogle: Войти через Google
 EventAndParticipantManagement: Управление мероприятиями и участниками
 YouDoNotHaveEventsToAttendYet: У вас пока нет запланированных мероприятий для посещения
 Schedule: Расписание

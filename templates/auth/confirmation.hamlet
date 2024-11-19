@@ -1,0 +1,29 @@
+
+<header.app-top-app-bar>
+  <md-icon-button href=@{HomeR} aria-label=_{MsgBack}>
+    <md-icon>arrow_back
+
+  <section.md-typescale-title-large>
+    _{MsgEmailVerification}
+      
+<main>
+  
+
+  <div.md-typescale-body-medium>
+    _{MsgVerifyEmailPlease}.
+
+  <div.md-typescale-body-medium>
+    _{MsgJustSentEmailTo} #
+    <code.md-typescale-body-medium.shape-extra-small.surface-variant>
+      #{email}
+    \.
+    <div.md-typescale-body-medium>
+      _{MsgClickToVerifyAccount}.
+
+  <p>
+    <div.md-typescale-body-small>
+      _{MsgDidNotGetEmail}
+    <md-text-button href=@{parent registerR} type=button>
+      _{MsgResendEmail}
+
+^{widgetSnackbar msgs}

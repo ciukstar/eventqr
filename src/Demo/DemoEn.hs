@@ -16,7 +16,10 @@ import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
     ( keyApiVapid, keyApiGmail
-    , User (User, userEmail, userPassword, userSuper, userAdmin, userName, userManager)
+    , User
+      ( User, userEmail, userPassword, userSuper, userAdmin, userName
+      , userManager, userAuthType, userVerkey, userVerified
+      )
     , UserPhoto
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
       , userPhotoPhoto
@@ -29,6 +32,7 @@ import Model
     , Token (Token, tokenApi, tokenStore)
     , Store (Store, storeToken, storeKey, storeVal)
     , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager), secretVapid
+    , AuthenticationType (UserAuthTypePassword)
     )
     
 import Settings (AppSettings (appDevelopment))
@@ -77,6 +81,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = True
                      , userManager = True
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid1 <- insert user1
 
@@ -94,6 +101,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = True
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid2 <- insert user2
 
@@ -111,6 +121,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = False
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid3 <- insert user3
 
@@ -128,6 +141,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = False
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid4 <- insert user4
 
@@ -145,6 +161,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = False
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid5 <- insert user5
 
@@ -162,6 +181,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = False
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid6 <- insert user6
 
@@ -179,6 +201,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = False
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid7 <- insert user7
 
@@ -196,6 +221,9 @@ fillDemoEn appSettings = do
                      , userSuper = False
                      , userAdmin = False
                      , userManager = False
+                     , userAuthType = UserAuthTypePassword
+                     , userVerkey = Nothing
+                     , userVerified = False
                      }
     uid8 <- insert user8
 

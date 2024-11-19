@@ -61,6 +61,9 @@ User
     super Bool
     admin Bool
     manager Bool
+    authType AuthenticationType
+    verkey Text Maybe
+    verified Bool
     UniqueUser email
     deriving Typeable
     

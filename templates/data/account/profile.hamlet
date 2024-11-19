@@ -19,7 +19,7 @@
     
   <div.padding.page.active>
 
-    $maybe Entity uid (User email _ uname _ admin manager) <- user
+    $maybe Entity uid (User email _ uname _ admin manager _ _ _) <- user
               
       <dl>
         <dt.bold>_{MsgPhoto}

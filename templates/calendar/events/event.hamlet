@@ -38,7 +38,7 @@
         <dd.small-margin>
           #{attendees}
 
-    $maybe Entity uid (User _ _ _ super admin manager) <- user
+    $maybe Entity uid (User _ _ _ super admin manager _ _ _) <- user
       <div ##{idActions}>
         $if subscribed
           <span.italic>_{MsgYouAreRegisteredForThisEvent}.

@@ -14,7 +14,7 @@
       _{MsgAttendees}
     
   <div.padding.page.active>
-    $maybe (Entity _ (Event _ time name descr),Entity mid (User email _ mname _ _ _)) <- event
+    $maybe (Entity _ (Event _ time name descr),Entity mid (User email _ mname _ _ _ _ _ _)) <- event
       <dl>
         <dt.bold>
           _{MsgName}

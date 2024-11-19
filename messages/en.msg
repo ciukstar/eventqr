@@ -1,3 +1,19 @@
+PasswordRecovery: Password recovery
+CreatePassword: Create password
+EmailVerification: Email verification
+VerifyEmailPlease: Please verify your email
+JustSentEmailTo: We just sent an email to
+ClickToVerifyAccount: Click the link in the email to verify your account
+DidNotGetEmail: Didn't receive the email?
+ResendEmail: Resend email
+ForgotYourPassword: Forgot your password?
+DoNotHaveAnAccount: Don't have an account?
+CreateAccount: Create account
+GmailAccountNotSet: Gmail account is not set. Initialize tokens.
+ThankYou: Thank you
+ConfirmEmailPlease: Please confirm your email address by clicking on the link below
+VerifyYourEmailAddress: Verify your email address
+SignInWithGoogle: Sign in with Google
 EventAndParticipantManagement: Event and Participant Management
 YouDoNotHaveEventsToAttendYet: You don't have any events planned to attend yet
 Schedule: Schedule

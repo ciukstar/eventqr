@@ -192,11 +192,11 @@ getCalendarEventRegistrationR month day eid = do
     user <- maybeAuth
 
     case (user,card,event) of
-      (Just (Entity uid (User _ _ _ False False False)),Just (_,Entity uid' _),_) | uid /= uid' -> do
+      (Just (Entity uid (User _ _ _ False False False _ _ _)),Just (_,Entity uid' _),_) | uid /= uid' -> do
                 addMessageI msgError MsgNotYourQrCodeSorry
                 redirect $ CalendarEventR month day eid
           
-      (Just (Entity uid (User _ _ _ False False True)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
+      (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
                 addMessageI msgError MsgNotManagerOfEventSorry
                 redirect $ CalendarEventR month day eid
           
@@ -289,7 +289,7 @@ formUserCards uid extra = do
 
   where
 
-      pairs (Entity cid _,Entity _ (User email _ _ _ _ _)) = (email, cid)
+      pairs (Entity cid _,Entity _ (User email _ _ _ _ _ _ _ _)) = (email, cid)
 
       md3radioFieldList :: [(Entity Card,Entity User)] -> Field Handler CardId
       md3radioFieldList cards = (radioField (optionsPairs (pairs <$> cards)))
@@ -320,7 +320,7 @@ $if null opts
 $else
   <div *{attrs}>
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _)) <- findEvent opt cards
+      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _ _ _ _)) <- findEvent opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>

@@ -44,7 +44,7 @@
           <figcaption>
             _{MsgYouDoNonHaveCardsYet}.
       $else
-        $forall ((Entity cid (Card _ _ issued),Entity _ (User email _ uname _ _ _)),attrs) <- cards
+        $forall ((Entity cid (Card _ _ issued),Entity _ (User email _ uname _ _ _ _ _ _)),attrs) <- cards
           $with i <- show $ fromSqlKey cid
             <dialog ##{idDialogQrCode}#{i} style="z-index:102">
               <h6>_{MsgQrCode}
@@ -122,7 +122,7 @@ $if not (null msgs)
     <i>search
     <span>_{MsgSearch}
 
-  $maybe Entity uid (User _ _ _ super admin manager) <- user
+  $maybe Entity uid (User _ _ _ super admin manager _ _ _) <- user
     $if (super || admin) || manager
       <a ##{idButtonQrScanner} href=@{ScanQrR uid} title=_{MsgScanQrCode} role=button>
         <i>qr_code_scanner
@@ -138,7 +138,7 @@ $if not (null msgs)
       <i>close
       
   <div.dialog-content>
-    $maybe Entity _ (User _ _ _ _ _ manager) <- user
+    $maybe Entity _ (User _ _ _ _ _ manager _ _ _) <- user
       $if manager
 
         <form method=get action=@{HomeR} ##{idFormUpcomingFilter}>
@@ -186,7 +186,7 @@ $if not (null msgs)
     <i>close
     
   <div.dialog-content>
-    $maybe Entity _ (User _ _ _ _ _ manager) <- user
+    $maybe Entity _ (User _ _ _ _ _ manager _ _ _) <- user
       $if manager
 
         <form method=get action=@{ApiEventsR} ##{idFormSearhFilter}>
