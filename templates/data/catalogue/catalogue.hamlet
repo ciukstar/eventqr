@@ -19,7 +19,7 @@
         <figcaption>
           _{MsgNoEventsYet}.
     $else
-      $forall Entity eid (Event mid time name _ _) <- events
+      $forall Entity eid (Event mid time name _ dur) <- events
         <a.row.padding.wave href=@{DataR $ DataEventR mid eid}>
         
           <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
@@ -32,6 +32,10 @@
               $with dt <- show time
                 <time.full-datetime datetime=#{dt}>
                   #{dt}
+
+            $with (h,m) <- normalizeNominalDiffTime dur
+              <div.duration.supporting-text.small-text data-hours=#{h} data-minutes=#{m}>
+                #{show dur}
 
           <i>arrow_forward_ios
 

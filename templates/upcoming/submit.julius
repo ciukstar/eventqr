@@ -10,9 +10,12 @@ document.getElementById(#{idFormUpcomingFilter}).addEventListener('submit', e =>
     headers: {'Accept': 'application/json'}
   }).then(data => data.json()).then(function (events) {
 
-    Array.from(e.target.elements['mine']).map(
-      x => x.querySelector('i')
-    ).filter(x => !!x).forEach(x => { x.remove(); });
+    Array.from(e.target.elements['mine']).forEach(x => {
+      x.classList.remove('fill');
+      Array.from(x.querySelectorAll('i')).filter(x => !!x).forEach(x => { x.remove(); });
+    });
+
+    e.submitter.classList.add('fill');
     
     e.submitter.prepend((() => {
       const i = document.createElement('i');
@@ -24,52 +27,106 @@ document.getElementById(#{idFormUpcomingFilter}).addEventListener('submit', e =>
     
     if (events.length > 0) {
 
-      eventList.replaceChildren( ... events.flatMap(([x,attendees]) => {
+      eventList.replaceChildren( ... events.flatMap(([x,attendees,[hours,minutes]]) => {
         const item = document.createElement('a');
         item.href = `/events/${x.id}`;
         item.className = 'row padding surface-container wave';
 
-        const start = document.createElement('img');
-        start.className = 'large round';
-        start.setAttribute('src',`/events/${x.id}/poster`);
-        start.setAttribute('loading','lazy');
-        start.setAttribute('alt',#{msgr MsgPoster});
+        item.appendChild((() => {
+          const start = document.createElement('img');
+          start.className = 'large round';
+          start.setAttribute('src',`/events/${x.id}/poster`);
+          start.setAttribute('loading','lazy');
+          start.setAttribute('alt',#{msgr MsgPoster});
+          return start;
+        }) ());
+        
+        item.appendChild((() => {
+          const content = document.createElement('div');
+          content.className = 'content max';
 
-        const content = document.createElement('div');
-        content.className = 'content max';
+          content.appendChild((() => {
+            const headline = document.createElement('h6');
+            headline.className = 'headline large-text';
+            headline.textContent = x.name;
+            return headline;
+          }) ());
 
-        const headline = document.createElement('h6');
-        headline.className = 'headline large-text';
-        headline.textContent = x.name;
+          content.appendChild((() => {
+            const supporting = document.createElement('time');
+            supporting.className = 'full-datetime supporting-text small-text';
+            supporting.datetime = x.time;
+            supporting.textContent = new Date(x.time).toLocaleDateString(
+              navigator.language,
+              { year: 'numeric',
+                month: 'short',
+                weekday: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric'
+              }
+            );
+            return supporting;
+          }) ());
 
-        const supporting = document.createElement('time');
-        supporting.className = 'full-datetime supporting-text small-text';
-        supporting.datetime = x.time;
-        supporting.textContent = new Date(x.time).toLocaleDateString(
-          navigator.language,
-          { year: 'numeric',
-            month: 'short',
-            weekday: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric'
-          }
-        );
+          content.appendChild((() => {
+            const supporting = document.createElement('div');
+            supporting.className = 'supporting-text small-text text-with-icons';
+            
+            supporting.appendChild((() => {
+              const span = document.createElement('span');
+              span.title = #{msgr MsgDuration};
 
-        const thirdLine = document.createElement('div');
-        thirdLine.className = 'supporting-text small-text';
-        thirdLine.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
+              span.appendChild((() => {
+                const i = document.createElement('i');
+                i.className = 'tiny secondary-text';
+                i.textContent = 'hourglass_bottom';
+                return i;
+              }) ());
 
-        const end = document.createElement('i');
-        end.textContent = 'arrow_forward_ios';
+              span.appendChild((() => {
+                const duration = document.createElement('span');
+                duration.className = 'duration';
+                duration.textContent = new Intl.DurationFormat(navigator.language, { style: 'narrow' }).format(
+                  { hours: hours, minutes: minutes }
+                );
+                return duration;
+              }) ());
+              
+              return span;
+            }) ());
+            
+            supporting.appendChild((() => {
+              const span = document.createElement('span');
+              span.title = #{msgr MsgAttendees};
+              
+              span.appendChild((() => {
+                const i = document.createElement('i');
+                i.className = 'small secondary-text';
+                i.textContent = 'groups';
+                return i;
+              }) ());
+              
+              span.appendChild((() => {
+                const span = document.createElement('span');
+                span.textContent = attendees;
+                return span;
+              }) ());
+              
+              return span;
+            }) ());
+            
+            return supporting;
+          }) ());
 
-        content.appendChild(headline);
-        content.appendChild(supporting);
-        content.appendChild(thirdLine);
-
-        item.appendChild(start);
-        item.appendChild(content);
-        item.appendChild(end);
+          return content;
+        }) ());
+        
+        item.appendChild((() => {
+          const end = document.createElement('i');
+          end.textContent = 'arrow_forward_ios';
+          return end;
+        }) ());
 
         const divider = document.createElement('hr');
         return [item,divider];
@@ -106,9 +163,12 @@ document.getElementById(#{idFormSearhFilter}).addEventListener('submit', functio
     headers: {'Accept': 'application/json'}
   }).then(data => data.json()).then(function (events) {
 
-    Array.from(e.target.elements['mine']).map(
-      x => x.querySelector('i')
-    ).filter(x => !!x).forEach(x => { x.remove(); });
+    Array.from(e.target.elements['mine']).forEach(x => {
+      x.classList.remove('fill');
+      Array.from(x.querySelectorAll('i')).filter(x => !!x).forEach(x => { x.remove(); });
+    });
+
+    e.submitter.classList.add('fill');
     
     e.submitter.prepend((() => {
       const i = document.createElement('i');
@@ -118,7 +178,7 @@ document.getElementById(#{idFormSearhFilter}).addEventListener('submit', functio
 
     if (events.length > 0) {
 
-      listSearch.replaceChildren( ... events.flatMap(([x,attendees]) => {
+      listSearch.replaceChildren( ... events.flatMap(([x,attendees,[hours,minutes]]) => {
         const item = document.createElement('a');
         item.href = `/events/${x.id}`;
         item.className = 'row padding surface-container wave';
@@ -161,13 +221,56 @@ document.getElementById(#{idFormSearhFilter}).addEventListener('submit', functio
             );
             return supporting;
           }) ());
-          
+
           content.appendChild((() => {
             const supporting = document.createElement('div');
-            supporting.className = 'supporting-text small-text';
-            supporting.textContent = `#{rawJS $ msgr MsgAttendees}: ${attendees}`;
+            supporting.className = 'supporting-text small-text text-with-icons';
+            
+            supporting.appendChild((() => {
+              const span = document.createElement('span');
+              span.title = #{msgr MsgDuration};
+
+              span.appendChild((() => {
+                const i = document.createElement('i');
+                i.className = 'tiny secondary-text';
+                i.textContent = 'hourglass_bottom';
+                return i;
+              }) ());
+
+              span.appendChild((() => {
+                const duration = document.createElement('span');
+                duration.className = 'duration';
+                duration.textContent = new Intl.DurationFormat(navigator.language, { style: 'narrow' }).format(
+                  { hours: hours, minutes: minutes }
+                );
+                return duration;
+              }) ());
+              
+              return span;
+            }) ());
+            
+            supporting.appendChild((() => {
+              const span = document.createElement('span');
+              span.title = #{msgr MsgAttendees};
+              
+              span.appendChild((() => {
+                const i = document.createElement('i');
+                i.className = 'small secondary-text';
+                i.textContent = 'groups';
+                return i;
+              }) ());
+              
+              span.appendChild((() => {
+                const span = document.createElement('span');
+                span.textContent = attendees;
+                return span;
+              }) ());
+              
+              return span;
+            }) ());
+            
             return supporting;
-          }) ());
+          }) ())
           
           return content;
           

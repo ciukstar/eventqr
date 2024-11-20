@@ -31,8 +31,9 @@
 
         <dt.bold>
           _{MsgDuration}
-        <dd>
-          #{show dur}
+        $with (h,m) <- normalizeNominalDiffTime dur
+          <dd.duration data-hours=#{h} data-minutes=#{m}>
+            #{show dur}
 
         <dt.bold>
           _{MsgDescription}

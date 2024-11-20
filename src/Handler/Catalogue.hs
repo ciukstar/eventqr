@@ -113,7 +113,7 @@ import Foundation
       , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail
       , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher
       , MsgUnknownMessageRecipient, MsgCheckAtLeastOneOptionPlease
-      , MsgProvideRecipientEmailPlease, MsgDurationHours, MsgDuration
+      , MsgProvideRecipientEmailPlease, MsgDurationHours, MsgDuration, MsgInMinutes
       )
     )
 
@@ -123,7 +123,8 @@ import Material3
     ( daytimeLocalField, md3textareaWidget, md3widget, md3checkboxWidget, md3fileWidget)
 
 import Model
-    ( msgSuccess, msgError, gmailSendEnpoint
+    ( msgSuccess, msgError, gmailSendEnpoint, normalizeNominalDiffTime
+    , nominalDiffTimeToMinutes, minutesToNominalDiffTime
     , EventId, Event(Event, eventName, eventTime, eventDescr, eventDuration)
     , CardId, Card (Card)
     , UserId, User (User, userEmail)
@@ -135,7 +136,7 @@ import Model
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent
       , PosterAttribution, EventManager
-      ), nominalDiffTimeToHours, hoursToNominalDiffTime
+      )
     )
 
 import Network.Mail.Mime
@@ -175,12 +176,13 @@ import Yesod.Core
 import Yesod.Form.Fields
     ( textField, radioField, optionsPairs
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
-    , timeField, hiddenField, intField, htmlField, checkBoxField, emailField, fileField, doubleField
+    , timeField, hiddenField, intField, htmlField, checkBoxField, emailField
+    , fileField
     )
 import Yesod.Form.Functions (generateFormPost, runFormPost, mreq, mopt)
 import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Form.Types
-    ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId)
+    ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId, fvLabel, fvRequired)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
@@ -587,13 +589,13 @@ formEventDay mid day event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
 
-    (durR,durV) <- mreq doubleField FieldSettings
+    (durR,durV) <- mreq intField FieldSettings
         { fsLabel = SomeMessage MsgDurationHours
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
-        } (nominalDiffTimeToHours . eventDuration . entityVal <$> event)
+        } (nominalDiffTimeToMinutes . eventDuration . entityVal <$> event)
 
     let r = Event mid <$> (localTimeToUTC tz . LocalTime day <$> timeR) <*> nameR <*> descrR
-            <*> (hoursToNominalDiffTime <$> durR)
+            <*> (minutesToNominalDiffTime <$> durR)
 
     return (r,$(widgetFile "data/catalogue/calendar/events/form"))
 
@@ -1414,15 +1416,15 @@ formEvent manager event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
 
-    (durR,durV) <- mreq doubleField FieldSettings
-        { fsLabel = SomeMessage MsgDurationHours
+    (durR,durV) <- mreq intField FieldSettings
+        { fsLabel = SomeMessage MsgDurationHours 
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
-        } (nominalDiffTimeToHours . eventDuration . entityVal <$> event)
+        } (nominalDiffTimeToMinutes . eventDuration . entityVal <$> event)
 
     let r = Event manager <$> (localTimeToUTC tz <$> timeR) <*> nameR <*> descrR
-            <*> (hoursToNominalDiffTime <$> durR)
+            <*> (minutesToNominalDiffTime <$> durR)
             
-    return (r,$(widgetFile "data/catalogue/form"))
+    return (r,$(widgetFile "data/catalogue/form")) 
 
 
 postDataEventsR :: UserId -> Handler Html

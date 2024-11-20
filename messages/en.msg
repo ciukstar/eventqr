@@ -1,3 +1,4 @@
+InMinutes: In minutes
 PasswordRecovery: Password recovery
 CreatePassword: Create password
 EmailVerification: Email verification

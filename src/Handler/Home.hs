@@ -75,8 +75,8 @@ import Foundation
     )
 
 import Model
-    ( msgSuccess, msgError
-    , EventId, Event (Event)
+    ( msgSuccess, msgError, normalizeNominalDiffTime
+    , EventId, Event (Event, eventDuration)
     , CardId, Card (Card)
     , UserId, User (User, userManager)
     , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
@@ -125,7 +125,7 @@ getApiEventsR = do
 
     user <- maybeAuth
 
-    events <- (second unValue <$>) <$> runDB ( select $ do
+    events <- blow <$> runDB ( select $ do
         x <- from $ table @Event
 
         let attendees :: SqlExpr (Value Int)
@@ -145,6 +145,9 @@ getApiEventsR = do
         return (x,attendees) )
 
     selectRep $ provideJson events
+
+  where
+      blow = ((\(e,a) -> (e,a,normalizeNominalDiffTime . eventDuration . entityVal $ e)) . second unValue <$>)
 
 
 postAttendeeRegistrationR :: UserId -> Handler Html
@@ -653,6 +656,7 @@ getHomeR = do
         
         where_ $ x ^. EventTime >=. val now
         orderBy [asc (x ^. EventTime)]
+        limit 100
         return (x, attendees) )
 
     events <- (second unValue <$>) <$> runDB ( select $ do
@@ -663,12 +667,16 @@ getHomeR = do
                 a <- from $ table @Attendee
                 where_ $ a ^. AttendeeEvent ==. x ^. EventId
 
+        case (user,mine) of
+          (Just (Entity mid (User _ _ _ _ _ True _ _ _)), True) -> where_ $ x ^. EventManager ==. val mid
+          _otherwise -> return ()
+
         orderBy [asc (x ^. EventTime)]
         limit 100
         return (x, attendees) )
 
     selectRep $ do
-        provideJson upcoming
+        provideJson $ blow <$> upcoming
         
         provideRep $ do
             msgr <- getMessageRender
@@ -699,6 +707,9 @@ getHomeR = do
                 when (maybe False (userManager . entityVal) user)
                     $ toWidget $(juliusFile "templates/upcoming/submit.julius")
                 $(widgetFile "homepage")
+
+  where
+      blow (e,a) = (e,a,normalizeNominalDiffTime . eventDuration . entityVal $ e)
 
 
 getEventPosterR :: EventId -> Handler TypedContent

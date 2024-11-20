@@ -47,7 +47,9 @@ fillDemoEn appSettings = do
 
     now <- liftIO getCurrentTime
 
-    let hour = 60 * 60
+    
+    let minute = 60
+    let hour = 60 * minute
     let day = 24 * hour
     
     let freepik = [shamlet|
@@ -407,7 +409,7 @@ fillDemoEn appSettings = do
                             , eventTime = addUTCTime hour now
                             , eventName = "Private party"
                             , eventDescr = "Only Disco"
-                            , eventDuration = 1 * hour
+                            , eventDuration = 1 * hour + (5 * minute)
                             }
     liftIO (BS.readFile "demo/private_party_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid11
@@ -420,7 +422,7 @@ fillDemoEn appSettings = do
                             , eventTime = addUTCTime (2 * hour) now
                             , eventName = "Wellness party"
                             , eventDescr = "Wellness party, then Disco"
-                            , eventDuration = 1 * hour
+                            , eventDuration = 1 * hour + (10 * minute)
                             }
     liftIO (BS.readFile "demo/wellness_party_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid12
@@ -433,7 +435,7 @@ fillDemoEn appSettings = do
                            , eventTime = addUTCTime (2 * day) now
                            , eventName = "Team-building event"
                            , eventDescr = "Team-building event, then Disco"
-                            , eventDuration = 1 * hour
+                            , eventDuration = 1 * hour + (15 * minute)
                            }
     liftIO (BS.readFile "demo/team_building_event.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid2
@@ -446,7 +448,7 @@ fillDemoEn appSettings = do
                            , eventTime = addUTCTime (3 * day) now
                            , eventName = "Shareholder meeting"
                            , eventDescr = "Shareholder meeting, then Disco"
-                           , eventDuration = 1 * hour
+                           , eventDuration = 1 * hour + (20 * minute)
                            }
     liftIO (BS.readFile "demo/shareholder_meeting_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid3
@@ -459,7 +461,7 @@ fillDemoEn appSettings = do
                            , eventTime = addUTCTime ((-2) * day + (-2) * hour) now
                            , eventName = "Board meeting"
                            , eventDescr = "Board meeting, then Disco"
-                           , eventDuration = 1 * hour
+                           , eventDuration = 1 * hour + (25 * minute)
                            }
     liftIO (BS.readFile "demo/board_meeting_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid4
@@ -472,7 +474,7 @@ fillDemoEn appSettings = do
                            , eventTime = addUTCTime (1 * day + 1 * hour) now
                            , eventName = "Milestone celebration"
                            , eventDescr = "Milestone celebration, then Disco"
-                           , eventDuration = 1 * hour
+                           , eventDuration = 1 * hour + (30 * minute)
                            }
     liftIO (BS.readFile "demo/milestone_celebration.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid5
@@ -485,7 +487,7 @@ fillDemoEn appSettings = do
                            , eventTime = addUTCTime (2 * day + 2 * hour) now
                            , eventName = "Business seminar"
                            , eventDescr = "Business seminar, then Disco"
-                           , eventDuration = 1 * hour
+                           , eventDuration = 1 * hour + (35 * minute)
                            }
     liftIO (BS.readFile "demo/business_seminar_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid6
@@ -498,7 +500,7 @@ fillDemoEn appSettings = do
                            , eventTime = addUTCTime (3 * day + 3 * hour) now
                            , eventName = "Fundraising event"
                            , eventDescr = "Fundraising event, then Disco"
-                           , eventDuration = 1 * hour
+                           , eventDuration = 1 * hour + (13 * minute)
                            }
     liftIO (BS.readFile "demo/fundraising_1.avif") >>= \bs ->
       insert_ Poster { posterEvent = eid7

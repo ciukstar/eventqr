@@ -1,7 +1,23 @@
 
 #{extra}
 
-$forall v <- [timeV, nameV, durV]
+$forall v <- [timeV, nameV]
   ^{md3widget v}
+
+$forall v <- [durV]
+  <div.field.label.border.round :isJust (fvErrors v):.invalid>
+
+    ^{fvInput v}
+    <label>
+      #{fvLabel v}
+      $if fvRequired v
+        <sup>*
+
+    $maybe err <- fvErrors v
+      <span.error>
+        #{err}
+    $nothing
+      <span.helper.lower>
+        _{MsgInMinutes}
 
 ^{md3textareaWidget descrV}

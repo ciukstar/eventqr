@@ -143,13 +143,13 @@ $if not (null msgs)
 
         <form method=get action=@{HomeR} ##{idFormUpcomingFilter}>
         
-        <button.chip.fill.round.small-margin type=submit name=mine value=true form=#{idFormUpcomingFilter}>
+        <button.chip.round.small-margin type=submit name=mine value=true form=#{idFormUpcomingFilter} :mine:.fill>
           $if mine
             <i>done
           <span>_{MsgMyEvents}
           <div.badge.none.tertiary>#{nMineUpcoming}
    
-        <button.chip.fill.round.small-margin type=submit name=mine value=false form=#{idFormUpcomingFilter}>
+        <button.chip.round.small-margin type=submit name=mine value=false form=#{idFormUpcomingFilter} :not mine:.fill>
           $if not mine
             <i>done
           <span>_{MsgAll}
@@ -172,10 +172,17 @@ $if not (null msgs)
                 $with dt <- show time
                   <time.full-datetime datetime=#{dt}>
                     #{dt}
-                (#{show dur})
-                  
-              <div.supporting-text.small-text>
-                _{MsgAttendees}: #{attendees}
+
+              <div.supporting-text.small-text.text-with-icons>
+                <span title=_{MsgDuration}>
+                  <i.tiny.secondary-text>hourglass_bottom
+                  $with (h,m) <- normalizeNominalDiffTime dur
+                    <span.duration data-hours=#{h} data-minutes=#{m}>
+                      #{show dur}
+
+                <span title=_{MsgAttendees}>
+                  <i.small.secondary-text>groups
+                  <span>#{attendees}
 
             <i>arrow_forward_ios
 
@@ -194,13 +201,13 @@ $if not (null msgs)
 
         <form method=get action=@{ApiEventsR} ##{idFormSearhFilter}>
         
-        <button.chip.fill.round.small-margin type=submit name=mine value=true form=#{idFormSearhFilter}>
+        <button.chip.round.small-margin type=submit name=mine value=true form=#{idFormSearhFilter} :mine:.fill>
           $if mine
             <i>done
           <span>_{MsgMyEvents}
           <div.badge.none.tertiary>#{nMineEvents}
    
-        <button.chip.fill.round.small-margin type=submit name=mine value=false form=#{idFormSearhFilter}>
+        <button.chip.round.small-margin type=submit name=mine value=false form=#{idFormSearhFilter} :not mine:.fill>
           $if not mine
             <i>done
           <span>_{MsgAll}
@@ -218,10 +225,17 @@ $if not (null msgs)
               $with dt <- show time
                 <time.full-datetime datetime=#{dt}>
                   #{dt}
-              (#{show dur})
-                
-            <div.supporting-text.small-text>
-              _{MsgAttendees}: #{attendees}
+
+            <div.supporting-text.small-text.text-with-icons>
+              <span title=_{MsgDuration}>
+                <i.tiny.secondary-text>hourglass_bottom
+                $with (h,m) <- normalizeNominalDiffTime dur
+                  <span.duration data-hours=#{h} data-minutes=#{m}>
+                    #{show dur}
+
+              <span title=_{MsgAttendees}>
+                <i.small.secondary-text>groups
+                <span>#{attendees}
 
           <i>arrow_forward_ios
 

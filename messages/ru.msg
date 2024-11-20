@@ -1,3 +1,4 @@
+InMinutes: В минутах
 PasswordRecovery: Восстановление пароля
 CreatePassword: Создание пароля
 EmailVerification: Проверка электронной почты

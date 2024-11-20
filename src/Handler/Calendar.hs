@@ -72,7 +72,7 @@ import Foundation
     )
     
 import Model
-    ( msgSuccess, msgError
+    ( msgSuccess, msgError, normalizeNominalDiffTime
     , EventId, Event(Event, eventTime)
     , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , CardId, Card (Card)

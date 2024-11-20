@@ -8,3 +8,13 @@ main
             white-space: nowrap
             overflow: hidden
             text-overflow: ellipsis
+            
+        .supporting-text.text-with-icons
+            display: flex
+            column-gap: 1rem
+            align-items: center
+            
+            span
+                display: flex
+                column-gap: 0.5rem
+                align-items: center

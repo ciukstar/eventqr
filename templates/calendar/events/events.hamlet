@@ -20,10 +20,17 @@
             $with dt <- show time
               <time.full-datetime datetime=#{dt}>
                 #{dt}
-            (#{show dur})
-                
-          <div.supporting-text.small-text>
-            _{MsgAttendees}: #{attendees}
+
+          <div.supporting-text.small-text.text-with-icons>
+            <span title=_{MsgDuration}>
+              <i.tiny.secondary-text>hourglass_bottom
+              $with (h,m) <- normalizeNominalDiffTime dur
+                <span.duration data-hours=#{h} data-minutes=#{m}>
+                  #{show dur}
+
+            <span title=_{MsgAttendees}>
+              <i.small.secondary-text>groups
+              #{attendees}
 
         <i>arrow_forward_ios
         

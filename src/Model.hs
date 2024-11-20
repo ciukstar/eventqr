@@ -31,6 +31,7 @@ import Data.Bool (Bool)
 import Data.ByteString (ByteString)
 import Data.Either (Either (Left, Right)) 
 import Data.Eq (Eq)
+import Data.Int (Int)
 import Data.Fixed (Fixed (MkFixed))
 import Data.Function ((.))
 import Data.Maybe (Maybe (Just))
@@ -54,7 +55,7 @@ import GHC.Integer (Integer)
 import GHC.Num ((*))
 import GHC.Real ((/), (^))
 
-import Prelude (truncate, undefined, fromIntegral)
+import Prelude (truncate, undefined, fromIntegral, flip, quotRem, div)
 
 import Text.Hamlet (Html)
 import Text.Printf (printf)
@@ -229,7 +230,21 @@ keyBacklinkAuth = "backlinkAuth"
 keyUtlDest :: Text
 keyUtlDest = "_ULT"
 
-nominalDiffTimeToHours :: NominalDiffTime -> Double
+normalizeNominalDiffTime :: NominalDiffTime -> (Int, Int)
+normalizeNominalDiffTime = flip quotRem 60 . (`div` 60) . truncate . nominalDiffTimeToSeconds
+
+
+nominalDiffTimeToMinutes :: NominalDiffTime -> Int
+nominalDiffTimeToMinutes =
+    (`div` 60) . truncate . nominalDiffTimeToSeconds
+
+
+minutesToNominalDiffTime :: Int -> NominalDiffTime
+minutesToNominalDiffTime =
+    secondsToNominalDiffTime . MkFixed . (* (^) @Integer @Integer 10 12) . (* 60) . fromIntegral
+
+
+{-- nominalDiffTimeToHours :: NominalDiffTime -> Double
 nominalDiffTimeToHours =
     (/ 3600.0) . int2Double . truncate . nominalDiffTimeToSeconds
 
@@ -238,3 +253,4 @@ hoursToNominalDiffTime :: Double -> NominalDiffTime
 hoursToNominalDiffTime =
     secondsToNominalDiffTime . MkFixed . (* (^) @Integer @Integer 10 12) . truncateDouble @Integer . (* 3600)
 
+--}

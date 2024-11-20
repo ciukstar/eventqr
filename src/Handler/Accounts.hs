@@ -91,7 +91,7 @@ import Handler.Tokens (fetchVapidKeys)
 import Material3 (md3switchWidget)
 
 import Model
-    ( keyThemeMode, msgSuccess, msgError
+    ( keyThemeMode, msgSuccess, msgError, normalizeNominalDiffTime
     , UserId, User (User)
     , Attendee (Attendee)
     , EventId, Event (Event, eventTime), Card

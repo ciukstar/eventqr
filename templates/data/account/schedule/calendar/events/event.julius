@@ -15,6 +15,14 @@ Array.from(
   );
 });
 
+Array.from(
+  document.querySelectorAll('.duration[data-hours][data-minutes]')
+).forEach(function (x) {
+  x.textContent = new Intl.DurationFormat(navigator.language, { style: 'long' }).format(
+    { hours: x.dataset.hours, minutes: x.dataset.minutes }
+  );
+});
+
 document.getElementById(#{idButtonUnsubscribe}).addEventListener('click', e => {
   document.getElementById(#{idDialogUnsubscribe}).show();
 });

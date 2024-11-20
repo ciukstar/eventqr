@@ -26,6 +26,14 @@ Array.from(
   );
 });
 
+Array.from(
+  document.querySelectorAll('.duration[data-hours][data-minutes]')
+).forEach(function (x) {
+  x.textContent = new Intl.DurationFormat(navigator.language, { style: 'narrow' }).format(
+    { hours: x.dataset.hours, minutes: x.dataset.minutes }
+  );
+});
+
 
 document.getElementById(#{idDetailsMyCards}).addEventListener('toggle', e => {
   e.target.querySelector('summary > i').textContent = e.target.open ? 'expand_less' : 'expand_more';

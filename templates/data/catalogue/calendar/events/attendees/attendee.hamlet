@@ -24,7 +24,10 @@
         $with dt <- show time
           <time.full-datetime datetime=#{dt}>
             #{dt}
-        (#{show dur})
+
+      $with (h,m) <- normalizeNominalDiffTime dur
+        <p.small-text.duration data-hours=#{h} data-minutes=#{m}>
+          #{show dur}
 
       <p.small-text>
         #{descr}
