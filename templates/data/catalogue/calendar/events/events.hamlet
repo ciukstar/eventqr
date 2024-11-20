@@ -9,16 +9,18 @@
       <figcaption>
         _{MsgNoEventsForThisDayYet}.
   $else
-    $forall Entity eid (Event mid time name _) <- events
+    $forall Entity eid (Event mid time name _ dur) <- events
       <a.row.padding.wave href=@{DataR $ DataEventCalendarEventR mid month day eid}>
         <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
           <h6.headline.large-text>
             #{name}
+            
           <div.supporting-text.small-text>
             $with dt <- show time
               <time.full-datetime datetime=#{dt}>
                 #{dt}
+            (#{show dur})
 
         <i>arrow_forward_ios
         

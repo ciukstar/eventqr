@@ -36,6 +36,7 @@ Event json
     time UTCTime
     name Text
     descr Html
+    duration NominalDiffTime
 
 PushSubscription
     user UserId OnDeleteCascade

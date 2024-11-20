@@ -1,19 +1,20 @@
 
-<header>
-  <md-icon-button href=@{AuthR LoginR} aria-label=_{MsgBack}>
-    <md-icon>arrow_back
-
-  <section.md-typescale-title-large>
-    _{MsgRegistration}
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{AuthR LoginR} aria-label=_{MsgBack}>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgRegistration}
       
-<main>
+      
+<main.responsive.padding>
 
-  <div ##{formRegisterWrapper}>
-    <div.md-typescale-body-medium>
-      _{EnterEmail}
-    <form method=post action=@{parent registerR} enctype=#{et} ##{formRegister}>
-      ^{fw}
-      <md-filled-button type=submit>
-        _{Register}
+  <p>_{EnterEmail}
+
+  <form method=post action=@{parent registerR} enctype=#{et}>
+    ^{fw}
+    <button.responsive type=submit>
+      _{Register}
 
 ^{widgetSnackbar msgs}

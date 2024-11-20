@@ -1,17 +1,20 @@
 
-<header>
-  <md-icon-button href=@{AuthR LoginR} aria-label=_{MsgBack}>
-    <md-icon>arrow_back
-
-  <section.md-typescale-title-large>
-    _{MsgPasswordRecovery}
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{AuthR LoginR} aria-label=_{MsgBack} rel=prev>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgPasswordRecovery}
       
-<main>
+      
+<main.responsive.padding>
 
-  <div.md-typescale-body-medium>_{PasswordResetPrompt}
+  <p>_{PasswordResetPrompt}
+  
   <form method=post action=@{parent forgotPasswordR} enctype=#{et} ##{idFormForgotPassword}>
     ^{fw}
-    <md-filled-button type=submit>
+    <button.responsive type=submit>
       _{SendPasswordResetEmail}
 
 ^{widgetSnackbar msgs}

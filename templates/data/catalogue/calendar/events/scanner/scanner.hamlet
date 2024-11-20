@@ -3,11 +3,11 @@
 
 <main.responsive>
 
-  $maybe Entity _ (Event _ time name _) <- event
+  $maybe Entity _ (Event _ time name _ _) <- event
     <dl>
-      <dt.large-text>
+      <dt.bold>
         _{MsgRegistrationForEvent}:
-      <dd.small-text>
+      <dd>
         #{name}
         <br>
         $with dt <- show time

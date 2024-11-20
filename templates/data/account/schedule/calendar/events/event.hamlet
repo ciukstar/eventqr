@@ -12,29 +12,34 @@
     
   <div.padding.page.active>
 
-    $maybe (Entity _ (Event _ time name descr),attendees) <- event
+    $maybe (Entity _ (Event _ time name descr dur),attendees) <- event
       <figure>
         <img src=@{EventPosterR eid} height=128 loading=lazy alt=_{MsgPoster}>
       
       <dl>
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgName}
         <dd>
           #{name}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgEventStartTime}
         <dd>
           $with dt <- show time
             <time.full-datetime datetime=#{dt}>
               #{dt}
 
-        <dt.bold.large-text>
+        <dt.bold>
+          _{MsgDuration}
+        <dd>
+          #{show dur}
+
+        <dt.bold>
           _{MsgDescription}
         <dd>
           #{descr}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgNumberOfAttendees}
         <dd>
           #{attendees}

@@ -19,7 +19,7 @@
         <figcaption>
           _{MsgNoEventsYet}.
     $else
-      $forall Entity eid (Event mid time name _) <- events
+      $forall Entity eid (Event mid time name _ _) <- events
         <a.row.padding.wave href=@{DataR $ DataEventR mid eid}>
         
           <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>

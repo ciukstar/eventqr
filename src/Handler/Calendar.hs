@@ -55,7 +55,7 @@ import Foundation
     , AppMessage
       ( MsgCalendar, MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgPrevious, MsgNext, MsgEvents, MsgEvent, MsgName, MsgTime
-      , MsgDescription, MsgScanQrCodeAndLinkToEvent
+      , MsgDescription, MsgScanQrCodeAndLinkToEvent, MsgDuration
       , MsgNoEventsForThisDayYet, MsgAttendees, MsgDetails, MsgPhoto
       , MsgClose, MsgNoEventsForThisMonth, MsgTotalEventsForThisMonth
       , MsgQrCode, MsgTotalAttendees, MsgRegistrationDate, MsgCardholder
@@ -196,7 +196,7 @@ getCalendarEventRegistrationR month day eid = do
                 addMessageI msgError MsgNotYourQrCodeSorry
                 redirect $ CalendarEventR month day eid
           
-      (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
+      (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _ _))) | uid /= mid -> do
                 addMessageI msgError MsgNotManagerOfEventSorry
                 redirect $ CalendarEventR month day eid
           

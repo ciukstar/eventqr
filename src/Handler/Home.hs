@@ -54,7 +54,7 @@ import Foundation
     , DataR (UserPhotoR, CardQrImageR, AccountEventScheduleR)
     , AppMessage
       ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard, MsgSignIn
-      , MsgUpcomingEvents, MsgSearch, MsgEvent, MsgAll
+      , MsgUpcomingEvents, MsgSearch, MsgEvent, MsgAll, MsgDuration
       , MsgScanQrCode, MsgScanQrCodeAndLinkToEvent, MsgDescription
       , MsgScan, MsgWelcomeTo, MsgRegistration, MsgRegister, MsgPhoto
       , MsgConfirmUserRegistrationForEventPlease, MsgCancel, MsgScanAgain
@@ -210,7 +210,7 @@ formAttendeeRegistration mid card extra = do
 
   where
 
-      pairs (Entity eid (Event _ _ name _)) = (name, eid)
+      pairs (Entity eid (Event _ _ name _ _)) = (name, eid)
 
       md3radioFieldList :: [Entity Event] -> Field Handler EventId
       md3radioFieldList events = (radioField (optionsPairs (pairs <$> events)))
@@ -232,7 +232,7 @@ $if null opts
 $else
   <div *{attrs} style="height:40svh;overflow-y:auto">
     $forall (i,opt) <- opts
-      $maybe Entity _ (Event _ time ename _) <- findEvent opt events
+      $maybe Entity _ (Event _ time ename _ _) <- findEvent opt events
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
           <label.radio>
             <input type=radio ##{theId}-#{i} name=#{name} :isReq:required=true value=#{optionExternalValue opt}
@@ -446,7 +446,7 @@ getEventRegistrationR eid = do
                 addMessageI msgError MsgNotYourQrCodeSorry
                 redirect $ EventR eid
           
-      (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _))) | uid /= mid -> do
+      (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _ _))) | uid /= mid -> do
                 addMessageI msgError MsgNotManagerOfEventSorry
                 redirect $ EventR eid
           

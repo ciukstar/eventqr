@@ -15,7 +15,7 @@
 module Foundation where
 
 import Control.Monad.Logger (LogSource)
-import Control.Lens ((^?), (?~))
+import Control.Lens ((^?), (?~), to, folded, filtered, _2)
 import qualified Control.Lens as L ((^.))
 
 import Import.NoFoundation
@@ -48,7 +48,8 @@ import Network.Mail.Mime
     , PartContent (PartContent), renderMail'
     )
 import Network.Wreq (post, postWith, FormParam ((:=)), defaults, auth, oauth2Bearer)
-import qualified Network.Wreq as WL (responseBody, responseStatus, statusCode)
+import qualified Network.Wreq as W (get, responseHeader, responseBody)
+import qualified Network.Wreq.Lens as WL (responseBody, responseStatus, statusCode)
 
 import System.Directory (doesFileExist)
 import System.IO (readFile')
@@ -71,7 +72,7 @@ import Yesod.Auth.Email
       , verifyAccount, needOldPassword, setVerifyKey, getVerifyKey, sendVerifyEmail
       )
     )
-import Yesod.Auth.HashDB (authHashDBWithForm)
+-- import Yesod.Auth.HashDB (authHashDBWithForm)
 import Yesod.Auth.OAuth2.Google (oauth2GoogleScopedWidget)
 import Yesod.Auth.Message
     ( defaultMessage, englishMessage, russianMessage
@@ -86,6 +87,7 @@ import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Form.I18n.English (englishFormMessage)
 import Yesod.Form.I18n.Russian (russianFormMessage)
 import Material3 (md3widget)
+import qualified Data.ByteString.Lazy as BSL
 
 
 -- | The foundation datatype for your application. This can be a good place to
@@ -296,7 +298,6 @@ instance Yesod App where
     
     isAuthorized DocsR _ = setUltDestCurrent >> return Authorized
     
-    isAuthorized PwdResetR _ = return Authorized
     isAuthorized LangR _ = return Authorized
     
     isAuthorized FaviconR _ = return Authorized
@@ -457,14 +458,6 @@ instance Yesod App where
     errorHandler x = defaultErrorHandler x
 
 
-getPwdResetR :: Handler Html
-getPwdResetR = do
-    msgs <- getMessages
-    defaultLayout $ do
-        setTitleI MsgRestoreLogin
-        $(widgetFile "auth/restore")
-
-
 getServiceWorkerR :: Handler TypedContent
 getServiceWorkerR = do
     rndr <- getUrlRenderParams
@@ -518,14 +511,65 @@ instance YesodAuth App where
             $(widgetFile "auth/login")
 
     authenticate :: (MonadHandler m, HandlerSite m ~ App) => Creds App -> m (AuthenticationResult App)
-    authenticate (Creds _plugin ident _extra) = liftHandler $ do
-        user <- runDB $ selectOne $ do
-            x <- from $ table @User
-            where_ $ x ^. UserEmail E.==. val ident
-            return x
-        return $ case user of
-                Just (Entity uid _) -> Authenticated uid
-                Nothing -> UserError InvalidLogin
+    authenticate (Creds plugin ident extra) =  liftHandler $ case plugin of
+      "google" -> do
+          let name :: Maybe Text
+              name = extra ^? folded . filtered ((== "userResponse") . fst) . _2 . key "name" . _String
+              
+          let picture :: Maybe Text
+              picture = extra ^? folded . filtered ((== "userResponse") . fst) . _2 . key "picture" . _String
+              
+          let email :: Maybe Text
+              email = extra ^? folded . filtered ((== "userResponse") . fst) . _2 . key "email" . _String
+
+          case email of
+              Just em -> do
+                  Entity uid _ <- runDB $ upsert User { userEmail = em
+                                                      , userPassword = Nothing
+                                                      , userName = name
+                                                      , userSuper = False
+                                                      , userAdmin = False
+                                                      , userManager = False
+                                                      , userAuthType = UserAuthTypeGoogle
+                                                      , userVerkey = Nothing
+                                                      , userVerified = True
+                                                      }
+                                  [ UserName =. name
+                                  , UserPassword =. Nothing
+                                  , UserAuthType =. UserAuthTypeGoogle
+                                  , UserVerkey =. Nothing
+                                  , UserVerified =. True
+                                  ]
+                                  
+                  _ <- return $ UserError InvalidLogin
+
+                  case picture of
+                    Just src -> do
+                        r <- liftIO $ W.get (unpack src)
+                        case (r ^? W.responseHeader "Content-Type" . to decodeUtf8, BSL.toStrict <$> r ^? W.responseBody) of
+                            (Just mime, Just bs) -> void $ runDB $ upsert
+                                UserPhoto { userPhotoUser = uid
+                                          , userPhotoMime = mime
+                                          , userPhotoPhoto = bs
+                                          , userPhotoAttribution = Nothing
+                                          }
+                                [UserPhotoMime =. mime, UserPhotoPhoto =. bs]
+                                
+                            _otherwise -> return ()
+                            
+                    Nothing -> return ()
+                  return $ Authenticated uid
+                  
+              _otherwise -> return $ UserError InvalidLogin
+
+      _ -> do
+          user <- runDB $ selectOne $ do
+              x <- from $ table @User
+              where_ $ x ^. UserEmail E.==. val ident
+              return x
+          case user of
+            Just (Entity uid _) -> return $ Authenticated uid
+            Nothing -> return $ UserError InvalidLogin
 
     authPlugins :: App -> [AuthPlugin App]
     authPlugins app = [ oauth2GoogleScopedWidget $(widgetFile "auth/google") ["email","openid","profile"]
@@ -557,48 +601,44 @@ instance YesodAuthEmail App where
       where
           formForgotPassword :: Form Text
           formForgotPassword extra = do
-              rndr <- getMessageRender
               (r,v) <- mreq emailField FieldSettings
                   { fsLabel = SomeMessage MsgEmailAddress
                   , fsId = Just "forgotPassword", fsName = Just "email", fsTooltip = Nothing
-                  , fsAttrs = [("label", rndr MsgEmailAddress)]
+                  , fsAttrs = [("autocomplete","email")]
                   } Nothing
-              return (r,[whamlet|#{extra}^{fvInput v}|])
+              return (r,[whamlet|#{extra}^{md3widget v}|])
 
     setPasswordHandler :: Bool -> AuthHandler App TypedContent
     setPasswordHandler old = do
         parent <- getRouteToParent
+        (fw,et) <- liftHandler $ generateFormPost formSetPassword    
         msgs <- getMessages
         selectRep $ provideRep $ authLayout $ do
             setTitleI SetPassTitle 
-            idFormSetPassWrapper <- newIdent
-            idFormSetPass <- newIdent
-            (fw,et) <- liftHandler $ generateFormPost formSetPassword
             $(widgetFile "auth/password")
       where
           formSetPassword :: Form (Text,Text,Text)
           formSetPassword extra = do
-              rndr <- getMessageRender
               (currR,currV) <- mreq passwordField FieldSettings
                   { fsLabel = SomeMessage CurrentPassword
                   , fsTooltip = Nothing
                   , fsId = Just "currentPassword"
                   , fsName = Just "current"
-                  , fsAttrs = [("label", rndr CurrentPassword)]
+                  , fsAttrs = [("autocomplete","current-password")]
                   } Nothing
               (newR,newV) <- mreq passwordField FieldSettings
                   { fsLabel = SomeMessage NewPass
                   , fsTooltip = Nothing
                   , fsId = Just "newPassword"
                   , fsName = Just "new"
-                  , fsAttrs = [("label", rndr NewPass)]
+                  , fsAttrs = [("autocomplete","new-password")]
                   } Nothing
               (confR,confV) <- mreq passwordField FieldSettings
                   { fsLabel = SomeMessage ConfirmPass
                   , fsTooltip = Nothing
                   , fsId = Just "confirmPassword"
                   , fsName = Just "confirm"
-                  , fsAttrs = [("label", rndr ConfirmPass)]
+                  , fsAttrs = [("autocomplete","off")]
                   } Nothing
 
               let r = (,,) <$> currR <*> newR <*> confR
@@ -610,9 +650,9 @@ instance YesodAuthEmail App where
                       [whamlet|
                               #{extra}
                               $if old
-                                ^{fvInput currV}
-                              ^{fvInput newV}
-                              ^{fvInput confV}
+                                ^{md3widget currV}
+                              ^{md3widget newV}
+                              ^{md3widget confV}
                               |]
               return (r,w)
 
@@ -632,21 +672,18 @@ instance YesodAuthEmail App where
         msgs <- getMessages
         authLayout $ do
             setTitleI RegisterLong
-            formRegisterWrapper <- newIdent
-            formRegister <- newIdent
             $(widgetFile "auth/register")
       where
           formRegEmailForm :: Form Text
           formRegEmailForm extra = do
-              renderMsg <- getMessageRender
               (emailR,emailV) <- mreq emailField FieldSettings
                   { fsLabel = SomeMessage MsgEmailAddress
                   , fsId = Just "email", fsName = Just "email", fsTooltip = Nothing
-                  , fsAttrs = [("label", renderMsg MsgEmailAddress)]
+                  , fsAttrs = [("autocomplete","email")]
                   } Nothing
               let w = [whamlet|
                           #{extra}
-                          ^{fvInput emailV}
+                          ^{md3widget emailV}
                       |]
               return (emailR,w)
 
@@ -668,12 +705,12 @@ instance YesodAuthEmail App where
               (emailR,emailV) <- mreq emailField FieldSettings
                   { fsLabel = SomeMessage MsgEmailAddress
                   , fsTooltip = Nothing, fsId = Just "email", fsName = Just "email"
-                  , fsAttrs = []
+                  , fsAttrs = [("autocomplete","email")]
                   } Nothing
               (passR,passV) <- mreq passwordField FieldSettings
                   { fsLabel = SomeMessage MsgPassword
                   , fsTooltip = Nothing, fsId = Just "password", fsName = Just "password"
-                  , fsAttrs = []
+                  , fsAttrs = [("autocomplete","current-password")]
                   } Nothing
               let r = (,) <$> emailR <*> passR
                   w = do

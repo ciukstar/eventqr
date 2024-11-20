@@ -7,7 +7,7 @@
     <h6.title.max>
       _{MsgAuthentication}
     
-<main.responsive.padding>
+<main.responsive.padding.center-align>
   $with plugins <- authPlugins app
     $forall (i,p) <- zip indexes plugins
       ^{apLogin p tp}

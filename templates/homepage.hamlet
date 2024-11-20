@@ -160,7 +160,7 @@ $if not (null msgs)
         <div.italic.padding>
           _{MsgNoUpcomingEventsYet}
       $else
-        $forall (Entity eid (Event _ time name _), attendees) <- upcoming
+        $forall (Entity eid (Event _ time name _ dur), attendees) <- upcoming
           <a.row.padding.surface-container.wave href=@{EventR eid}>
             <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
             <div.content.max>
@@ -168,11 +168,14 @@ $if not (null msgs)
               <h6.headline.large-text>
                 #{name}
 
-              $with dt <- show time
-                <time.full-datetime.supporting-text.small-text datetime=#{dt}>
-                  #{dt}
-                <div.supporting-text.small-text>
-                  _{MsgAttendees}: #{attendees}
+              <div.supporting-text.small-text>
+                $with dt <- show time
+                  <time.full-datetime datetime=#{dt}>
+                    #{dt}
+                (#{show dur})
+                  
+              <div.supporting-text.small-text>
+                _{MsgAttendees}: #{attendees}
 
             <i>arrow_forward_ios
 
@@ -204,16 +207,19 @@ $if not (null msgs)
           <div.badge.none.tertiary>#{nAllEvents}
 
     <nav ##{idNavSearchEventsResult}>
-      $forall (Entity eid (Event _ time name _), attendees) <- events
+      $forall (Entity eid (Event _ time name _ dur), attendees) <- events
         <a.row.padding.surface-container.wave href=@{EventR eid}>
           <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
           <div.content.max>
             <h6.headline.large-text>
               #{name}
 
-            $with dt <- show time
-              <time.full-datetime.supporting-text.small-text datetime=#{dt}>
-                #{dt}
+            <div.supporting-text.small-text>
+              $with dt <- show time
+                <time.full-datetime datetime=#{dt}>
+                  #{dt}
+              (#{show dur})
+                
             <div.supporting-text.small-text>
               _{MsgAttendees}: #{attendees}
 

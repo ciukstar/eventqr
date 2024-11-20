@@ -4,7 +4,7 @@
 <main.responsive>
 
   $case (card,event)
-    $of (Just (_,Entity uid (User email _ uname _ _ _ _ _ _)), Just (Entity _ (Event _ time name descr)))
+    $of (Just (_,Entity uid (User email _ uname _ _ _ _ _ _)), Just (Entity _ (Event _ time name descr dur)))
       <p>
         _{MsgConfirmUserRegistrationForEventPlease}.
       
@@ -25,7 +25,8 @@
           $with dt <- show time
             <time.full-datetime datetime=#{dt}>
               #{dt}
-       
+          (#{show dur})
+           
         <p.small-text>
           #{descr}
 

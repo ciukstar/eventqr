@@ -113,7 +113,7 @@ import Foundation
       , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail
       , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher
       , MsgUnknownMessageRecipient, MsgCheckAtLeastOneOptionPlease
-      , MsgProvideRecipientEmailPlease
+      , MsgProvideRecipientEmailPlease, MsgDurationHours, MsgDuration
       )
     )
 
@@ -124,7 +124,7 @@ import Material3
 
 import Model
     ( msgSuccess, msgError, gmailSendEnpoint
-    , EventId, Event(Event, eventName, eventTime, eventDescr)
+    , EventId, Event(Event, eventName, eventTime, eventDescr, eventDuration)
     , CardId, Card (Card)
     , UserId, User (User, userEmail)
     , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
@@ -135,7 +135,7 @@ import Model
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
       , UserId, UserName, AttendeeId, PushSubscriptionUser, PosterEvent
       , PosterAttribution, EventManager
-      )
+      ), nominalDiffTimeToHours, hoursToNominalDiffTime
     )
 
 import Network.Mail.Mime
@@ -175,7 +175,7 @@ import Yesod.Core
 import Yesod.Form.Fields
     ( textField, radioField, optionsPairs
     , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
-    , timeField, hiddenField, intField, htmlField, checkBoxField, emailField, fileField
+    , timeField, hiddenField, intField, htmlField, checkBoxField, emailField, fileField, doubleField
     )
 import Yesod.Form.Functions (generateFormPost, runFormPost, mreq, mopt)
 import Yesod.Form.Input (runInputGet, ireq)
@@ -587,7 +587,14 @@ formEventDay mid day event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
 
+    (durR,durV) <- mreq doubleField FieldSettings
+        { fsLabel = SomeMessage MsgDurationHours
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (nominalDiffTimeToHours . eventDuration . entityVal <$> event)
+
     let r = Event mid <$> (localTimeToUTC tz . LocalTime day <$> timeR) <*> nameR <*> descrR
+            <*> (hoursToNominalDiffTime <$> durR)
+
     return (r,$(widgetFile "data/catalogue/calendar/events/form"))
 
 
@@ -1407,7 +1414,14 @@ formEvent manager event extra = do
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
         } (eventDescr . entityVal <$> event)
 
+    (durR,durV) <- mreq doubleField FieldSettings
+        { fsLabel = SomeMessage MsgDurationHours
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } (nominalDiffTimeToHours . eventDuration . entityVal <$> event)
+
     let r = Event manager <$> (localTimeToUTC tz <$> timeR) <*> nameR <*> descrR
+            <*> (hoursToNominalDiffTime <$> durR)
+            
     return (r,$(widgetFile "data/catalogue/form"))
 
 

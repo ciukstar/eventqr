@@ -26,19 +26,22 @@
     <div.italic.padding>
       _{MsgYouDoNotHaveEventsToAttendYet}
   $else
-    $forall (_,(_,(Entity eid (Event _ time name _), attendees))) <- events
+    $forall (_,(_,(Entity eid (Event _ time name _ dur), attendees))) <- events
       <a.row.padding.wave href=@{DataR $ AccountEventScheduleCalendarEventR uid month day eid}>
         <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
 
           <h6.headline.large-text>
             #{name}
-
-          $with dt <- show time
-            <time.full-datetime.supporting-text.small-text datetime=#{dt}>
-              #{dt}
-            <div.supporting-text.small-text>
-              _{MsgAttendees}: #{attendees}
+ 
+          <div.supporting-text.small-text>
+            $with dt <- show time
+              <time.full-datetime datetime=#{dt}>
+                #{dt}
+            (#{show dur})
+              
+          <div.supporting-text.small-text>
+            _{MsgAttendees}: #{attendees}
 
         <i>arrow_forward_ios
 

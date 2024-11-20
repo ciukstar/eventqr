@@ -9,16 +9,19 @@
       <figcaption>
         _{MsgNoEventsForThisDayYet}.
   $else
-    $forall (Entity eid (Event _ time name _), attendees) <- events
+    $forall (Entity eid (Event _ time name _ dur), attendees) <- events
       <a.row.padding.wave href=@{CalendarEventR month day eid}>
         <img.large.round src=@{EventPosterR eid} loading=lazy alt=_{MsgPoster}>
         <div.content.max>
           <h6.headline.large-text>
             #{name}
+            
           <div.supporting-text.small-text>
             $with dt <- show time
               <time.full-datetime datetime=#{dt}>
                 #{dt}
+            (#{show dur})
+                
           <div.supporting-text.small-text>
             _{MsgAttendees}: #{attendees}
 

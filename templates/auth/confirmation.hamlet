@@ -1,29 +1,27 @@
 
-<header.app-top-app-bar>
-  <md-icon-button href=@{HomeR} aria-label=_{MsgBack}>
-    <md-icon>arrow_back
-
-  <section.md-typescale-title-large>
-    _{MsgEmailVerification}
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{HomeR} aria-label=_{MsgBack}>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgEmailVerification}
       
-<main>
+<main.responsive.padding>
   
+  <p>
+    _{MsgVerifyEmailPlease}. #
 
-  <div.md-typescale-body-medium>
-    _{MsgVerifyEmailPlease}.
-
-  <div.md-typescale-body-medium>
     _{MsgJustSentEmailTo} #
-    <code.md-typescale-body-medium.shape-extra-small.surface-variant>
-      #{email}
-    \.
-    <div.md-typescale-body-medium>
-      _{MsgClickToVerifyAccount}.
+    <code>
+      #{email}. #
+     
+    _{MsgClickToVerifyAccount}.
 
   <p>
-    <div.md-typescale-body-small>
-      _{MsgDidNotGetEmail}
-    <md-text-button href=@{parent registerR} type=button>
+    <span.small-text>
+      _{MsgDidNotGetEmail} #
+    <a.link href=@{parent registerR}>
       _{MsgResendEmail}
 
 ^{widgetSnackbar msgs}

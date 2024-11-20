@@ -14,21 +14,26 @@
       _{MsgAttendees}
     
   <div.page.active.padding>
-    $maybe Entity _ (Event _ time name descr) <- event
+    $maybe Entity _ (Event _ time name descr dur) <- event
       <dl>
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgName}
         <dd>
           #{name}
 
-        <dt.bold.large-text>
+        <dt.bold>
           _{MsgTime}
         <dd>
           $with dt <- show time
             <time.full-datetime datetime=#{dt}>
               #{dt}
 
-        <dt.bold.large-text>
+        <dt.bold>
+          _{MsgDuration}
+        <dd>
+          #{show dur}
+
+        <dt.bold>
           _{MsgDescription}
         <dd>
           #{descr}

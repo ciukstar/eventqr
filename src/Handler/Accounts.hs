@@ -82,6 +82,7 @@ import Foundation
       , MsgRegistrationDate, MsgList, MsgCalendar, MsgPrevious, MsgNext
       , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgTotalEventsForThisMonth, MsgTotalAttendees, MsgNoEventsForThisMonth, MsgEvents
+      , MsgDuration
       )
     )
 

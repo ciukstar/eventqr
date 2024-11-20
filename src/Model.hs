@@ -29,26 +29,32 @@ import Data.Aeson (ToJSON, toJSON, FromJSON, parseJSON)
 import Data.Aeson.Types (Parser)
 import Data.Bool (Bool)
 import Data.ByteString (ByteString)
+import Data.Either (Either (Left, Right)) 
 import Data.Eq (Eq)
 import Data.Fixed (Fixed (MkFixed))
 import Data.Function ((.))
 import Data.Maybe (Maybe (Just))
 import Data.Ord (Ord)
+import qualified Data.Proxy as DP (Proxy)
 import Data.Text (pack, unpack) 
 import Data.Time.Calendar.Month (Month)
 import Data.Time.Clock
     ( UTCTime, NominalDiffTime, nominalDiffTimeToSeconds, secondsToNominalDiffTime)
 
 import Database.Esqueleto.Experimental (SqlString)
+import Database.Persist
+    ( PersistField, PersistValue (PersistInt64), toPersistValue, fromPersistValue)
 import Database.Persist.Quasi ( lowerCaseSettings )
+import Database.Persist.Sql (PersistFieldSql, sqlType)
 import Database.Persist.TH (derivePersistField)
+import Database.Persist.Types (SqlType (SqlInt64))
 
 import GHC.Float (Double, int2Double, truncateDouble)
 import GHC.Integer (Integer)
 import GHC.Num ((*))
 import GHC.Real ((/), (^))
 
-import Prelude (truncate, undefined)
+import Prelude (truncate, undefined, fromIntegral)
 
 import Text.Hamlet (Html)
 import Text.Printf (printf)
@@ -101,6 +107,20 @@ instance FromJSON Html where
     parseJSON (A.String txt) = pure (toHtml txt)
     parseJSON (A.Bool b) = pure (toHtml b)
     parseJSON _ = undefined
+
+
+instance PersistField NominalDiffTime where
+    toPersistValue :: NominalDiffTime -> PersistValue
+    toPersistValue x = PersistInt64 (truncate (nominalDiffTimeToSeconds x))
+
+    fromPersistValue :: PersistValue -> Either Text NominalDiffTime
+    fromPersistValue (PersistInt64 x) = Right (secondsToNominalDiffTime (fromIntegral x))
+    fromPersistValue _ = Left "Invalid NominalDiffTime"
+
+
+instance PersistFieldSql NominalDiffTime where
+    sqlType :: DP.Proxy NominalDiffTime -> SqlType
+    sqlType _ = SqlInt64
     
 
 

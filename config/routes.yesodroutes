@@ -32,7 +32,6 @@
 
 /docs DocsR GET
 
-/restore PwdResetR  GET
 /lang    LangR      POST
 
 
