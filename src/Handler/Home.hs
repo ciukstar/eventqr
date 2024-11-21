@@ -51,7 +51,7 @@ import Foundation
       , EventAttendeeR, EventScannerR
       , ApiEventsR, DataR, StaticR, EventPosterR
       )
-    , DataR (UserPhotoR, CardQrImageR, AccountEventScheduleR)
+    , DataR (UserPhotoR, CardQrImageR, AccountEventScheduleR, AccountCardNewR)
     , AppMessage
       ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard, MsgSignIn
       , MsgUpcomingEvents, MsgSearch, MsgEvent, MsgAll, MsgDuration
@@ -70,7 +70,8 @@ import Foundation
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgYouDoNonHaveCardsYet
       , MsgMyCards, MsgLoginToSeeYourCardsPlease, MsgNotYourQrCodeSorry
       , MsgCardDoesNotContainAdditionalInfo, MsgNotManagerOfEventSorry
-      , MsgFillInCard, MsgMyVisitingSchedule, MsgUpcoming
+      , MsgFillInCard, MsgMyVisitingSchedule, MsgNoAttendeesForThisEventYet
+      , MsgUpcoming, MsgOrderNewCard, MsgCardIsRequiredToParticipateInEvents
       )
     )
 

@@ -269,6 +269,7 @@ instance Yesod App where
     isAuthorized ServiceWorkerR _ = return Authorized
 
     isAuthorized HomeR _ = setUltDestCurrent >> return Authorized
+    
     isAuthorized (EventR _) _ = return Authorized
     isAuthorized (EventPosterR _) _ = return Authorized
     isAuthorized (EventScannerR _) _ = return Authorized
@@ -327,6 +328,7 @@ instance Yesod App where
     isAuthorized (DataR (AccountEventScheduleCalendarUnregisterR uid _ _ _)) _ = isAuthenticatedSelf uid
     isAuthorized (DataR (AccountEventScheduleCalendarEventAttendeesR uid _ _ _)) _ = isAuthenticatedSelf uid
                             
+    isAuthorized (DataR (AccountCardNewR uid)) _ = isAuthenticatedSelf uid
         
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin

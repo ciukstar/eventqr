@@ -1,0 +1,18 @@
+
+#{extra}
+
+<div>
+  <label for=#{fvId photoV} ##{idLabelPhoto}>
+    <figure.center-align>
+      <img.circle src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>
+      <figcaption>
+
+        $maybe errs <- fvErrors photoV
+          <div.error>
+            #{errs}
+
+        <button.small.border.round.transparent type=button onclick="document.getElementById('#{idLabelPhoto}').click()">
+          <i>upload_file
+          _{MsgPhoto}
+
+  ^{fvInput photoV}

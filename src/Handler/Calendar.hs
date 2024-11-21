@@ -67,7 +67,7 @@ import Foundation
       , MsgRegisterForThisEvent, MsgUnsubscribe, MsgYouAreRegisteredForThisEvent
       , MsgRegisterWithQrCode, MsgSubscriptionSuccessful, MsgSelectCardToRegister
       , MsgCards, MsgRegisterForEvent, MsgIssueDate, MsgUnsubscribeAreYouSure
-      , MsgConfirmPlease, MsgUnsubscribeSuccessful
+      , MsgConfirmPlease, MsgUnsubscribeSuccessful, MsgNoAttendeesForThisEventYet
       )
     )
     

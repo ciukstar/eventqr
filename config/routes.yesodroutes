@@ -26,14 +26,12 @@
 /events/#EventId/poster                               EventPosterR           GET
 /events/#EventId                                      EventR                 GET
 
-/api/events ApiEventsR GET
-
 / HomeR GET
 
 /docs DocsR GET
+/lang LangR POST
 
-/lang    LangR      POST
-
+/api/events ApiEventsR GET
 
 /static StaticR Static appStatic
 /auth   AuthR   Auth   getAuth
@@ -50,6 +48,8 @@
 
     /users/#UserId/subscriptions/#PushSubscriptionId/unsubscribe UserUnsubscribeR   POST
     /users/#UserId/subscriptions                                 UserSubscriptionsR POST
+
+    /accounts/#UserId/cards AccountCardNewR GET 
 
     /accounts/#UserId/settings/push                      AccountPushSettingsR     GET
     /accounts/#UserId/notifications/#NotificationId/dele AccountNotificationDeleR POST

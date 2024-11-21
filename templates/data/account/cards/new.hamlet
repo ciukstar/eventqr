@@ -1,0 +1,15 @@
+
+<header.fixed>
+  <nav.responsive.max>
+    <a.button.circle.transparent href=@{HomeR}>
+      <i>arrow_back
+    
+    <h6.title.max>
+      _{MsgOrder}
+
+<main.responsive>
+  <form action=@{DataR $ AccountCardNewR uid} enctype=#{et}>
+    ^{fw}
+    <nav.right-align>
+      <button type=submit>
+        _{MsgPlaceOrder}

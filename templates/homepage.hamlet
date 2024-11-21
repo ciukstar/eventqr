@@ -42,7 +42,8 @@
         <figure.null.margin.pading>
           <i.extra>folder_open
           <figcaption>
-            _{MsgYouDoNonHaveCardsYet}.
+            <div.small-text>_{MsgYouDoNonHaveCardsYet}.
+            <div.small-text>_{MsgCardIsRequiredToParticipateInEvents}.
       $else
         $forall ((Entity cid (Card _ _ issued),Entity _ (User email _ uname _ _ _ _ _ _)),attrs) <- cards
           $with i <- show $ fromSqlKey cid
@@ -98,7 +99,11 @@
                   <button.circle title=_{MsgQrCode} data-ui=##{idOverlay}
                     onclick="document.getElementById('#{idDialogQrCode}#{i}').show()">
                     <i.no-round>qr_code
-      
+    
+      <a.button.border.responsive href=@{DataR $ AccountCardNewR uid}>
+        <i>note_stack_add
+        <span>_{MsgOrderNewCard}
+        
     $nothing
       <div.padding.center-align>
         <p>

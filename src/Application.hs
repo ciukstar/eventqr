@@ -124,6 +124,7 @@ import Handler.Accounts
     , getAccountEventScheduleCalendarEventR
     , postAccountEventScheduleCalendarUnregisterR
     , getAccountEventScheduleCalendarEventAttendeesR
+    , getAccountCardNewR
     )
 
 import Handler.Users

@@ -1,3 +1,7 @@
+PlaceOrder: Оформить заказ
+Order: Заказ
+CardIsRequiredToParticipateInEvents: Карточка необходима для участия в мероприятиях
+OrderNewCard: Заказать новую карточку
 InMinutes: В минутах
 PasswordRecovery: Восстановление пароля
 CreatePassword: Создание пароля

@@ -1,3 +1,7 @@
+PlaceOrder: Place order
+Order: Order
+CardIsRequiredToParticipateInEvents: A card is required to participate in the events
+OrderNewCard: Order new card
 InMinutes: In minutes
 PasswordRecovery: Password recovery
 CreatePassword: Create password

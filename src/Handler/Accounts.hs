@@ -18,6 +18,7 @@ module Handler.Accounts
   , getAccountEventScheduleCalendarEventR
   , postAccountEventScheduleCalendarUnregisterR
   , getAccountEventScheduleCalendarEventAttendeesR
+  , getAccountCardNewR
   ) where
 
 import ClassyPrelude (readMay, isJust)
@@ -65,6 +66,7 @@ import Foundation
       , AccountEventScheduleCalendarEventR
       , AccountEventScheduleCalendarUnregisterR
       , AccountEventScheduleCalendarEventAttendeesR
+      , AccountCardNewR
       )
     , AppMessage
       ( MsgUserAccount, MsgYes, MsgNo, MsgSettings, MsgProfile, MsgName
@@ -82,7 +84,7 @@ import Foundation
       , MsgRegistrationDate, MsgList, MsgCalendar, MsgPrevious, MsgNext
       , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgTotalEventsForThisMonth, MsgTotalAttendees, MsgNoEventsForThisMonth, MsgEvents
-      , MsgDuration
+      , MsgDuration, MsgCard, MsgOrder, MsgPlaceOrder
       )
     )
 
@@ -94,7 +96,7 @@ import Model
     ( keyThemeMode, msgSuccess, msgError, normalizeNominalDiffTime
     , UserId, User (User)
     , Attendee (Attendee)
-    , EventId, Event (Event, eventTime), Card
+    , EventId, Event (Event, eventTime), Card (Card)
     , NotificationId, Notification (Notification)
     , NotificationStatus (NotificationStatusUnread, NotificationStatusRead)
     , PushSubscription
@@ -120,18 +122,47 @@ import Web.WebPush (VAPIDKeys, vapidPublicKeyBytes)
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessages, getMessageRender
     , YesodRequest (reqGetParams), getRequest, addMessageI, redirect
-    , SomeMessage (SomeMessage), lookupHeader, getYesod
+    , SomeMessage (SomeMessage), lookupHeader, getYesod, MonadHandler (liftHandler), FileInfo
     )
 import Yesod.Core.Widget (whamlet)
 import Yesod.Form.Input (runInputGet, iopt)
-import Yesod.Form.Fields (boolField, textField, hiddenField, checkBoxField)
-import Yesod.Form.Functions (generateFormPost, runFormPost, mreq)
+import Yesod.Form.Fields (boolField, textField, hiddenField, checkBoxField, fileField)
+import Yesod.Form.Functions (generateFormPost, runFormPost, mreq, mopt)
 import Yesod.Form.Types
     ( FormResult(FormSuccess)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
-    , FieldView (fvId, fvInput)
+    , FieldView (fvId, fvInput, fvErrors)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+
+
+getAccountCardNewR :: UserId -> Handler Html
+getAccountCardNewR uid = do
+    (fw,et) <- generateFormPost $ formCard uid
+    defaultLayout $ do
+        setTitleI MsgCard 
+        $(widgetFile "data/account/cards/new")
+
+
+formCard :: UserId -> Form (Card, Maybe FileInfo)
+formCard uid extra = do
+
+    user <- liftHandler $ runDB $ selectOne $ do
+        x <- from $ table @User
+        where_ $ x ^. UserId ==. val uid
+        return x
+    
+    now <- liftIO getCurrentTime
+
+    (photoR,photoV) <- mopt fileField FieldSettings
+        { fsLabel = SomeMessage MsgPhoto
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = [("style","display:none")]
+        } Nothing
+    
+    let r = (,) <$> pure (Card uid "" now) <*> photoR
+    idLabelPhoto <- newIdent
+    return (r,$(widgetFile "data/account/cards/form"))
 
 
 getAccountEventScheduleCalendarEventAttendeesR :: UserId -> Month -> Day -> EventId -> Handler Html
