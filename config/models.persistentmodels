@@ -19,6 +19,14 @@ Info
     name Text
     value Html
 
+
+Photo
+    card CardId OnDeleteCascade
+    mime Text
+    photo ByteString
+    attribution Html Maybe
+    UniquePhoto card
+
 Card
     user UserId OnDeleteCascade
     qr Text

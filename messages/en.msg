@@ -1,3 +1,6 @@
+UploadPhoto: Upload photo
+TakePhoto: Take a photo
+FullName: Full name
 PlaceOrder: Place order
 Order: Order
 CardIsRequiredToParticipateInEvents: A card is required to participate in the events

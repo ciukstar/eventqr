@@ -66,7 +66,7 @@
 
             <article.margin>
               <div.row>
-                <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+                <img.small.circle src=@{DataR $ CardPhotoR cid} alt=_{MsgPhoto} loading=lazy>
                 <div.max>
                   <div.headline.large-text>
                     $maybe name <- uname
@@ -100,7 +100,7 @@
                     onclick="document.getElementById('#{idDialogQrCode}#{i}').show()">
                     <i.no-round>qr_code
     
-      <a.button.border.responsive href=@{DataR $ AccountCardNewR uid}>
+      <a.button.border.responsive.bottom-margin href=@{DataR $ AccountCardNewR uid}>
         <i>note_stack_add
         <span>_{MsgOrderNewCard}
         

@@ -108,6 +108,7 @@ import Handler.Cards
     , postUserCardNewFieldR
     , postUserCardDeleR
     , getCardQrImageR
+    , getCardPhotoR
     )
 
 import Handler.Accounts
@@ -124,7 +125,7 @@ import Handler.Accounts
     , getAccountEventScheduleCalendarEventR
     , postAccountEventScheduleCalendarUnregisterR
     , getAccountEventScheduleCalendarEventAttendeesR
-    , getAccountCardNewR
+    , getAccountCardNewR, postAccountCardNewR
     )
 
 import Handler.Users

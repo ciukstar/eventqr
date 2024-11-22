@@ -1,3 +1,6 @@
+UploadPhoto: Загрузить фото
+TakePhoto: Сфотографироваться
+FullName: Полное имя
 PlaceOrder: Оформить заказ
 Order: Заказ
 CardIsRequiredToParticipateInEvents: Карточка необходима для участия в мероприятиях

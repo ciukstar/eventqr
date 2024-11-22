@@ -1202,7 +1202,8 @@ formPoster idImgPoster poster extra = do
 
     (posterR,posterV) <- mopt fileField FieldSettings
         { fsLabel = SomeMessage MsgUploadPoster
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = [("accept","image/*")]
         } Nothing
 
     (attribR,attribV) <- mopt htmlField FieldSettings

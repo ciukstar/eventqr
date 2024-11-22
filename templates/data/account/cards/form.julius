@@ -1,0 +1,52 @@
+
+document.getElementById(#{fvId photoV}).addEventListener('change',function (e) {
+  if (this.files && this.files[0]) {
+    let fr = new FileReader();
+    fr.onload = function (e) {
+      document.getElementById(#{idImgPhoto}).setAttribute('src',e.target.result);
+    };
+    fr.readAsDataURL(this.files[0]);
+  }
+});
+
+
+document.getElementById(#{idButtonUploadPhoto}).addEventListener('click', e => {
+  document.getElementById(#{idLabelPhoto}).click();
+});
+
+document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
+
+  document.getElementById(#{idDialogVideo}).show();
+  
+  document.getElementById(#{idButtonCapture}).addEventListener('click', e => {
+    const player = document.getElementById(#{idVideo});
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('width',200);
+    canvas.setAttribute('height',200);
+    canvas.getContext('2d').drawImage(player,0,0,canvas.width,canvas.height);
+
+    document.getElementById(#{idImgPhoto}).src = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+
+    fetch(
+      document.getElementById(#{idImgPhoto}).src
+    ).then(x => x.arrayBuffer()).then(
+      buf => new File([buf],'MsgPhoto',{ type: 'image/png' })
+    ).then(file => {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      return dt;
+    }).then(dt => {
+      
+      document.getElementById(#{fvId photoV}).files = dt.files;
+      
+      player.srcObject.getVideoTracks().forEach(track => track.stop());
+      player.srcObject = null;
+      document.getElementById(#{idDialogVideo}).close();      
+    });
+  }, { once: true });
+  
+  navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(stream => {
+    document.getElementById(#{idVideo}).srcObject = stream;
+  });
+  
+});

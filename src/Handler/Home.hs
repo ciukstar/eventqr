@@ -51,7 +51,10 @@ import Foundation
       , EventAttendeeR, EventScannerR
       , ApiEventsR, DataR, StaticR, EventPosterR
       )
-    , DataR (UserPhotoR, CardQrImageR, AccountEventScheduleR, AccountCardNewR)
+    , DataR
+      ( UserPhotoR, CardQrImageR, AccountEventScheduleR, AccountCardNewR
+      , CardPhotoR
+      )
     , AppMessage
       ( MsgAppName, MsgEventsCalendar, MsgName, MsgCard, MsgSignIn
       , MsgUpcomingEvents, MsgSearch, MsgEvent, MsgAll, MsgDuration
@@ -108,8 +111,8 @@ import Yesod.Core
 import Yesod.Core.Widget (setTitleI)
 import Yesod.Form.Input (runInputGet, ireq, iopt)
 import Yesod.Form.Fields
-    ( intField, hiddenField, radioField, textField, optionsPairs
-    , Option (optionInternalValue, optionExternalValue), OptionList (olOptions), boolField
+    ( intField, hiddenField, radioField, textField, boolField, optionsPairs
+    , Option (optionInternalValue, optionExternalValue), OptionList (olOptions)
     )
 import Yesod.Form.Functions (generateFormPost, mreq, runFormPost)
 import Yesod.Form.Types

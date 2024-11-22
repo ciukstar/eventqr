@@ -14,6 +14,7 @@ module Handler.Cards
   , postUserCardNewFieldR
   , postUserCardDeleR
   , getCardQrImageR
+  , getCardPhotoR
   ) where
 
 
@@ -29,6 +30,7 @@ import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(first, second))
 import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (getCurrentTime)
 
 import Database.Esqueleto.Experimental
@@ -45,7 +47,7 @@ import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
     ( Handler, Form, App, widgetTopbar, widgetSnackbar
-    , Route (DataR)
+    , Route (DataR, StaticR)
     , DataR
       ( UserPhotoR, UsersR, UserR
       , UserCardsR, UserCardR, CardQrImageR, UserCardNewR
@@ -72,11 +74,14 @@ import Model
     , Card (Card)
     , CardId, Info (Info)
     , EntityField
-      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard
-      )
+      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard, PhotoCard
+      ), Photo (Photo)
     )
 
 import Settings (widgetFile)
+import Settings.StaticFiles
+    ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg
+    )
 
 import Text.Hamlet (Html)
 
@@ -415,3 +420,14 @@ getCardQrImageR cid = do
     case QR.encode (defaultQRCodeOptions ErrorLevel.M) Iso8859_1OrUtf8WithoutECI input of
       Just qrcode -> return $ TypedContent "image/bmp" $ toContent $ encodeBitmap $ toImage 4 7 qrcode
       Nothing -> notFound
+
+
+getCardPhotoR :: CardId -> Handler TypedContent
+getCardPhotoR cid = do
+    photo <- runDB $ selectOne $ do
+        x <- from $ table @Photo
+        where_ $ x ^. PhotoCard ==. val cid
+        return x
+    case photo of
+      Just (Entity _ (Photo _ mime bs _)) -> return $ TypedContent (encodeUtf8 mime) $ toContent bs
+      Nothing -> redirect $ StaticR img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg

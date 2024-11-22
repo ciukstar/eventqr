@@ -18,11 +18,11 @@ module Handler.Accounts
   , getAccountEventScheduleCalendarEventR
   , postAccountEventScheduleCalendarUnregisterR
   , getAccountEventScheduleCalendarEventAttendeesR
-  , getAccountCardNewR
+  , getAccountCardNewR, postAccountCardNewR
   ) where
 
 import ClassyPrelude (readMay, isJust)
-import Control.Monad (unless, void)
+import Control.Monad (unless, void, forM_)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Aeson (toJSON)
@@ -31,7 +31,7 @@ import qualified Data.List as L (length)
 import Data.Map (Map, fromListWith)
 import qualified Data.Map as M (foldr, lookup)
 import Data.Maybe (fromMaybe)
-import Data.Text (pack) 
+import Data.Text (Text, pack)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Time.Calendar
     ( Day, DayPeriod (periodFirstDay), DayOfWeek (Monday)
@@ -50,7 +50,9 @@ import Database.Esqueleto.Experimental
     , innerJoin, on, subSelectCount, orderBy, asc
     , update, set, delete, in_, subSelectList
     )
-import Database.Persist (Entity (Entity), entityVal, upsertBy, deleteBy)
+import Database.Persist
+    ( Entity (Entity), entityVal, insert, insert_, upsert, upsertBy, deleteBy
+    )
 import qualified Database.Persist as P (delete, (=.))
 import Database.Persist.Sql (fromSqlKey)
 
@@ -81,20 +83,21 @@ import Foundation
       , MsgUnsubscribeAreYouSure, MsgUnsubscribeSuccessful, MsgSubscriptionSuccessful
       , MsgUnsubscribe, MsgEnableNotificationsPlease, MsgNotificationsHaveBeenDisabled
       , MsgEvent, MsgNumberOfAttendees, MsgEventStartTime, MsgDetails, MsgDescription
-      , MsgRegistrationDate, MsgList, MsgCalendar, MsgPrevious, MsgNext
+      , MsgRegistrationDate, MsgList, MsgCalendar, MsgPrevious, MsgNext, MsgEvents
       , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
-      , MsgTotalEventsForThisMonth, MsgTotalAttendees, MsgNoEventsForThisMonth, MsgEvents
-      , MsgDuration, MsgCard, MsgOrder, MsgPlaceOrder
+      , MsgTotalEventsForThisMonth, MsgTotalAttendees, MsgNoEventsForThisMonth
+      , MsgDuration, MsgCard, MsgOrder, MsgPlaceOrder, MsgFullName, MsgUploadPhoto
+      , MsgTakePhoto, MsgPhone, MsgRecordAdded
       )
     )
 
 import Handler.Tokens (fetchVapidKeys)
 
-import Material3 (md3switchWidget)
+import Material3 (md3switchWidget, md3widget)
 
 import Model
     ( keyThemeMode, msgSuccess, msgError, normalizeNominalDiffTime
-    , UserId, User (User)
+    , UserId, User (User, userName)
     , Attendee (Attendee)
     , EventId, Event (Event, eventTime), Card (Card)
     , NotificationId, Notification (Notification)
@@ -104,13 +107,15 @@ import Model
       , pushSubscriptionAuth
       )
     , PushSubscriptionId, Unique (UniquePushSubscription)
+    , Photo (Photo)
     , EntityField
       ( UserId, AttendeeEvent, EventId, EventTime, AttendeeCard, CardId
       , CardUser, NotificationPublisher, NotificationRecipient
       , NotificationStatus, PushSubscriptionUser, PushSubscriptionEndpoint
       , PushSubscriptionP256dh, PushSubscriptionAuth, PushSubscriptionTime
-      , PushSubscriptionUserAgent, NotificationId
-      )
+      , PushSubscriptionUserAgent, NotificationId, PhotoMime, PhotoPhoto
+      , PhotoAttribution
+      ), Info (Info, infoCard, infoName, infoValue)
     )
 
 import Settings (widgetFile, AppSettings (appTimeZone))
@@ -122,7 +127,8 @@ import Web.WebPush (VAPIDKeys, vapidPublicKeyBytes)
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessages, getMessageRender
     , YesodRequest (reqGetParams), getRequest, addMessageI, redirect
-    , SomeMessage (SomeMessage), lookupHeader, getYesod, MonadHandler (liftHandler), FileInfo
+    , SomeMessage (SomeMessage), MonadHandler (liftHandler), FileInfo (fileContentType)
+    , lookupHeader, getYesod, fileSourceByteString, toHtml
     )
 import Yesod.Core.Widget (whamlet)
 import Yesod.Form.Input (runInputGet, iopt)
@@ -136,15 +142,54 @@ import Yesod.Form.Types
 import Yesod.Persist.Core (YesodPersist(runDB))
 
 
+postAccountCardNewR :: UserId -> Handler Html
+postAccountCardNewR uid = do
+    ((fr,fw),et) <- runFormPost $ formCard uid
+    case fr of
+      FormSuccess (c,Just fi,info) -> do
+          cid <- runDB $ insert c
+          bs <- fileSourceByteString fi
+          void $ runDB $ upsert (Photo cid (fileContentType fi) bs Nothing)
+                    [ PhotoMime P.=. fileContentType fi
+                    , PhotoPhoto P.=. bs
+                    , PhotoAttribution P.=. Nothing
+                    ]
+              
+          forM_ info $ \(label,value) -> case value of
+            Just v -> runDB $ insert_ Info { infoCard = cid, infoName = label, infoValue = v }
+            Nothing -> return ()
+            
+          addMessageI msgSuccess MsgRecordAdded
+          redirect HomeR
+          
+      FormSuccess (c,Nothing,info) -> do
+          cid <- runDB $ insert c
+              
+          forM_ info $ \(label,value) -> case value of
+            Just v -> runDB $ insert_ Info { infoCard = cid, infoName = label, infoValue = v }
+            Nothing -> return ()
+            
+          addMessageI msgSuccess MsgRecordAdded
+          redirect HomeR
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgCard 
+              $(widgetFile "data/account/cards/new")
+
+
 getAccountCardNewR :: UserId -> Handler Html
 getAccountCardNewR uid = do
     (fw,et) <- generateFormPost $ formCard uid
+    msgs <- getMessages
     defaultLayout $ do
         setTitleI MsgCard 
         $(widgetFile "data/account/cards/new")
 
 
-formCard :: UserId -> Form (Card, Maybe FileInfo)
+formCard :: UserId -> Form (Card, Maybe FileInfo, [(Text,Maybe Html)])
 formCard uid extra = do
 
     user <- liftHandler $ runDB $ selectOne $ do
@@ -154,15 +199,38 @@ formCard uid extra = do
     
     now <- liftIO getCurrentTime
 
+    (nameR,nameV) <- mopt textField FieldSettings
+        { fsLabel = SomeMessage MsgFullName
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = []
+        } (userName . entityVal <$> user)
+
+    (phoneR,phoneV) <- mopt textField FieldSettings
+        { fsLabel = SomeMessage MsgPhone
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = []
+        } Nothing
+
     (photoR,photoV) <- mopt fileField FieldSettings
         { fsLabel = SomeMessage MsgPhoto
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = [("style","display:none")]
+        , fsAttrs = [("style","display:none"),("accept","image/*")]
         } Nothing
+
+    msgr <- getMessageRender
+    let infos = [(msgr MsgFullName,nameR),(msgr MsgPhone,phoneR)]
     
-    let r = (,) <$> pure (Card uid "" now) <*> photoR
+    let r = (,,) <$> pure (Card uid "" now) <*> photoR
+            <*> traverse (\(l,x) -> (\a v -> (a,toHtml <$> v)) l <$> x) infos
+    
     idLabelPhoto <- newIdent
-    return (r,$(widgetFile "data/account/cards/form"))
+    idImgPhoto <- newIdent
+    idButtonUploadPhoto <- newIdent
+    idButtonTakePhoto <- newIdent
+    idDialogVideo <- newIdent
+    idVideo <- newIdent
+    idButtonCapture <- newIdent
+    return (r,$(widgetFile "data/account/cards/form")) 
 
 
 getAccountEventScheduleCalendarEventAttendeesR :: UserId -> Month -> Day -> EventId -> Handler Html

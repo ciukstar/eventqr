@@ -7,9 +7,12 @@
     <h6.title.max>
       _{MsgOrder}
 
-<main.responsive>
-  <form action=@{DataR $ AccountCardNewR uid} enctype=#{et}>
+<main.responsive.padding>
+  <form method=post action=@{DataR $ AccountCardNewR uid} enctype=#{et}>
     ^{fw}
     <nav.right-align>
       <button type=submit>
         _{MsgPlaceOrder}
+
+        
+  ^{widgetSnackbar msgs}

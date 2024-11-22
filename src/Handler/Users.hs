@@ -317,7 +317,7 @@ formUser user extra = do
     (photoR,photoV) <- mopt fileField FieldSettings
         { fsLabel = SomeMessage MsgPhoto
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = [("style","display:none")]
+        , fsAttrs = [("style","display:none"),("accept","image/*")]
         } Nothing
 
     attrib <- (unValue =<<) <$> case user of
@@ -395,7 +395,7 @@ formUserEdit user extra = do
     (photoR,photoV) <- mopt fileField FieldSettings
         { fsLabel = SomeMessage MsgPhoto
         , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = [("style","display:none")]
+        , fsAttrs = [("style","display:none"),("accept","image/*")]
         } Nothing
 
     attrib <- (unValue =<<) <$> case user of

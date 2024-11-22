@@ -2,17 +2,37 @@
 #{extra}
 
 <div>
+  
   <label for=#{fvId photoV} ##{idLabelPhoto}>
     <figure.center-align>
-      <img.circle src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto}>
-      <figcaption>
+      <img.circle.extra src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto} ##{idImgPhoto}>
+      <figcaption.margin>
 
         $maybe errs <- fvErrors photoV
           <div.error>
             #{errs}
+        <nav.center-align>
+          <button.border.round.transparent type=button ##{idButtonUploadPhoto}>
+            <i>upload_file
+            _{MsgUploadPhoto}
 
-        <button.small.border.round.transparent type=button onclick="document.getElementById('#{idLabelPhoto}').click()">
-          <i>upload_file
-          _{MsgPhoto}
+          <button.circle.transparent.border title=_{MsgTakePhoto} type=button ##{idButtonTakePhoto}>
+            <i>photo_camera
 
   ^{fvInput photoV}
+
+^{md3widget nameV}
+
+^{md3widget phoneV}
+
+
+
+
+<dialog ##{idDialogVideo}>
+
+  <video ##{idVideo} controls playsinline autoplay width=200 height=200>
+  
+  <nav.center-align>
+    <button.circle.extra.transparent type=button ##{idButtonCapture}>
+      <i.extra>circle
+  
