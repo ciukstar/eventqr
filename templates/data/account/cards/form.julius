@@ -16,16 +16,17 @@ document.getElementById(#{idButtonUploadPhoto}).addEventListener('click', e => {
 
 document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
 
-  document.getElementById(#{idDialogVideo}).show();
+  document.getElementById(#{idDialogSnapshot}).show();
   
   document.getElementById(#{idButtonCapture}).addEventListener('click', e => {
-    const player = document.getElementById(#{idVideo});
+    const video = document.getElementById(#{idVideo});
     const canvas = document.createElement('canvas');
-    canvas.setAttribute('width',200);
-    canvas.setAttribute('height',200);
-    canvas.getContext('2d').drawImage(player,0,0,canvas.width,canvas.height);
+    
+    canvas.setAttribute('width',video.videoWidth);
+    canvas.setAttribute('height',video.videoHeight);
+    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
 
-    document.getElementById(#{idImgPhoto}).src = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    document.getElementById(#{idImgPhoto}).src = canvas.toDataURL('image/png');
 
     fetch(
       document.getElementById(#{idImgPhoto}).src
@@ -39,9 +40,9 @@ document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
       
       document.getElementById(#{fvId photoV}).files = dt.files;
       
-      player.srcObject.getVideoTracks().forEach(track => track.stop());
-      player.srcObject = null;
-      document.getElementById(#{idDialogVideo}).close();      
+      video.srcObject.getVideoTracks().forEach(track => track.stop());
+      video.srcObject = null;
+      document.getElementById(#{idDialogSnapshot}).close();
     });
   }, { once: true });
   
@@ -49,4 +50,14 @@ document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
     document.getElementById(#{idVideo}).srcObject = stream;
   });
   
+});
+
+
+[#{idButtonCloseDialogSnapshot},#{idOverlay}].map(x => document.getElementById(x)).forEach(x => {
+    x.addEventListener('click', e => {
+      const video = document.getElementById(#{idVideo});
+      video.srcObject.getVideoTracks().forEach(track => track.stop());
+      video.srcObject = null;
+      document.getElementById(#{idDialogSnapshot}).close();
+    });
 });

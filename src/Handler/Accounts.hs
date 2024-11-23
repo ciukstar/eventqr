@@ -58,7 +58,7 @@ import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
     ( Handler, Form, App (appSettings), widgetSnackbar, widgetTopbar
-    , Route (HomeR, DataR, EventPosterR)
+    , Route (HomeR, DataR, EventPosterR, StaticR)
     , DataR
       ( AccountEventScheduleR, AccountEventR, AccountSettingsR, UserPhotoR
       , AccountPushSettingsR, AccountNotificationR, AccountNotificationsR
@@ -87,7 +87,7 @@ import Foundation
       , MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgTotalEventsForThisMonth, MsgTotalAttendees, MsgNoEventsForThisMonth
       , MsgDuration, MsgCard, MsgOrder, MsgPlaceOrder, MsgFullName, MsgUploadPhoto
-      , MsgTakePhoto, MsgPhone, MsgRecordAdded
+      , MsgTakePhoto, MsgPhone, MsgRecordAdded, MsgClose
       )
     )
 
@@ -108,6 +108,7 @@ import Model
       )
     , PushSubscriptionId, Unique (UniquePushSubscription)
     , Photo (Photo)
+    , Info (Info, infoCard, infoName, infoValue)
     , EntityField
       ( UserId, AttendeeEvent, EventId, EventTime, AttendeeCard, CardId
       , CardUser, NotificationPublisher, NotificationRecipient
@@ -115,10 +116,11 @@ import Model
       , PushSubscriptionP256dh, PushSubscriptionAuth, PushSubscriptionTime
       , PushSubscriptionUserAgent, NotificationId, PhotoMime, PhotoPhoto
       , PhotoAttribution
-      ), Info (Info, infoCard, infoName, infoValue)
+      )
     )
 
 import Settings (widgetFile, AppSettings (appTimeZone))
+import Settings.StaticFiles (img_camera_24dp_0000F5_FILL0_wght400_GRAD0_opsz24_svg)
 
 import Text.Hamlet (Html)
 
@@ -222,12 +224,14 @@ formCard uid extra = do
     
     let r = (,,) <$> pure (Card uid "" now) <*> photoR
             <*> traverse (\(l,x) -> (\a v -> (a,toHtml <$> v)) l <$> x) infos
-    
+
     idLabelPhoto <- newIdent
     idImgPhoto <- newIdent
     idButtonUploadPhoto <- newIdent
     idButtonTakePhoto <- newIdent
-    idDialogVideo <- newIdent
+    idOverlay <- newIdent
+    idDialogSnapshot <- newIdent
+    idButtonCloseDialogSnapshot <- newIdent
     idVideo <- newIdent
     idButtonCapture <- newIdent
     return (r,$(widgetFile "data/account/cards/form")) 

@@ -16,7 +16,7 @@
             <i>upload_file
             _{MsgUploadPhoto}
 
-          <button.circle.transparent.border title=_{MsgTakePhoto} type=button ##{idButtonTakePhoto}>
+          <button.circle.transparent.border title=_{MsgTakePhoto} type=button ##{idButtonTakePhoto} data-ui=##{idOverlay}>
             <i>photo_camera
 
   ^{fvInput photoV}
@@ -26,13 +26,21 @@
 ^{md3widget phoneV}
 
 
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
 
+<dialog ##{idDialogSnapshot}>
+ 
+  <h6.row>
+    <div.max>
+      _{MsgTakePhoto}
+    <button.transparent.circle type=button title=_{MsgClose} ##{idButtonCloseDialogSnapshot} data-ui=##{idOverlay}>
+      <i>close
 
-<dialog ##{idDialogVideo}>
-
-  <video ##{idVideo} controls playsinline autoplay width=200 height=200>
+  <figure.center-align>
+    <video ##{idVideo} playsinline autoplay width=128 height=128
+           poster=@{StaticR img_camera_24dp_0000F5_FILL0_wght400_GRAD0_opsz24_svg}>
   
   <nav.center-align>
-    <button.circle.extra.transparent type=button ##{idButtonCapture}>
+    <button.circle.extra.transparent.border type=button ##{idButtonCapture} data-ui=##{idOverlay}>
       <i.extra>circle
   

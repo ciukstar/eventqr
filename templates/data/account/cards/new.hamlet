@@ -11,6 +11,9 @@
   <form method=post action=@{DataR $ AccountCardNewR uid} enctype=#{et}>
     ^{fw}
     <nav.right-align>
+      <a.button.transparent href=@{HomeR}>
+        _{MsgCancel}
+      
       <button type=submit>
         _{MsgPlaceOrder}
 
