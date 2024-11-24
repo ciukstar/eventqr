@@ -109,6 +109,7 @@ import Handler.Cards
     , postUserCardDeleR
     , getCardQrImageR
     , getCardPhotoR
+    , getCardsR
     )
 
 import Handler.Accounts

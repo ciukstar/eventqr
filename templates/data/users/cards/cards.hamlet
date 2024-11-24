@@ -17,7 +17,7 @@
         <figcaption>
           _{MsgUserHasNoCardsYet}.
     $else
-      $forall (Entity cid (Card _ _ issued),Entity uid (User email _ uname _ _ _ _ _ _)) <- cards
+      $forall (Entity cid (Card _ _ _ status issued _),Entity uid (User email _ uname _ _ _ _ _ _)) <- cards
         <a.row.padding.wave href=@{DataR $ UserCardR uid cid}>
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -29,7 +29,22 @@
               $nothing
                 #{email}
             <div.supporting-text.small-text>
-              _{MsgIssueDate}
+              $case status
+                $of CardStatusAwaiting
+                  <span>
+                    <i.small>pending
+                    _{MsgAwaitingModeration}
+                    
+                $of CardStatusApproved
+                  <span>
+                    <i.small>verified
+                    _{MsgCardStatusActive}
+                    
+                $of CardStatusRejected
+                  <span>
+                    <i.small>block
+                    _{MsgRejected}
+                    
             <div.supporting-text.small-text>
               $with dt <- show issued
                 <time.day datetime=#{dt}>

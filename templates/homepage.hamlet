@@ -45,7 +45,7 @@
             <div.small-text>_{MsgYouDoNonHaveCardsYet}.
             <div.small-text>_{MsgCardIsRequiredToParticipateInEvents}.
       $else
-        $forall ((Entity cid (Card _ _ issued),Entity _ (User email _ uname _ _ _ _ _ _)),attrs) <- cards
+        $forall ((Entity cid (Card _ _ _ status issued _),Entity _ (User email _ uname _ _ _ _ _ _)),attrs) <- cards
           $with i <- show $ fromSqlKey cid
             <dialog ##{idDialogQrCode}#{i} style="z-index:102">
               <h6>_{MsgQrCode}
@@ -73,6 +73,23 @@
                       #{name}
                     $nothing
                       #{email}
+                  <div.supporting-text.small-text>
+                    $case status
+                      $of CardStatusAwaiting
+                        <span>
+                          <i.small>pending
+                          _{MsgAwaitingModeration}
+
+                      $of CardStatusApproved
+                        <span>
+                          <i.small>verified
+                          _{MsgCardStatusActive}
+
+                      $of CardStatusRejected
+                        <span>
+                          <i.small>block
+                          _{MsgRejected}
+                      
               <div>
                 <dl>
                   <dt.bold>_{MsgCardNumber}

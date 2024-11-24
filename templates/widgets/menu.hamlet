@@ -22,6 +22,10 @@
       <a href=@{DataR $ DataEventsR uid}>
         <i>topic
         <span>_{MsgEventsCatalogue}
+        
+      <a href=@{DataR $ CardsR uid}>
+        <i>policy
+        <span>_{MsgModeration}
 
     <a href=@{DataR UsersR} :curr == Just (DataR UsersR):.active>
       <i>group

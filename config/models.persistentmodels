@@ -30,7 +30,10 @@ Photo
 Card
     user UserId OnDeleteCascade
     qr Text
-    issued UTCTime
+    ordered UTCTime
+    status CardStatus
+    issued UTCTime Maybe
+    moderator UserId Maybe
 
 Poster
     event EventId OnDeleteCascade

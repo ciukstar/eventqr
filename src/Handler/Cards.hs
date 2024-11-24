@@ -15,6 +15,7 @@ module Handler.Cards
   , postUserCardDeleR
   , getCardQrImageR
   , getCardPhotoR
+  , getCardsR
   ) where
 
 
@@ -29,15 +30,14 @@ import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(first, second))
-import Data.Text (Text)
+import Data.Text (Text, unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (getCurrentTime)
 
 import Database.Esqueleto.Experimental
     ( select, from, table, selectOne, where_, val
     , (^.), (==.), (:&)((:&))
-    , orderBy, asc, innerJoin, on
-    , delete
+    , orderBy, asc, innerJoin, on, delete
     )
     
 import Database.Persist
@@ -47,22 +47,23 @@ import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
     ( Handler, Form, App, widgetTopbar, widgetSnackbar
-    , Route (DataR, StaticR)
+    , Route (DataR, StaticR, HomeR)
     , DataR
       ( UserPhotoR, UsersR, UserR
       , UserCardsR, UserCardR, CardQrImageR, UserCardNewR
       , UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
-      , UserCardDeleR
+      , UserCardDeleR, CardsR
       )
     , AppMessage
-      ( MsgPhoto, MsgUser, MsgName
+      ( MsgPhoto, MsgUser, MsgName, MsgAwaiting
       , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel
-      , MsgSave, MsgCardDoesNotContainAdditionalInfo
+      , MsgSave, MsgCardDoesNotContainAdditionalInfo, MsgQrCode
       , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgNewField
-      , MsgDetails, MsgCards, MsgCard, MsgIssueDate, MsgAdd, MsgClose
-      , MsgQrCode, MsgCardNumber, MsgCardholder
-      , MsgValue, MsgNewFieldNameRequired, MsgNoFieldsForThisCardYet
-      , MsgUserHasNoCardsYet, MsgRecordEdited
+      , MsgDetails, MsgCards, MsgCard, MsgAdd, MsgClose, MsgCardNumber
+      , MsgCardholder, MsgValue, MsgNewFieldNameRequired, MsgRecordEdited
+      , MsgNoFieldsForThisCardYet, MsgUserHasNoCardsYet, MsgRejected
+      , MsgAwaitingModeration, MsgCardStatusActive, MsgModeration
+      , MsgNoCardsForModerationYet, MsgApproved, MsgAll
       )
     )
 
@@ -71,11 +72,12 @@ import Material3 (md3widget, md3textareaWidget)
 import Model
     ( msgSuccess, msgError
     , UserId, User(User)
-    , Card (Card)
-    , CardId, Info (Info)
+    , CardId, Card (Card)
+    , CardStatus (CardStatusAwaiting, CardStatusApproved, CardStatusRejected)
+    , Info (Info), Photo (Photo)
     , EntityField
-      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard, PhotoCard
-      ), Photo (Photo)
+      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard, PhotoCard, CardStatus
+      )
     )
 
 import Settings (widgetFile)
@@ -84,7 +86,9 @@ import Settings.StaticFiles
     )
 
 import Text.Hamlet (Html)
+import Text.Read (readMaybe)
 
+import Yesod.Auth (YesodAuth(maybeAuthId))
 import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
@@ -92,6 +96,7 @@ import Yesod.Core
     , addMessageI, toHtml
     , getPostParams
     )
+import Yesod.Form.Input (runInputGet, iopt)
 import Yesod.Form.Fields
     ( textField, htmlField
     )
@@ -101,6 +106,31 @@ import Yesod.Form.Types
     , FieldSettings(FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+
+
+getCardsR :: UserId -> Handler Html
+getCardsR uid = do
+
+    status <- ((readMaybe . unpack) =<<) <$> runInputGet ( iopt textField "status" )
+
+    cards <- runDB $ select $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
+            
+        case status of
+          Just s -> where_ $ x ^. CardStatus ==. val s
+          Nothing -> return ()
+          
+        orderBy [asc (x ^. CardIssued)]
+        return (x,u)
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgModeration
+        idOverlay <- newIdent
+        idFormFilter <- newIdent
+        $(widgetFile "data/moderation/cards")
 
 
 postUserCardDeleR :: UserId -> CardId -> Handler Html
@@ -340,7 +370,9 @@ formCard route uid card fields extra = do
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
         } Nothing
 
-    let r = (,) <$> ( (,) (maybe (Card uid "" now) entityVal card) <$> traverse fst attrs )
+    authId <- maybeAuthId 
+
+    let r = (,) <$> ( (,) (maybe (Card uid "" now CardStatusApproved (Just now) authId) entityVal card) <$> traverse fst attrs )
                 <*> ( (,) <$> nameR <*> valR )
     let w = do
             idDetailsNewField <- newIdent

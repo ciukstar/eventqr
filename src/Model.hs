@@ -91,6 +91,11 @@ data StoreType = StoreTypeDatabase | StoreTypeSession | StoreTypeGoogleSecretMan
 derivePersistField "StoreType"
 
 
+data CardStatus = CardStatusAwaiting | CardStatusApproved | CardStatusRejected
+    deriving (Show, Read, Eq, Ord)
+derivePersistField "CardStatus"
+
+
 instance PathPiece Month where
     toPathPiece :: Month -> Text
     toPathPiece = pack . show

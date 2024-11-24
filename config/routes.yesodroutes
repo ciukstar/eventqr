@@ -46,6 +46,8 @@
 
 /data DataR:
 
+    /moderation/#UserId/cards CardsR GET
+
     /users/#UserId/subscriptions/#PushSubscriptionId/unsubscribe UserUnsubscribeR   POST
     /users/#UserId/subscriptions                                 UserSubscriptionsR POST
 

@@ -111,9 +111,10 @@ import Foundation
       , MsgItLooksLikeUserNotSubscribedToPushNotifications, MsgPoster, MsgUploadPoster
       , MsgAttribution, MsgNotificationSent, MsgUnableToObtainAccessToken
       , MsgRefreshTokenIsNotInitialized, MsgUnknownAccountForSendingEmail
-      , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher
-      , MsgUnknownMessageRecipient, MsgCheckAtLeastOneOptionPlease
-      , MsgProvideRecipientEmailPlease, MsgDurationHours, MsgDuration, MsgInMinutes
+      , MsgVapidNotInitializedProperly, MsgUnknownMessagePublisher, MsgInMinutes
+      , MsgUnknownMessageRecipient, MsgCheckAtLeastOneOptionPlease, MsgDuration
+      , MsgProvideRecipientEmailPlease, MsgDurationHours, MsgRejected
+      , MsgAwaitingModeration, MsgCardStatusActive
       )
     )
 
@@ -127,6 +128,7 @@ import Model
     , nominalDiffTimeToMinutes, minutesToNominalDiffTime
     , EventId, Event(Event, eventName, eventTime, eventDescr, eventDuration)
     , CardId, Card (Card)
+    , CardStatus (CardStatusAwaiting, CardStatusApproved, CardStatusRejected)
     , UserId, User (User, userEmail)
     , AttendeeId, Attendee (Attendee, attendeeRegDate, attendeeCard, attendeeEvent)
     , PushSubscription (PushSubscription)
@@ -182,7 +184,8 @@ import Yesod.Form.Fields
 import Yesod.Form.Functions (generateFormPost, runFormPost, mreq, mopt)
 import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Form.Types
-    ( FormResult(FormSuccess), Field (fieldView), FieldView (fvInput, fvErrors, fvId, fvLabel, fvRequired)
+    ( FormResult(FormSuccess), Field (fieldView)
+    , FieldView (fvInput, fvErrors, fvId, fvLabel, fvRequired)
     , FieldSettings (FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
@@ -1081,7 +1084,7 @@ $if null opts
 $else
   <div *{attrs} style="max-height:60svh;overflow-y:auto">
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _ _ _ _)) <- findCard opt cards
+      $maybe (Entity _ (Card _ _ _ status issued _),Entity uid (User email _ uname _ _ _ _ _ _)) <- findCard opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -1092,6 +1095,22 @@ $else
                 #{name}
               $nothing
                 #{email}
+            <div.supporting-text.small-text>
+              $case status
+                $of CardStatusAwaiting
+                  <span>
+                    <i.small>pending
+                    _{MsgAwaitingModeration}
+
+                $of CardStatusApproved
+                  <span>
+                    <i.small>verified
+                    _{MsgCardStatusActive}
+
+                $of CardStatusRejected
+                  <span>
+                    <i.small>block
+                    _{MsgRejected}
             <div.small>
               $with dt <- show issued
                 <time.full-datetime datetime=#{dt}>

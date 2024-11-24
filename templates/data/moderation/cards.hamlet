@@ -1,0 +1,91 @@
+
+^{widgetTopbar (Just (HomeR,[])) (msgr MsgModeration) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <form method=get action=@{DataR $ CardsR uid} ##{idFormFilter}>
+
+  <nav.small-margin.scroll>
+
+    <button.chip.round type=submit name=status value=#{show CardStatusAwaiting}
+                       form=#{idFormFilter} :Just CardStatusAwaiting == status:.fill>
+
+      $maybe s <- status
+        $if CardStatusAwaiting == s
+          <i>done
+      <span>_{MsgAwaiting}
+
+    <button.chip.round type=submit name=status value=#{show CardStatusApproved} 
+                       form=#{idFormFilter} :Just CardStatusApproved == status:.fill>
+
+      $maybe s <- status
+        $if CardStatusApproved == s
+          <i>done
+      <span>_{MsgApproved}
+
+    <button.chip.round type=submit name=status value=#{show CardStatusRejected}
+                       form=#{idFormFilter} :Just CardStatusRejected == status:.fill>
+
+      $maybe s <- status
+        $if CardStatusRejected == s
+          <i>done
+      <span>_{MsgRejected}
+
+    <button.chip.round type=submit form=#{idFormFilter} :Nothing == status:.fill>
+      $maybe _ <- status
+      $nothing
+        <i>done
+      <span>_{MsgAll}
+
+  $if null cards
+    <figure.margin.pading style="text-align:center">
+      <i.extra>folder_open
+      <figcaption>
+        _{MsgNoCardsForModerationYet}.
+ 
+  $else
+    $forall (Entity cid (Card uid _ ordered status issued _),Entity _ (User email _ uname _ _ _ _ _ _)) <- cards
+      <a.row.padding.wave href=#>
+
+        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+        <div.content.max>
+          <h6.headline.large-text>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+          <div.supporting-text.small-text>
+            $case status
+              $of CardStatusAwaiting
+                <span>
+                  <i.small.orange-text>pending
+                  _{MsgAwaitingModeration}
+
+              $of CardStatusApproved
+                <span>
+                  <i.small.green-text>verified
+                  _{MsgApproved}
+
+              $of CardStatusRejected
+                <span>
+                  <i.small.red-text>block
+                  _{MsgRejected}
+
+          <div.supporting-text.small-text>
+            $case status
+              $of CardStatusApproved
+                $maybe dt <- show <$> issued
+                  <time.day datetime=#{dt}>
+                    #{dt}
+      
+              $of _
+                $with dt <- show ordered
+                  <time.day datetime=#{dt}>
+                    #{dt}
+
+        <i>arrow_forward_ios
+
+      <hr>
+
+  ^{widgetSnackbar msgs}

@@ -1,3 +1,10 @@
+Awaiting: Awaiting
+NoCardsForModerationYet: There are no cards for moderation yet
+Moderation: Moderation
+CardStatusActive: Active
+Rejected: Rejected
+Approved: Approved
+AwaitingModeration: Awaiting moderation
 UploadPhoto: Upload photo
 TakePhoto: Take a photo
 FullName: Full name

@@ -24,7 +24,7 @@ import Model
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
       , userPhotoPhoto
       )
-    , Card (Card, cardUser, cardIssued, cardQr)
+    , Card (Card, cardUser, cardIssued, cardQr, cardStatus, cardOrdered, cardModerator)
     , Event (Event, eventTime, eventName, eventDescr, eventManager, eventDuration)
     , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info, infoCard, infoName, infoValue)
@@ -32,7 +32,7 @@ import Model
     , Token (Token, tokenApi, tokenStore)
     , Store (Store, storeToken, storeKey, storeVal)
     , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager), secretVapid
-    , AuthenticationType (UserAuthTypePassword)
+    , AuthenticationType (UserAuthTypePassword), CardStatus (CardStatusApproved, CardStatusAwaiting), Photo (Photo, photoCard, photoMime, photoPhoto, photoAttribution)
     )
     
 import Settings (AppSettings (appDevelopment))
@@ -242,9 +242,18 @@ fillDemoRu appSettings = do
         logoOk = "https://upload.wikimedia.org/wikipedia/commons/0/0c/Odnoklassniki.svg"
 
     cid1 <- insert $ Card { cardUser = uid1
-                          , cardIssued = addUTCTime ((-30) * day) now
                           , cardQr = ""
+                          , cardOrdered = addUTCTime ((-31) * day) now
+                          , cardStatus = CardStatusApproved
+                          , cardIssued = Just ( addUTCTime ((-30) * day) now )
+                          , cardModerator = Just uid1
                           }
+    liftIO (BS.readFile "demo/user_1.avif") >>= \bs ->
+      insert_ Photo { photoCard = cid1
+                    , photoMime = "image/avif"
+                    , photoPhoto = bs
+                    , photoAttribution = Just freepik
+                    }
     insert_ $ Info { infoCard = cid1
                    , infoName = "Дата рождения"
                    , infoValue = [shamlet|<time class="day" datetime="1996-11-22">22.11.1996|]
@@ -283,9 +292,18 @@ fillDemoRu appSettings = do
                    }
 
     cid2 <- insert $ Card { cardUser = uid2
-                          , cardIssued = addUTCTime ((-31) * day) now
                           , cardQr = ""
+                          , cardOrdered = addUTCTime ((-32) * day) now
+                          , cardStatus = CardStatusApproved
+                          , cardIssued = Just ( addUTCTime ((-31) * day) now )
+                          , cardModerator = Just uid1
                           }
+    liftIO (BS.readFile "demo/user_2.avif") >>= \bs ->
+      insert_ Photo { photoCard = cid2
+                    , photoMime = "image/avif"
+                    , photoPhoto = bs
+                    , photoAttribution = Just freepik
+                    }
     insert_ $ Info { infoCard = cid2
                    , infoName = "Дата рождения"
                    , infoValue = [shamlet|<time class="day" datetime="1995-10-21">21.10.1995|]
@@ -324,9 +342,18 @@ fillDemoRu appSettings = do
                    }
 
     cid3 <- insert $ Card { cardUser = uid3
-                          , cardIssued = addUTCTime ((-32) * day) now
                           , cardQr = ""
+                          , cardOrdered = addUTCTime ((-33) * day) now
+                          , cardStatus = CardStatusApproved
+                          , cardIssued = Just ( addUTCTime ((-32) * day) now )
+                          , cardModerator = Just uid1
                           }
+    liftIO (BS.readFile "demo/user_3.avif") >>= \bs ->
+      insert_ Photo { photoCard = cid3
+                    , photoMime = "image/avif"
+                    , photoPhoto = bs
+                    , photoAttribution = Just freepik
+                    }
     insert_ $ Info { infoCard = cid3
                    , infoName = "Дата рождения"
                    , infoValue = [shamlet|<time class="day" datetime="1994-09-20">20.09.1994|]
@@ -365,9 +392,18 @@ fillDemoRu appSettings = do
                    }
 
     cid4 <- insert $ Card { cardUser = uid4
-                          , cardIssued = addUTCTime ((-33) * day) now
                           , cardQr = ""
+                          , cardOrdered = addUTCTime ((-34) * day) now
+                          , cardStatus = CardStatusApproved
+                          , cardIssued = Just ( addUTCTime ((-33) * day) now )
+                          , cardModerator = Just uid1
                           }
+    liftIO (BS.readFile "demo/user_4.avif") >>= \bs ->
+      insert_ Photo { photoCard = cid4
+                    , photoMime = "image/avif"
+                    , photoPhoto = bs
+                    , photoAttribution = Just freepik
+                    }
     insert_ $ Info { infoCard = cid4
                    , infoName = "Дата рождения"
                    , infoValue = [shamlet|<time class="day" datetime="1993-08-19">19.08.1993|]
@@ -404,6 +440,34 @@ fillDemoRu appSettings = do
                                            Ok
                                          |]
                    }
+
+    cid5 <- insert $ Card { cardUser = uid5
+                          , cardQr = ""
+                          , cardOrdered = addUTCTime ((-1) * day) now
+                          , cardStatus = CardStatusAwaiting
+                          , cardIssued = Nothing
+                          , cardModerator = Nothing
+                          }
+    liftIO (BS.readFile "demo/user_5.avif") >>= \bs ->
+      insert_ Photo { photoCard = cid5
+                    , photoMime = "image/avif"
+                    , photoPhoto = bs
+                    , photoAttribution = Just freepik
+                    }
+
+    cid6 <- insert $ Card { cardUser = uid6
+                          , cardQr = ""
+                          , cardOrdered = addUTCTime ((-1) * day + (1 * hour)) now
+                          , cardStatus = CardStatusAwaiting
+                          , cardIssued = Nothing
+                          , cardModerator = Nothing
+                          }
+    liftIO (BS.readFile "demo/user_6.avif") >>= \bs ->
+      insert_ Photo { photoCard = cid6
+                    , photoMime = "image/avif"
+                    , photoPhoto = bs
+                    , photoAttribution = Just freepik
+                    }
 
     eid11 <- insert $ Event { eventManager = uid1
                             , eventTime = addUTCTime hour now

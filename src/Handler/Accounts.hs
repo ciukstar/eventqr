@@ -116,7 +116,7 @@ import Model
       , PushSubscriptionP256dh, PushSubscriptionAuth, PushSubscriptionTime
       , PushSubscriptionUserAgent, NotificationId, PhotoMime, PhotoPhoto
       , PhotoAttribution
-      )
+      ), CardStatus (CardStatusAwaiting)
     )
 
 import Settings (widgetFile, AppSettings (appTimeZone))
@@ -222,7 +222,7 @@ formCard uid extra = do
     msgr <- getMessageRender
     let infos = [(msgr MsgFullName,nameR),(msgr MsgPhone,phoneR)]
     
-    let r = (,,) <$> pure (Card uid "" now) <*> photoR
+    let r = (,,) <$> pure (Card uid "" now CardStatusAwaiting Nothing Nothing) <*> photoR
             <*> traverse (\(l,x) -> (\a v -> (a,toHtml <$> v)) l <$> x) infos
 
     idLabelPhoto <- newIdent

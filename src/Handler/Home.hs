@@ -75,6 +75,7 @@ import Foundation
       , MsgCardDoesNotContainAdditionalInfo, MsgNotManagerOfEventSorry
       , MsgFillInCard, MsgMyVisitingSchedule, MsgNoAttendeesForThisEventYet
       , MsgUpcoming, MsgOrderNewCard, MsgCardIsRequiredToParticipateInEvents
+      , MsgAwaitingModeration, MsgRejected, MsgCardStatusActive
       )
     )
 
@@ -82,6 +83,7 @@ import Model
     ( msgSuccess, msgError, normalizeNominalDiffTime
     , EventId, Event (Event, eventDuration)
     , CardId, Card (Card)
+    , CardStatus (CardStatusAwaiting, CardStatusApproved, CardStatusRejected)
     , UserId, User (User, userManager)
     , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info)
@@ -384,7 +386,7 @@ $if null opts
 $else
   <div *{attrs}>
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ issued),Entity uid (User email _ uname _ _ _ _ _ _)) <- findEvent opt cards
+      $maybe (Entity _ (Card _ _ _ status issued _),Entity uid (User email _ uname _ _ _ _ _ _)) <- findEvent opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -396,7 +398,21 @@ $else
               $nothing
                 #{email}
             <div.supporting-text.small-text>
-              _{MsgIssueDate}
+              $case status
+                $of CardStatusAwaiting
+                  <span>
+                    <i.small>pending
+                    _{MsgAwaitingModeration}
+
+                $of CardStatusApproved
+                  <span>
+                    <i.small>verified
+                    _{MsgCardStatusActive}
+
+                $of CardStatusRejected
+                  <span>
+                    <i.small>block
+                    _{MsgRejected}
             <div.supporting-text.small-text>
               $with dt <- show issued
                 <time.day datetime=#{dt}>

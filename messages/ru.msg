@@ -1,3 +1,10 @@
+Awaiting: Ожидание
+NoCardsForModerationYet: Карточек для модерации пока нет
+Moderation: Модерация
+CardStatusActive: Активна
+Rejected: Отклонено
+Approved: Одобрено
+AwaitingModeration: Ожидает модерации
 UploadPhoto: Загрузить фото
 TakePhoto: Сфотографироваться
 FullName: Полное имя
