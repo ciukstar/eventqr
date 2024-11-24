@@ -1,3 +1,10 @@
+CardRejected: The request was rejected
+DateRevoked: Date of cancellation
+DateRejected: Date of rejection
+CardRevoked: The card has been cancelled
+Status: Status
+RequestApproved: Request approved
+RequestDate: Request date
 Revoke: Revoke
 Reject: Reject
 Approve: Approve

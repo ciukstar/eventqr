@@ -91,7 +91,7 @@ import Model
     , EntityField
       ( EventTime, EventId, CardId, CardUser, UserId, AttendeeCard, AttendeeEvent
       , AttendeeId, InfoCard, InfoId, EventName, EventDescr, PosterEvent
-      , CardIssued, EventManager
+      , CardUpdated, EventManager
       )
     )
 
@@ -345,7 +345,7 @@ formUserCards uid extra = do
         x :& u <- from $ table @Card
             `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
         where_ $ x ^. CardUser  ==. val uid
-        orderBy [asc (x ^. CardIssued)]
+        orderBy [asc (x ^. CardUpdated)]
         return (x,u)
 
     (cardR,cardV) <- mreq (md3radioFieldList cards) "" Nothing
@@ -386,7 +386,7 @@ $if null opts
 $else
   <div *{attrs}>
     $forall (i,opt) <- opts
-      $maybe (Entity _ (Card _ _ _ status issued _),Entity uid (User email _ uname _ _ _ _ _ _)) <- findEvent opt cards
+      $maybe (Entity _ (Card _ _ _ status updated _),Entity uid (User email _ uname _ _ _ _ _ _)) <- findEvent opt cards
         <div.max.row.no-margin.padding.wave onclick="document.getElementById('#{theId}-#{i}').click()">
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -414,7 +414,7 @@ $else
                     <i.small>block
                     _{MsgRejected}
             <div.supporting-text.small-text>
-              $with dt <- show issued
+              $with dt <- show updated
                 <time.day datetime=#{dt}>
                   #{dt}
 
@@ -628,7 +628,7 @@ getHomeR = do
               x :& u <- from $ table @Card
                  `innerJoin` table @User `on` (\(x :& u) -> x ^. CardUser ==. u ^. UserId)
               where_ $ x ^. CardUser  ==. val uid
-              orderBy [asc (x ^. CardIssued)]
+              orderBy [asc (x ^. CardUpdated)]
               return (x,u)
 
         forM cards $ \c@(Entity cid _,_) -> (c,) <$> runDB ( select $ do

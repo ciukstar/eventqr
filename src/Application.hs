@@ -111,6 +111,9 @@ import Handler.Cards
     , getCardPhotoR
     , getCardsR
     , getCardR
+    , postCardApproveR
+    , postCardRevokeR
+    , postCardRejectR
     )
 
 import Handler.Accounts

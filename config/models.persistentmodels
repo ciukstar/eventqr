@@ -32,7 +32,7 @@ Card
     qr Text
     ordered UTCTime
     status CardStatus
-    issued UTCTime Maybe
+    updated UTCTime Maybe
     moderator UserId Maybe
 
 Poster

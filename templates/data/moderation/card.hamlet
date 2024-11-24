@@ -1,10 +1,57 @@
 
 ^{widgetTopbar (Just (DataR $ CardsR uid,stati)) (msgr MsgCard) idOverlay Nothing Nothing}
 
-<main.responsive.margin>
+<main.responsive.horizontal-margin>
 
-  $maybe (Entity cid (Card _ _ ordered status issued _),Entity _ (User email _ uname _ _ _ _ _ _)) <- card
+  $maybe (Entity cid (Card _ _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)) <- card
     <dl>
+      <dt.bold>_{MsgStatus}
+      <dd.bottom-margin.left-margin>
+        $case status
+          $of CardStatusAwaiting
+            <span>
+              <i.orange-text>pending
+              _{MsgAwaitingModeration}
+
+          $of CardStatusApproved
+            <span>
+              <i.green-text>verified
+              _{MsgApproved}
+
+          $of CardStatusRejected
+            <span>
+              <i.small.red-text>block
+              _{MsgRejected}
+
+          $of CardStatusRevoked
+            <span>
+              <i.red-text>remove_moderator
+              _{MsgRevoked}
+            
+      <dt.bold>_{MsgRequestDate}
+      <dd.bottom-margin.left-margin>
+        $with dt <- show ordered
+          <time.full-datetime datetime=#{dt}>
+            #{dt}
+     
+      $maybe dt <- show <$> updated
+        <dt.bold>
+          $case status
+            $of CardStatusApproved
+              _{MsgIssueDate}
+
+            $of CardStatusRejected
+              _{MsgDateRejected}
+
+            $of CardStatusRevoked
+              _{MsgDateRevoked}       
+       
+            $of _
+            
+        <dd.bottom-margin.left-margin>
+          <time.full-datetime datetime=#{dt}>
+            #{dt}
+        
       <dt.bold>_{MsgCardNumber}
       <dd.bottom-margin.left-margin>
         #{fromSqlKey cid}
@@ -33,13 +80,26 @@
 
     $case status
       $of CardStatusAwaiting
-        <button.green.bottom-margin type=button>
-          <i>verified
-          <span>_{MsgApprove}
+        <form method=post action=@{DataR $ CardApproveR uid cid} enctype=#{etApprove}>
+          ^{fwApprove}
+          <button.responsive.green type=submit>
+            <i>verified
+            <span>_{MsgApprove}
+            
+        <form method=post action=@{DataR $ CardRejectR uid cid} enctype=#{etReject}>
+          ^{fwReject}          
+          <button.responsive.border.transparent type=submit>
+            <i.red-text>block
+            <span>_{MsgReject}
           
-        <button.border.transparent.bottom-margin type=button>
-          <i.red-text>block
-          <span>_{MsgReject}
+      $of CardStatusApproved
+        <form method=post action=@{DataR $ CardRevokeR uid cid} enctype=#{etRevoke}>
+          ^{fwRevoke}
+          <button.responsive.red type=submit>
+            <i>remove_moderator
+            <span>_{MsgRevoke}
+          
+      $of _
 
     ^{widgetSnackbar msgs}
 

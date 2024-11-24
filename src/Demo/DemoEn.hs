@@ -24,7 +24,7 @@ import Model
       ( UserPhoto, userPhotoUser, userPhotoMime, userPhotoAttribution
       , userPhotoPhoto
       )
-    , Card (Card, cardUser, cardIssued, cardQr, cardStatus, cardOrdered, cardModerator)
+    , Card (Card, cardUser, cardUpdated, cardQr, cardStatus, cardOrdered, cardModerator)
     , Event (Event, eventTime, eventName, eventDescr, eventManager, eventDuration)
     , Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info, infoCard, infoName, infoValue)
@@ -245,7 +245,7 @@ fillDemoEn appSettings = do
                           , cardQr = ""
                           , cardOrdered = addUTCTime ((-31) * day) now
                           , cardStatus = CardStatusApproved
-                          , cardIssued = Just ( addUTCTime ((-30) * day) now )
+                          , cardUpdated = Just ( addUTCTime ((-30) * day) now )
                           , cardModerator = Just uid1
                           }
     liftIO (BS.readFile "demo/user_1.avif") >>= \bs ->
@@ -295,7 +295,7 @@ fillDemoEn appSettings = do
                           , cardQr = ""
                           , cardOrdered = addUTCTime ((-32) * day) now
                           , cardStatus = CardStatusApproved
-                          , cardIssued = Just ( addUTCTime ((-31) * day) now )
+                          , cardUpdated = Just ( addUTCTime ((-31) * day) now )
                           , cardModerator = Just uid1
                           }
     liftIO (BS.readFile "demo/user_2.avif") >>= \bs ->
@@ -345,7 +345,7 @@ fillDemoEn appSettings = do
                           , cardQr = ""
                           , cardOrdered = addUTCTime ((-33) * day) now
                           , cardStatus = CardStatusApproved
-                          , cardIssued = Just ( addUTCTime ((-32) * day) now )
+                          , cardUpdated = Just ( addUTCTime ((-32) * day) now )
                           , cardModerator = Just uid1
                           }
     liftIO (BS.readFile "demo/user_3.avif") >>= \bs ->
@@ -395,7 +395,7 @@ fillDemoEn appSettings = do
                           , cardQr = ""
                           , cardOrdered = addUTCTime ((-34) * day) now
                           , cardStatus = CardStatusApproved
-                          , cardIssued = Just ( addUTCTime ((-33) * day) now )
+                          , cardUpdated = Just ( addUTCTime ((-33) * day) now )
                           , cardModerator = Just uid1
                           }
     liftIO (BS.readFile "demo/user_4.avif") >>= \bs ->
@@ -445,7 +445,7 @@ fillDemoEn appSettings = do
                           , cardQr = ""
                           , cardOrdered = addUTCTime ((-1) * day) now
                           , cardStatus = CardStatusAwaiting
-                          , cardIssued = Nothing
+                          , cardUpdated = Nothing
                           , cardModerator = Nothing
                           }
     liftIO (BS.readFile "demo/user_5.avif") >>= \bs ->
@@ -459,7 +459,7 @@ fillDemoEn appSettings = do
                           , cardQr = ""
                           , cardOrdered = addUTCTime ((-1) * day + (1 * hour)) now
                           , cardStatus = CardStatusAwaiting
-                          , cardIssued = Nothing
+                          , cardUpdated = Nothing
                           , cardModerator = Nothing
                           }
     liftIO (BS.readFile "demo/user_6.avif") >>= \bs ->

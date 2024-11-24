@@ -28,7 +28,7 @@
         _{MsgNoCardsForModerationYet}.
  
   $else
-    $forall (Entity cid (Card oid _ ordered status issued _),Entity _ (User email _ uname _ _ _ _ _ _)) <- cards
+    $forall (Entity cid (Card oid _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)) <- cards
       <a.row.padding.wave href=@?{(DataR $ CardR uid cid,[("status",pack $ show status)])}>
 
         <img.circle src=@{DataR $ UserPhotoR oid} alt=_{MsgPhoto} loading=lazy>
@@ -64,7 +64,7 @@
           <div.supporting-text.small-text>
             $case status
               $of CardStatusApproved
-                $maybe dt <- show <$> issued
+                $maybe dt <- show <$> updated
                   <time.day datetime=#{dt}>
                     #{dt}
       

@@ -17,6 +17,9 @@ module Handler.Cards
   , getCardPhotoR
   , getCardsR
   , getCardR
+  , postCardApproveR
+  , postCardRevokeR
+  , postCardRejectR
   ) where
 
 
@@ -36,9 +39,9 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (getCurrentTime)
 
 import Database.Esqueleto.Experimental
-    ( select, from, table, selectOne, where_, val
-    , (^.), (==.), (:&)((:&))
-    , orderBy, asc, innerJoin, on, delete
+    ( select, from, table, selectOne, where_, val, update, set
+    , (^.), (==.), (:&)((:&)), (=.)
+    , orderBy, asc, innerJoin, on, delete, just
     )
     
 import Database.Persist
@@ -50,10 +53,9 @@ import Foundation
     ( Handler, Form, App, widgetTopbar, widgetSnackbar
     , Route (DataR, StaticR, HomeR)
     , DataR
-      ( UserPhotoR, UsersR, UserR
-      , UserCardsR, UserCardR, CardQrImageR, UserCardNewR
-      , UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
-      , UserCardDeleR, CardsR, CardR
+      ( UserPhotoR, UsersR, UserR, UserCardsR, UserCardR, CardQrImageR
+      , UserCardNewR, UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
+      , UserCardDeleR, CardsR, CardR, CardApproveR, CardRevokeR, CardRejectR
       )
     , AppMessage
       ( MsgPhoto, MsgUser, MsgName, MsgAwaiting
@@ -65,7 +67,9 @@ import Foundation
       , MsgNoFieldsForThisCardYet, MsgUserHasNoCardsYet, MsgRejected
       , MsgAwaitingModeration, MsgCardStatusActive, MsgModeration
       , MsgNoCardsForModerationYet, MsgApproved, MsgAll, MsgApprove
-      , MsgReject, MsgRevoked
+      , MsgReject, MsgRevoked, MsgIssueDate, MsgRequestDate, MsgStatus
+      , MsgRequestApproved, MsgRevoke, MsgCardRevoked, MsgDateRevoked
+      , MsgDateRejected, MsgCardRejected
       )
     )
 
@@ -81,7 +85,7 @@ import Model
       )
     , Info (Info), Photo (Photo)
     , EntityField
-      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard, PhotoCard
+      ( UserId, CardUpdated, CardUser, CardId, InfoId, InfoCard, PhotoCard
       , CardStatus
       )
     )
@@ -114,6 +118,90 @@ import Yesod.Form.Types
 import Yesod.Persist.Core (YesodPersist(runDB))
 
 
+postCardRejectR :: UserId -> CardId -> Handler Html
+postCardRejectR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+
+    card <- runDB $ selectOne $ do
+        x <- from $ table @Card
+        where_ $ x ^. CardId ==. val cid
+        where_ $ x ^. CardStatus ==. val CardStatusAwaiting
+        return x
+
+    ((fr,_),_) <- runFormPost formCardReject
+    case (card, fr) of
+      (Just _,FormSuccess ()) -> do
+          now <- liftIO getCurrentTime
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusRejected
+                    , CardUpdated =. just (val now)
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          addMessageI msgSuccess MsgCardRejected
+          redirect (DataR $ CardR uid cid,stati)
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect (DataR $ CardR uid cid,stati)
+
+
+postCardRevokeR :: UserId -> CardId -> Handler Html
+postCardRevokeR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+
+    card <- runDB $ selectOne $ do
+        x <- from $ table @Card
+        where_ $ x ^. CardId ==. val cid
+        where_ $ x ^. CardStatus ==. val CardStatusApproved
+        return x
+
+    ((fr,_),_) <- runFormPost formCardRevoke
+    case (card, fr) of
+      (Just _,FormSuccess ()) -> do
+          now <- liftIO getCurrentTime
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusRevoked
+                    , CardUpdated =. just (val now)
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          addMessageI msgSuccess MsgCardRevoked
+          redirect (DataR $ CardR uid cid,stati)
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect (DataR $ CardR uid cid,stati)
+
+
+postCardApproveR :: UserId -> CardId -> Handler Html
+postCardApproveR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+
+    card <- runDB $ selectOne $ do
+        x <- from $ table @Card
+        where_ $ x ^. CardId ==. val cid
+        where_ $ x ^. CardStatus ==. val CardStatusAwaiting
+        return x
+
+    ((fr,_),_) <- runFormPost formCardApprove
+    case (card, fr) of
+      (Just _,FormSuccess ()) -> do
+          now <- liftIO getCurrentTime
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusApproved
+                    , CardUpdated =. just (val now)
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          addMessageI msgSuccess MsgRequestApproved
+          redirect (DataR $ CardR uid cid,stati)
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect (DataR $ CardR uid cid,stati)
+
+
 getCardR :: UserId -> CardId -> Handler Html
 getCardR uid cid = do
 
@@ -131,7 +219,9 @@ getCardR uid cid = do
         orderBy [asc (x ^. InfoId)]
         return x
 
-    (fw0,et0) <- generateFormPost formCardDelete
+    (fwApprove,etApprove) <- generateFormPost formCardApprove
+    (fwRevoke,etRevoke) <- generateFormPost formCardRevoke
+    (fwReject,etReject) <- generateFormPost formCardReject    
     
     msgr <- getMessageRender
     msgs <- getMessages
@@ -142,6 +232,18 @@ getCardR uid cid = do
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
         $(widgetFile "data/moderation/card")
+
+
+formCardReject :: Form ()
+formCardReject extra = return (pure (), [whamlet|^{extra}|])
+
+
+formCardRevoke :: Form ()
+formCardRevoke extra = return (pure (), [whamlet|^{extra}|])
+
+
+formCardApprove :: Form ()
+formCardApprove extra = return (pure (), [whamlet|^{extra}|])
 
 
 getCardsR :: UserId -> Handler Html
@@ -157,7 +259,7 @@ getCardsR uid = do
           Just s -> where_ $ x ^. CardStatus ==. val s
           Nothing -> return ()
           
-        orderBy [asc (x ^. CardIssued)]
+        orderBy [asc (x ^. CardUpdated)]
         return (x,u)
     
     msgr <- getMessageRender
@@ -469,7 +571,7 @@ getUserCardsR uid = do
         x :& u <- from $ table @Card
             `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
         where_ $ x ^. CardUser ==. val uid
-        orderBy [asc (x ^. CardIssued)]
+        orderBy [asc (x ^. CardUpdated)]
         return (x,u)
     
     msgr <- getMessageRender

@@ -1,3 +1,10 @@
+CardRejected: Запрос был отклонен
+DateRevoked: Дата аннулирования
+DateRejected: Дата отклонения
+CardRevoked: Карточка аннулирована
+Status: Статус
+RequestApproved: Запрос одобрен
+RequestDate: Дата запроса
 Revoke: Отозвать
 Reject: Отклонить
 Approve: Одобрить
