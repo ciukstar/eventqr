@@ -17,14 +17,18 @@ import Foundation
       , MsgOverview, MsgUseCaseDiagram, MsgEntityRelationshipDiagram
       , MsgSuperuser, MsgUsername, MsgPassword, MsgEmail, MsgClientId
       , MsgClientSecret, MsgGoogleSecretManager, MsgProjectId, MsgUserRoles
-      , MsgDataAdministrator, MsgEventManager
+      , MsgDataAdministrator, MsgEventManager, MsgBasicEntities, MsgCard
+      , MsgStateMachineDiagram, MsgModeration
       , MsgDoc000, MsgDoc001, MsgDoc002, MsgDoc003, MsgDoc004, MsgDoc005
       , MsgDoc006, MsgDoc007
       )
     )
 
 import Settings (widgetFile)
-import Settings.StaticFiles (img_EventQr_UCD_svg, img_EventQr_ERD_svg)
+import Settings.StaticFiles
+    ( img_EventQr_UCD_svg, img_EventQr_ERD_svg
+    , img_Moderation_SMD_svg
+    )
 
 import Text.Blaze.Html (preEscapedToHtml)
 import Text.Hamlet (Html)

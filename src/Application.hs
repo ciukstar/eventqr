@@ -110,6 +110,7 @@ import Handler.Cards
     , getCardQrImageR
     , getCardPhotoR
     , getCardsR
+    , getCardR
     )
 
 import Handler.Accounts

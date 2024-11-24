@@ -50,10 +50,9 @@ import Database.Persist.Sql (PersistFieldSql, sqlType)
 import Database.Persist.TH (derivePersistField)
 import Database.Persist.Types (SqlType (SqlInt64))
 
-import GHC.Float (Double, int2Double, truncateDouble)
 import GHC.Integer (Integer)
 import GHC.Num ((*))
-import GHC.Real ((/), (^))
+import GHC.Real ((^))
 
 import Prelude (truncate, undefined, fromIntegral, flip, quotRem, div)
 
@@ -91,7 +90,7 @@ data StoreType = StoreTypeDatabase | StoreTypeSession | StoreTypeGoogleSecretMan
 derivePersistField "StoreType"
 
 
-data CardStatus = CardStatusAwaiting | CardStatusApproved | CardStatusRejected
+data CardStatus = CardStatusAwaiting | CardStatusApproved | CardStatusRejected | CardStatusRevoked
     deriving (Show, Read, Eq, Ord)
 derivePersistField "CardStatus"
 

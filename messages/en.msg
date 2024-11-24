@@ -1,7 +1,11 @@
+Revoke: Revoke
+Reject: Reject
+Approve: Approve
 Awaiting: Awaiting
 NoCardsForModerationYet: There are no cards for moderation yet
 Moderation: Moderation
 CardStatusActive: Active
+Revoked: Revoked
 Rejected: Rejected
 Approved: Approved
 AwaitingModeration: Awaiting moderation

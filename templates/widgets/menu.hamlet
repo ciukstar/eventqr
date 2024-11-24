@@ -23,7 +23,7 @@
         <i>topic
         <span>_{MsgEventsCatalogue}
         
-      <a href=@{DataR $ CardsR uid}>
+      <a href=@?{(DataR $ CardsR uid,[("status",pack $ show CardStatusAwaiting)])}>
         <i>policy
         <span>_{MsgModeration}
 

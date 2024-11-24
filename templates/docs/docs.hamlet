@@ -73,11 +73,21 @@
             _{MsgProjectId}
           <dd>
             <code>&dollar;YESOD_GCLOUD_PROJECT_ID
-          
 
   <section>
-    <h3.small>_{MsgEntityRelationshipDiagram}
-    <img src=@{StaticR img_EventQr_ERD_svg} alt=_{MsgEntityRelationshipDiagram} loading=lazy>
+    <h3.medium>_{MsgBasicEntities}
+    
+  <section>
+    <h4.small>_{MsgEntityRelationshipDiagram}
+     <img src=@{StaticR img_EventQr_ERD_svg} alt=_{MsgEntityRelationshipDiagram} loading=lazy>
+
+  <section>
+    <h4.small>_{MsgCard}
+    ...
+
+  <section>
+    <h4.small>_{MsgModeration}
+    <img src=@{StaticR img_Moderation_SMD_svg} alt=_{MsgStateMachineDiagram} loading=lazy>
 
   <section>
     <h3.small>_{MsgSourceCode}

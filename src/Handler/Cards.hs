@@ -16,6 +16,7 @@ module Handler.Cards
   , getCardQrImageR
   , getCardPhotoR
   , getCardsR
+  , getCardR
   ) where
 
 
@@ -30,7 +31,7 @@ import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(first, second))
-import Data.Text (Text, unpack)
+import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (getCurrentTime)
 
@@ -52,7 +53,7 @@ import Foundation
       ( UserPhotoR, UsersR, UserR
       , UserCardsR, UserCardR, CardQrImageR, UserCardNewR
       , UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
-      , UserCardDeleR, CardsR
+      , UserCardDeleR, CardsR, CardR
       )
     , AppMessage
       ( MsgPhoto, MsgUser, MsgName, MsgAwaiting
@@ -63,7 +64,8 @@ import Foundation
       , MsgCardholder, MsgValue, MsgNewFieldNameRequired, MsgRecordEdited
       , MsgNoFieldsForThisCardYet, MsgUserHasNoCardsYet, MsgRejected
       , MsgAwaitingModeration, MsgCardStatusActive, MsgModeration
-      , MsgNoCardsForModerationYet, MsgApproved, MsgAll
+      , MsgNoCardsForModerationYet, MsgApproved, MsgAll, MsgApprove
+      , MsgReject, MsgRevoked
       )
     )
 
@@ -73,10 +75,14 @@ import Model
     ( msgSuccess, msgError
     , UserId, User(User)
     , CardId, Card (Card)
-    , CardStatus (CardStatusAwaiting, CardStatusApproved, CardStatusRejected)
+    , CardStatus
+      ( CardStatusAwaiting, CardStatusApproved, CardStatusRejected
+      , CardStatusRevoked
+      )
     , Info (Info), Photo (Photo)
     , EntityField
-      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard, PhotoCard, CardStatus
+      ( UserId, CardIssued, CardUser, CardId, InfoId, InfoCard, PhotoCard
+      , CardStatus
       )
     )
 
@@ -94,7 +100,7 @@ import Yesod.Core
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , SomeMessage (SomeMessage), notFound
     , addMessageI, toHtml
-    , getPostParams
+    , getPostParams, YesodRequest (reqGetParams), getRequest
     )
 import Yesod.Form.Input (runInputGet, iopt)
 import Yesod.Form.Fields
@@ -106,6 +112,36 @@ import Yesod.Form.Types
     , FieldSettings(FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+
+
+getCardR :: UserId -> CardId -> Handler Html
+getCardR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+
+    card <- runDB $ selectOne $ do
+        x :& u <- from $ table @Card
+            `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
+        where_ $ x ^. CardId ==. val cid
+        return (x,u)
+
+    attrs <- runDB $ select $ do
+        x <- from $ table @Info
+        where_ $ x ^. InfoCard ==. val cid
+        orderBy [asc (x ^. InfoId)]
+        return x
+
+    (fw0,et0) <- generateFormPost formCardDelete
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgCard
+        idOverlay <- newIdent
+        idButtonShowDialogQrCode <- newIdent
+        idDialogQrCode <- newIdent
+        idButtonCloseDialogQrCode <- newIdent
+        $(widgetFile "data/moderation/card")
 
 
 getCardsR :: UserId -> Handler Html

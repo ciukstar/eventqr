@@ -1,7 +1,11 @@
+Revoke: Отозвать
+Reject: Отклонить
+Approve: Одобрить
 Awaiting: Ожидание
 NoCardsForModerationYet: Карточек для модерации пока нет
 Moderation: Модерация
 CardStatusActive: Активна
+Revoked: Отозвано
 Rejected: Отклонено
 Approved: Одобрено
 AwaitingModeration: Ожидает модерации

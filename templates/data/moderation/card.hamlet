@@ -1,0 +1,63 @@
+
+^{widgetTopbar (Just (DataR $ CardsR uid,stati)) (msgr MsgCard) idOverlay Nothing Nothing}
+
+<main.responsive.margin>
+
+  $maybe (Entity cid (Card _ _ ordered status issued _),Entity _ (User email _ uname _ _ _ _ _ _)) <- card
+    <dl>
+      <dt.bold>_{MsgCardNumber}
+      <dd.bottom-margin.left-margin>
+        #{fromSqlKey cid}
+      
+      <dt.bold>_{MsgCardholder}
+      <dd.bottom-margin.left-margin>
+        <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        $maybe name <- uname
+          #{name}
+        $nothing
+          #{email}
+      
+      <dt.bold>_{MsgQrCode}
+      <dd.bottom-margin.left-margin>
+        <button.circle.border.transparent.no-margin ##{idButtonShowDialogQrCode}>
+          <i>qr_code
+
+      $forall Entity _ (Info _ name val) <- attrs
+        <dt.bold>#{name}
+        <dd.bottom-margin.left-margin>
+          #{val}
+     
+    $if null attrs
+      <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
+        
+
+    $case status
+      $of CardStatusAwaiting
+        <button.green.bottom-margin type=button>
+          <i>verified
+          <span>_{MsgApprove}
+          
+        <button.border.transparent.bottom-margin type=button>
+          <i.red-text>block
+          <span>_{MsgReject}
+
+    ^{widgetSnackbar msgs}
+
+
+    <div.overlay ##{idOverlay}>
+
+
+    <dialog ##{idDialogQrCode}>
+      <h5>_{MsgQrCode}
+      <div>
+        <figure>
+          <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+          <figcaption>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+
+      <nav.right-align>
+        <button.transparent.link ##{idButtonCloseDialogQrCode}>
+          _{MsgClose}

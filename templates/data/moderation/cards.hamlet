@@ -7,29 +7,13 @@
 
   <nav.small-margin.scroll>
 
-    <button.chip.round type=submit name=status value=#{show CardStatusAwaiting}
-                       form=#{idFormFilter} :Just CardStatusAwaiting == status:.fill>
+    $forall (s,l) <- [(CardStatusAwaiting,MsgAwaiting),(CardStatusApproved,MsgApproved),(CardStatusRejected,MsgRejected),(CardStatusRevoked,MsgRevoked)]
+      <button.chip.round type=submit name=status value=#{show s}
+                         form=#{idFormFilter} :Just s == status:.fill>
 
-      $maybe s <- status
-        $if CardStatusAwaiting == s
+        $if Just s == status
           <i>done
-      <span>_{MsgAwaiting}
-
-    <button.chip.round type=submit name=status value=#{show CardStatusApproved} 
-                       form=#{idFormFilter} :Just CardStatusApproved == status:.fill>
-
-      $maybe s <- status
-        $if CardStatusApproved == s
-          <i>done
-      <span>_{MsgApproved}
-
-    <button.chip.round type=submit name=status value=#{show CardStatusRejected}
-                       form=#{idFormFilter} :Just CardStatusRejected == status:.fill>
-
-      $maybe s <- status
-        $if CardStatusRejected == s
-          <i>done
-      <span>_{MsgRejected}
+        <span>_{l}
 
     <button.chip.round type=submit form=#{idFormFilter} :Nothing == status:.fill>
       $maybe _ <- status
@@ -44,10 +28,10 @@
         _{MsgNoCardsForModerationYet}.
  
   $else
-    $forall (Entity cid (Card uid _ ordered status issued _),Entity _ (User email _ uname _ _ _ _ _ _)) <- cards
-      <a.row.padding.wave href=#>
+    $forall (Entity cid (Card oid _ ordered status issued _),Entity _ (User email _ uname _ _ _ _ _ _)) <- cards
+      <a.row.padding.wave href=@?{(DataR $ CardR uid cid,[("status",pack $ show status)])}>
 
-        <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        <img.circle src=@{DataR $ UserPhotoR oid} alt=_{MsgPhoto} loading=lazy>
 
         <div.content.max>
           <h6.headline.large-text>
@@ -71,6 +55,11 @@
                 <span>
                   <i.small.red-text>block
                   _{MsgRejected}
+
+              $of CardStatusRevoked
+                <span>
+                  <i.small.red-text>remove_moderator
+                  _{MsgRevoked}
 
           <div.supporting-text.small-text>
             $case status
