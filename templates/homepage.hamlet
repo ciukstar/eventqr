@@ -45,7 +45,7 @@
             <div.small-text>_{MsgYouDoNonHaveCardsYet}.
             <div.small-text>_{MsgCardIsRequiredToParticipateInEvents}.
       $else
-        $forall ((Entity cid (Card _ _ _ status updated _),Entity _ (User email _ uname _ _ _ _ _ _)),attrs) <- cards
+        $forall ((Entity cid (Card _ _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)),attrs) <- cards
           $with i <- show $ fromSqlKey cid
             <dialog ##{idDialogQrCode}#{i} style="z-index:102">
               <h6>_{MsgQrCode}
@@ -77,30 +77,63 @@
                     $case status
                       $of CardStatusAwaiting
                         <span>
-                          <i.small>pending
+                          <i.small.orange-text>pending
                           _{MsgAwaitingModeration}
 
                       $of CardStatusApproved
                         <span>
-                          <i.small>verified
+                          <i.small.green-text>verified
                           _{MsgCardStatusActive}
+
+                      $of CardStatusRevoked
+                        <span>
+                          <i.small.red-text>remove_moderator
+                          _{MsgRevoked}
 
                       $of CardStatusRejected
                         <span>
-                          <i.small>block
+                          <i.small.red-text>block
                           _{MsgRejected}
+
+                      $of _
                       
               <div>
                 <dl>
-                  <dt.bold>_{MsgCardNumber}
-                  <dd>
-                    #{i}
-      
-                  <dt.bold>_{MsgIssueDate}
-                  <dd>
-                    $with dt <- show updated
-                      <time.day datetime=#{dt}>
-                        #{dt} 
+                  $if CardStatusAwaiting == status
+                    <dt.bold>_{MsgRequestDate}
+                    <dd>
+                      $with dt <- show ordered
+                        <time.day datetime=#{dt}>
+                          #{dt}
+                          
+                  $elseif CardStatusApproved == status
+                    <dt.bold>_{MsgCardNumber}
+                    <dd>
+                      #{i}
+
+                    <dt.bold>_{MsgIssueDate}
+                    <dd>
+                      $with dt <- show updated
+                        <time.day datetime=#{dt}>
+                          #{dt}
+                          
+                  $elseif CardStatusRevoked == status
+                    <dt.bold>_{MsgCardNumber}
+                    <dd>
+                      #{i}
+
+                    <dt.bold>_{MsgDateRevoked}
+                    <dd>
+                      $with dt <- show updated
+                        <time.day datetime=#{dt}>
+                          #{dt}
+                          
+                  $elseif CardStatusRejected == status
+                    <dt.bold>_{MsgDateRejected}
+                    <dd>
+                      $with dt <- show updated
+                        <time.day datetime=#{dt}>
+                          #{dt}
 
                 $if not (null attrs)
                   $forall Entity _ (Info _ name val) <- attrs
@@ -111,11 +144,12 @@
                   <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
                   <button.fill>
                     _{MsgFillInCard}
-      
-                <nav.right-align>
-                  <button.circle title=_{MsgQrCode} data-ui=##{idOverlay}
-                    onclick="document.getElementById('#{idDialogQrCode}#{i}').show()">
-                    <i.no-round>qr_code
+
+                $if status == CardStatusApproved
+                  <nav.right-align>
+                    <button.circle title=_{MsgQrCode} data-ui=##{idOverlay}
+                      onclick="document.getElementById('#{idDialogQrCode}#{i}').show()">
+                      <i.no-round>qr_code
     
       <a.button.border.responsive.bottom-margin href=@{DataR $ AccountCardNewR uid}>
         <i>note_stack_add

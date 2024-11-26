@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-name-shadowing -Wincomplete-patterns -Werror=incomplete-patterns #-}
 
 module Handler.Cards
   ( getUserCardsR, postUserCardsR
@@ -40,8 +40,8 @@ import Data.Time.Clock (getCurrentTime)
 
 import Database.Esqueleto.Experimental
     ( select, from, table, selectOne, where_, val, update, set
-    , (^.), (==.), (:&)((:&)), (=.)
-    , orderBy, asc, innerJoin, on, delete, just
+    , (^.), (?.), (==.), (:&)((:&)), (=.)
+    , orderBy, asc, innerJoin, on, delete, just, leftJoin
     )
     
 import Database.Persist
@@ -69,7 +69,7 @@ import Foundation
       , MsgNoCardsForModerationYet, MsgApproved, MsgAll, MsgApprove
       , MsgReject, MsgRevoked, MsgIssueDate, MsgRequestDate, MsgStatus
       , MsgRequestApproved, MsgRevoke, MsgCardRevoked, MsgDateRevoked
-      , MsgDateRejected, MsgCardRejected
+      , MsgDateRejected, MsgCardRejected, MsgModerator
       )
     )
 
@@ -86,7 +86,7 @@ import Model
     , Info (Info), Photo (Photo)
     , EntityField
       ( UserId, CardUpdated, CardUser, CardId, InfoId, InfoCard, PhotoCard
-      , CardStatus
+      , CardStatus, CardModerator
       )
     )
 
@@ -136,6 +136,7 @@ postCardRejectR uid cid = do
           runDB $ update $ \x -> do
               set x [ CardStatus =. val CardStatusRejected
                     , CardUpdated =. just (val now)
+                    , CardModerator =. just (val uid)
                     ]
               where_ $ x ^. CardId ==. val cid
           addMessageI msgSuccess MsgCardRejected
@@ -164,6 +165,7 @@ postCardRevokeR uid cid = do
           runDB $ update $ \x -> do
               set x [ CardStatus =. val CardStatusRevoked
                     , CardUpdated =. just (val now)
+                    , CardModerator =. just (val uid)
                     ]
               where_ $ x ^. CardId ==. val cid
           addMessageI msgSuccess MsgCardRevoked
@@ -192,6 +194,7 @@ postCardApproveR uid cid = do
           runDB $ update $ \x -> do
               set x [ CardStatus =. val CardStatusApproved
                     , CardUpdated =. just (val now)
+                    , CardModerator =. just (val uid)
                     ]
               where_ $ x ^. CardId ==. val cid
           addMessageI msgSuccess MsgRequestApproved
@@ -208,10 +211,11 @@ getCardR uid cid = do
     stati <- reqGetParams <$> getRequest
 
     card <- runDB $ selectOne $ do
-        x :& u <- from $ table @Card
+        x :& u :& m <- from $ table @Card
             `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
+            `leftJoin` table @User `on` (\(c :& _ :& m) -> c ^. CardModerator ==. m ?. UserId)
         where_ $ x ^. CardId ==. val cid
-        return (x,u)
+        return ((x, u), m)
 
     attrs <- runDB $ select $ do
         x <- from $ table @Info
@@ -534,17 +538,24 @@ paramsOut (p,_) = (p /= paramFieldToken) && (p /= paramFieldNewName) && (p /= pa
 getUserCardR :: UserId -> CardId -> Handler Html
 getUserCardR uid cid = do
 
+    stati <- reqGetParams <$> getRequest
+
     card <- runDB $ selectOne $ do
-        x :& u <- from $ table @Card
+        x :& u :& m <- from $ table @Card
             `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
+            `leftJoin` table @User `on` (\(c :& _ :& m) -> c ^. CardModerator ==. m ?. UserId)
         where_ $ x ^. CardId ==. val cid
-        return (x,u)
+        return ((x, u), m)
 
     attrs <- runDB $ select $ do
         x <- from $ table @Info
         where_ $ x ^. InfoCard ==. val cid
         orderBy [asc (x ^. InfoId)]
         return x
+
+    (fwApprove,etApprove) <- generateFormPost formCardApprove
+    (fwRevoke,etRevoke) <- generateFormPost formCardRevoke
+    (fwReject,etReject) <- generateFormPost formCardReject    
 
     (fw0,et0) <- generateFormPost formCardDelete
     

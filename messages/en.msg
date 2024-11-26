@@ -1,3 +1,4 @@
+Moderator: Moderator
 CardRejected: The request was rejected
 DateRevoked: Date of cancellation
 DateRejected: Date of rejection

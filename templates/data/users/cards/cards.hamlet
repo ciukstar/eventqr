@@ -17,7 +17,7 @@
         <figcaption>
           _{MsgUserHasNoCardsYet}.
     $else
-      $forall (Entity cid (Card _ _ _ status updated _),Entity uid (User email _ uname _ _ _ _ _ _)) <- cards
+      $forall (Entity cid (Card _ _ ordered status updated _),Entity uid (User email _ uname _ _ _ _ _ _)) <- cards
         <a.row.padding.wave href=@{DataR $ UserCardR uid cid}>
 
           <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
@@ -32,23 +32,35 @@
               $case status
                 $of CardStatusAwaiting
                   <span>
-                    <i.small>pending
+                    <i.small.orange-text>pending
                     _{MsgAwaitingModeration}
                     
                 $of CardStatusApproved
                   <span>
-                    <i.small>verified
+                    <i.small.green-text>verified
                     _{MsgCardStatusActive}
                     
                 $of CardStatusRejected
                   <span>
-                    <i.small>block
+                    <i.small.red-text>block
                     _{MsgRejected}
                     
+                $of CardStatusRevoked
+                  <span>
+                    <i.small.red-text>remove_moderator
+                    _{MsgDateRevoked}
+                    
+                $of _
+                    
             <div.supporting-text.small-text>
-              $with dt <- show updated
+              $maybe dt <- show <$> updated
                 <time.day datetime=#{dt}>
                   #{dt}
+                  
+              $nothing
+                $with dt <- show ordered
+                  <time.day datetime=#{dt}>
+                    #{dt}
 
           <i>arrow_forward_ios
 

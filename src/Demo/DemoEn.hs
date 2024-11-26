@@ -32,7 +32,9 @@ import Model
     , Token (Token, tokenApi, tokenStore)
     , Store (Store, storeToken, storeKey, storeVal)
     , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager), secretVapid
-    , AuthenticationType (UserAuthTypePassword), CardStatus (CardStatusApproved, CardStatusAwaiting), Photo (photoCard, photoMime, photoPhoto, photoAttribution, Photo)
+    , AuthenticationType (UserAuthTypePassword)
+    , CardStatus (CardStatusApproved, CardStatusAwaiting)
+    , Photo (photoCard, photoMime, photoPhoto, photoAttribution, Photo)
     )
     
 import Settings (AppSettings (appDevelopment))

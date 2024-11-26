@@ -1,9 +1,9 @@
 
 ^{widgetTopbar (Just (DataR $ CardsR uid,stati)) (msgr MsgCard) idOverlay Nothing Nothing}
 
-<main.responsive.horizontal-margin>
+<main.responsive.horizontal-padding.bottom-padding>
 
-  $maybe (Entity cid (Card _ _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)) <- card
+  $maybe ((Entity cid (Card oid _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)),moderator) <- card
     <dl>
       <dt.bold>_{MsgStatus}
       <dd.bottom-margin.left-margin>
@@ -44,7 +44,7 @@
               _{MsgDateRejected}
 
             $of CardStatusRevoked
-              _{MsgDateRevoked}       
+              _{MsgDateRevoked}
        
             $of _
             
@@ -58,21 +58,30 @@
       
       <dt.bold>_{MsgCardholder}
       <dd.bottom-margin.left-margin>
-        <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+        <img.circle.small src=@{DataR $ UserPhotoR oid} alt=_{MsgPhoto} loading=lazy>
         $maybe name <- uname
           #{name}
         $nothing
           #{email}
+
+      $forall Entity _ (Info _ name val) <- attrs
+        <dt.bold>#{name}
+        <dd.bottom-margin.left-margin>
+          #{val}
       
       <dt.bold>_{MsgQrCode}
       <dd.bottom-margin.left-margin>
         <button.circle.border.transparent.no-margin ##{idButtonShowDialogQrCode}>
           <i>qr_code
 
-      $forall Entity _ (Info _ name val) <- attrs
-        <dt.bold>#{name}
+      $maybe Entity uid (User email _ uname _ _ _ _ _ _) <- moderator
+        <dt.bold>_{MsgModerator}
         <dd.bottom-margin.left-margin>
-          #{val}
+          <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+          $maybe name <- uname
+            #{name}
+          $nothing
+            #{email}
      
     $if null attrs
       <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.

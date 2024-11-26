@@ -1,17 +1,64 @@
 
 ^{widgetTopbar (Just (DataR $ UserCardsR uid,[])) (msgr MsgCard) idOverlay (Just idDialogDelete) (Just $ DataR $ UserCardEditR uid cid)}
 
-<main.responsive.no-padding>
+<main.responsive.horizontal-padding.bottom-padding>
 
-  $maybe (Entity cid _,Entity _ (User email _ uname _ _ _ _ _ _)) <- card
-    <dl.margin>
+  $maybe ((Entity cid (Card oid _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)),moderator) <- card
+    <dl>
+      <dt.bold>_{MsgStatus}
+      <dd.bottom-margin.left-margin>
+        $case status
+          $of CardStatusAwaiting
+            <span>
+              <i.orange-text>pending
+              _{MsgAwaitingModeration}
+
+          $of CardStatusApproved
+            <span>
+              <i.green-text>verified
+              _{MsgApproved}
+
+          $of CardStatusRejected
+            <span>
+              <i.small.red-text>block
+              _{MsgRejected}
+
+          $of CardStatusRevoked
+            <span>
+              <i.red-text>remove_moderator
+              _{MsgRevoked}
+            
+      <dt.bold>_{MsgRequestDate}
+      <dd.bottom-margin.left-margin>
+        $with dt <- show ordered
+          <time.full-datetime datetime=#{dt}>
+            #{dt}
+     
+      $maybe dt <- show <$> updated
+        <dt.bold>
+          $case status
+            $of CardStatusApproved
+              _{MsgIssueDate}
+
+            $of CardStatusRejected
+              _{MsgDateRejected}
+
+            $of CardStatusRevoked
+              _{MsgDateRevoked}
+       
+            $of _
+            
+        <dd.bottom-margin.left-margin>
+          <time.full-datetime datetime=#{dt}>
+            #{dt}
+        
       <dt.bold>_{MsgCardNumber}
-      <dd>
+      <dd.bottom-margin.left-margin>
         #{fromSqlKey cid}
       
       <dt.bold>_{MsgCardholder}
-      <dd>
-        <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+      <dd.bottom-margin.left-margin>
+        <img.circle.small src=@{DataR $ UserPhotoR oid} alt=_{MsgPhoto} loading=lazy>
         $maybe name <- uname
           #{name}
         $nothing
@@ -19,16 +66,48 @@
 
       $forall Entity _ (Info _ name val) <- attrs
         <dt.bold>#{name}
-        <dd>
+        <dd.bottom-margin.left-margin>
           #{val}
+      
+      <dt.bold>_{MsgQrCode}
+      <dd.bottom-margin.left-margin>
+        <button.circle.border.transparent.no-margin ##{idButtonShowDialogQrCode}>
+          <i>qr_code
+
+      $maybe Entity uid (User email _ uname _ _ _ _ _ _) <- moderator
+        <dt.bold>_{MsgModerator}
+        <dd.bottom-margin.left-margin>
+          <img.circle.small src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+          $maybe name <- uname
+            #{name}
+          $nothing
+            #{email}
      
     $if null attrs
       <p.italic>_{MsgCardDoesNotContainAdditionalInfo}.
         
-
-    <button.border.transparent.margin ##{idButtonShowDialogQrCode}>
-      <i>qr_code
-      <span>_{MsgQrCode}
+    $case status
+      $of CardStatusAwaiting
+        <form method=post action=@{DataR $ CardApproveR uid cid} enctype=#{etApprove}>
+          ^{fwApprove}
+          <button.responsive.green type=submit>
+            <i>verified
+            <span>_{MsgApprove}
+            
+        <form method=post action=@{DataR $ CardRejectR uid cid} enctype=#{etReject}>
+          ^{fwReject}          
+          <button.responsive.border.transparent type=submit>
+            <i.red-text>block
+            <span>_{MsgReject}
+          
+      $of CardStatusApproved
+        <form method=post action=@{DataR $ CardRevokeR uid cid} enctype=#{etRevoke}>
+          ^{fwRevoke}
+          <button.responsive.red type=submit>
+            <i>remove_moderator
+            <span>_{MsgRevoke}
+          
+      $of _
 
   ^{widgetSnackbar msgs}
 

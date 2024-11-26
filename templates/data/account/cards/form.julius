@@ -1,18 +1,20 @@
 
-document.getElementById(#{fvId photoV}).addEventListener('change',function (e) {
-  if (this.files && this.files[0]) {
-    let fr = new FileReader();
-    fr.onload = function (e) {
+document.getElementById(#{fvId photoV}).addEventListener('change',(e) => {
+  [e.target.files].map(xs => xs[0]).forEach(file => {
+    const fr = new FileReader();
+    fr.onload = (e) => {
       document.getElementById(#{idImgPhoto}).setAttribute('src',e.target.result);
     };
-    fr.readAsDataURL(this.files[0]);
-  }
+    fr.readAsDataURL(file);
+  });
+  
 });
 
 
 document.getElementById(#{idButtonUploadPhoto}).addEventListener('click', e => {
   document.getElementById(#{idLabelPhoto}).click();
 });
+
 
 document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
 
@@ -60,4 +62,17 @@ document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
       video.srcObject = null;
       document.getElementById(#{idDialogSnapshot}).close();
     });
+});
+
+
+fetch(
+  document.getElementById(#{idImgPhoto}).src
+).then(x => x.blob()).then(
+  blob => new File([blob],'MsgPhoto',{ 'type': blob.type })
+).then(file => {
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  return dt;
+}).then(dt => {
+  document.getElementById(#{fvId photoV}).files = dt.files;
 });

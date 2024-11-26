@@ -75,7 +75,8 @@ import Foundation
       , MsgCardDoesNotContainAdditionalInfo, MsgNotManagerOfEventSorry
       , MsgFillInCard, MsgMyVisitingSchedule, MsgNoAttendeesForThisEventYet
       , MsgUpcoming, MsgOrderNewCard, MsgCardIsRequiredToParticipateInEvents
-      , MsgAwaitingModeration, MsgRejected, MsgCardStatusActive
+      , MsgAwaitingModeration, MsgRejected, MsgCardStatusActive, MsgRevoked
+      , MsgRequestDate, MsgDateRejected, MsgDateRevoked
       )
     )
 
@@ -83,7 +84,10 @@ import Model
     ( msgSuccess, msgError, normalizeNominalDiffTime
     , EventId, Event (Event, eventDuration)
     , CardId, Card (Card)
-    , CardStatus (CardStatusAwaiting, CardStatusApproved, CardStatusRejected)
+    , CardStatus
+      ( CardStatusAwaiting, CardStatusApproved, CardStatusRejected
+      , CardStatusRevoked
+      )
     , UserId, User (User, userManager)
     , AttendeeId, Attendee (Attendee, attendeeEvent, attendeeCard, attendeeRegDate)
     , Info (Info)
@@ -170,7 +174,7 @@ postAttendeeRegistrationR mid = do
                                    }
           addMessageI msgSuccess MsgUserSuccessfullyRegisteredForEvent
           redirect HomeR
-          
+
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
           redirect HomeR
@@ -468,11 +472,11 @@ getEventRegistrationR eid = do
       (Just (Entity uid (User _ _ _ False False False _ _ _)),Just (_,Entity uid' _),_) | uid /= uid' -> do
                 addMessageI msgError MsgNotYourQrCodeSorry
                 redirect $ EventR eid
-          
+
       (Just (Entity uid (User _ _ _ False False True _ _ _)),_,Just (Entity _ (Event mid _ _ _ _))) | uid /= mid -> do
                 addMessageI msgError MsgNotManagerOfEventSorry
                 redirect $ EventR eid
-          
+
       _otherwise -> return ()
 
     (fw,et) <- generateFormPost $ formRegistration event (fst <$> card)
@@ -618,7 +622,7 @@ getHomeR = do
 
     now <- liftIO getCurrentTime
     let month = (\(y,m,_) -> YearMonth y m) . toGregorian . utctDay $ now
-    
+
     user <- maybeAuth
 
     cards <- do
@@ -661,7 +665,7 @@ getHomeR = do
     nAllEvents <- maybe (0 :: Int) unValue <$> runDB ( selectOne $ do
               _ <- from $ table @Event
               return countRows )
-    
+
     upcoming <- (second unValue <$>) <$> runDB ( select $ do
         x <- from $ table @Event
 
@@ -673,7 +677,7 @@ getHomeR = do
         case (user,mine) of
           (Just (Entity mid (User _ _ _ _ _ True _ _ _)), True) -> where_ $ x ^. EventManager ==. val mid
           _otherwise -> return ()
-        
+
         where_ $ x ^. EventTime >=. val now
         orderBy [asc (x ^. EventTime)]
         limit 100
@@ -697,7 +701,7 @@ getHomeR = do
 
     selectRep $ do
         provideJson $ blow <$> upcoming
-        
+
         provideRep $ do
             msgr <- getMessageRender
             msgs <- getMessages

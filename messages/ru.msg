@@ -1,3 +1,4 @@
+Moderator: Модератор
 CardRejected: Запрос был отклонен
 DateRevoked: Дата аннулирования
 DateRejected: Дата отклонения

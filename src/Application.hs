@@ -21,9 +21,10 @@ module Application
     , db
     ) where
 
-import Control.Monad.Logger (liftLoc, runLoggingT)
+import Control.Monad.Logger (liftLoc, NoLoggingT (runNoLoggingT))
+-- import Control.Monad.Logger (runLoggingT)
 import Database.Persist.Sqlite
-    ( runSqlPool,sqlDatabase, createSqlitePoolWithConfig )
+    ( runSqlPool,sqlDatabase, createSqlitePoolWithConfig, runMigrationSilent )
                                              
 import Demo.DemoEn (fillDemoEn)
 import Demo.DemoRu (fillDemoRu)
@@ -181,19 +182,23 @@ makeFoundation appSettings = do
         -- The App {..} syntax is an example of record wild cards. For more
         -- information, see:
         -- https://ocharles.org.uk/blog/posts/2014-12-04-record-wildcards.html
-        tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
-        logFunc = messageLoggerSource tempFoundation appLogger
+        -- tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
+        -- logFunc = messageLoggerSource tempFoundation appLogger
 
     -- Create the database connection pool
-    pool <- flip runLoggingT logFunc $ createSqlitePoolWithConfig
+    
+    -- pool <- flip runLoggingT logFunc $ createSqlitePoolWithConfig
+    pool <- runNoLoggingT $ createSqlitePoolWithConfig
         (sqlDatabase $ appDatabaseConf appSettings)
         (appConnectionPoolConfig appSettings)
 
     -- Perform database migration using our application's logging settings.
 
-    flip runLoggingT logFunc $ flip runSqlPool pool $ do
+    -- flip runLoggingT logFunc $ flip runSqlPool pool $ do
+    runNoLoggingT $ flip runSqlPool pool $ do
 
-        runMigration migrateAll
+        -- runMigration migrateAll
+        _ <- runMigrationSilent migrateAll
 
         superpass <- liftIO $ saltPass (superuserPassword . appSuperuser $ appSettings)
         insert_ User { userEmail = superuserUsername . appSuperuser $ appSettings
@@ -212,8 +217,6 @@ makeFoundation appSettings = do
           Just "RU" -> fillDemoRu appSettings
           Just _ -> fillDemoEn appSettings
           Nothing -> fillDemoEn appSettings
-          
-    -- runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
 
     -- Return the foundation
     return $ mkFoundation pool
