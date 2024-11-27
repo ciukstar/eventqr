@@ -13,6 +13,9 @@ module Handler.Cards
   , getUserCardEditR
   , postUserCardNewFieldR
   , postUserCardDeleR
+  , postUserCardApproveR
+  , postUserCardRevokeR
+  , postUserCardRejectR
   , getCardQrImageR
   , getCardPhotoR
   , getCardsR
@@ -30,7 +33,7 @@ import Codec.QRCode.JuicyPixels (toImage)
 import Codec.Picture (encodeBitmap)
 import Codec.QRCode (TextEncoding(Iso8859_1OrUtf8WithoutECI))
 
-import Control.Monad (forM)
+import Control.Monad (forM, void)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(first, second))
@@ -45,8 +48,8 @@ import Database.Esqueleto.Experimental
     )
     
 import Database.Persist
-    ( Entity (Entity), entityVal, insert, insertMany_, replace)
-import qualified Database.Persist as P (delete)
+    ( Entity (Entity), entityVal, insert, insertMany_, replace, upsert)
+import qualified Database.Persist as P (delete, (=.))
 import Database.Persist.Sql (fromSqlKey)
 
 import Foundation
@@ -56,20 +59,21 @@ import Foundation
       ( UserPhotoR, UsersR, UserR, UserCardsR, UserCardR, CardQrImageR
       , UserCardNewR, UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
       , UserCardDeleR, CardsR, CardR, CardApproveR, CardRevokeR, CardRejectR
+      , UserCardRejectR, UserCardRevokeR, UserCardApproveR, CardPhotoR
       )
     , AppMessage
-      ( MsgPhoto, MsgUser, MsgName, MsgAwaiting
+      ( MsgPhoto, MsgUser, MsgName, MsgAwaiting, MsgTakePhoto
       , MsgDeleteAreYouSure, MsgDele, MsgConfirmPlease, MsgCancel
       , MsgSave, MsgCardDoesNotContainAdditionalInfo, MsgQrCode
       , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted, MsgNewField
       , MsgDetails, MsgCards, MsgCard, MsgAdd, MsgClose, MsgCardNumber
       , MsgCardholder, MsgValue, MsgNewFieldNameRequired, MsgRecordEdited
-      , MsgNoFieldsForThisCardYet, MsgUserHasNoCardsYet, MsgRejected
+      , MsgUserHasNoCardsYet, MsgRejected, MsgFullName
       , MsgAwaitingModeration, MsgCardStatusActive, MsgModeration
       , MsgNoCardsForModerationYet, MsgApproved, MsgAll, MsgApprove
       , MsgReject, MsgRevoked, MsgIssueDate, MsgRequestDate, MsgStatus
       , MsgRequestApproved, MsgRevoke, MsgCardRevoked, MsgDateRevoked
-      , MsgDateRejected, MsgCardRejected, MsgModerator
+      , MsgDateRejected, MsgCardRejected, MsgModerator, MsgUploadPhoto
       )
     )
 
@@ -77,7 +81,7 @@ import Material3 (md3widget, md3textareaWidget)
     
 import Model
     ( msgSuccess, msgError
-    , UserId, User(User)
+    , UserId, User(User, userName)
     , CardId, Card (Card)
     , CardStatus
       ( CardStatusAwaiting, CardStatusApproved, CardStatusRejected
@@ -86,13 +90,14 @@ import Model
     , Info (Info), Photo (Photo)
     , EntityField
       ( UserId, CardUpdated, CardUser, CardId, InfoId, InfoCard, PhotoCard
-      , CardStatus, CardModerator
+      , CardStatus, CardModerator, PhotoMime, PhotoPhoto, PhotoAttribution
       )
     )
 
 import Settings (widgetFile)
 import Settings.StaticFiles
     ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg
+    , img_camera_24dp_0000F5_FILL0_wght400_GRAD0_opsz24_svg
     )
 
 import Text.Hamlet (Html)
@@ -103,17 +108,19 @@ import Yesod.Core
     ( Yesod(defaultLayout), setTitleI, newIdent, getMessageRender, getMessages
     , TypedContent (TypedContent), ToContent (toContent), redirect, whamlet
     , SomeMessage (SomeMessage), notFound
-    , addMessageI, toHtml
-    , getPostParams, YesodRequest (reqGetParams), getRequest
+    , addMessageI, toHtml, fileSourceByteString, getPostParams
+    , YesodRequest (reqGetParams), getRequest, FileInfo (fileContentType)
+    , MonadHandler (liftHandler)
     )
 import Yesod.Form.Input (runInputGet, iopt)
 import Yesod.Form.Fields
-    ( textField, htmlField
+    ( textField, htmlField, fileField
     )
 import Yesod.Form.Functions (generateFormPost, mreq, mopt, runFormPost)
 import Yesod.Form.Types
     ( FormResult (FormSuccess)
     , FieldSettings(FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
+    , FieldView (fvInput, fvId, fvErrors)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
 
@@ -215,7 +222,7 @@ getCardR uid cid = do
             `innerJoin` table @User `on` (\(c :& u) -> c ^. CardUser ==. u ^. UserId)
             `leftJoin` table @User `on` (\(c :& _ :& m) -> c ^. CardModerator ==. m ?. UserId)
         where_ $ x ^. CardId ==. val cid
-        return ((x, u), m)
+        return ((x,u),m)
 
     attrs <- runDB $ select $ do
         x <- from $ table @Info
@@ -248,6 +255,97 @@ formCardRevoke extra = return (pure (), [whamlet|^{extra}|])
 
 formCardApprove :: Form ()
 formCardApprove extra = return (pure (), [whamlet|^{extra}|])
+
+
+postUserCardRejectR :: UserId -> CardId -> Handler Html
+postUserCardRejectR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+    mid <- maybeAuthId
+
+    card <- runDB $ selectOne $ do
+        x <- from $ table @Card
+        where_ $ x ^. CardId ==. val cid
+        where_ $ x ^. CardStatus ==. val CardStatusAwaiting
+        return x
+
+    ((fr,_),_) <- runFormPost formCardReject
+    case (card, fr) of
+      (Just _,FormSuccess ()) -> do
+          now <- liftIO getCurrentTime
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusRejected
+                    , CardUpdated =. just (val now)
+                    , CardModerator =. val mid
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          addMessageI msgSuccess MsgCardRejected
+          redirect (DataR $ UserCardR uid cid,stati)
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect (DataR $ UserCardR uid cid,stati)
+
+
+postUserCardRevokeR :: UserId -> CardId -> Handler Html
+postUserCardRevokeR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+    mid <- maybeAuthId
+
+    card <- runDB $ selectOne $ do
+        x <- from $ table @Card
+        where_ $ x ^. CardId ==. val cid
+        where_ $ x ^. CardStatus ==. val CardStatusApproved
+        return x
+
+    ((fr,_),_) <- runFormPost formCardRevoke
+    case (card, fr) of
+      (Just _,FormSuccess ()) -> do
+          now <- liftIO getCurrentTime
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusRevoked
+                    , CardUpdated =. just (val now)
+                    , CardModerator =. val mid
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          addMessageI msgSuccess MsgCardRevoked
+          redirect (DataR $ UserCardR uid cid,stati)
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect (DataR $ UserCardR uid cid,stati)
+
+
+postUserCardApproveR :: UserId -> CardId -> Handler Html
+postUserCardApproveR uid cid = do
+
+    stati <- reqGetParams <$> getRequest
+
+    mid <- maybeAuthId
+
+    card <- runDB $ selectOne $ do
+        x <- from $ table @Card
+        where_ $ x ^. CardId ==. val cid
+        where_ $ x ^. CardStatus ==. val CardStatusAwaiting
+        return x
+
+    ((fr,_),_) <- runFormPost formCardApprove
+    case (card, fr) of
+      (Just _,FormSuccess ()) -> do
+          now <- liftIO getCurrentTime
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusApproved
+                    , CardUpdated =. just (val now)
+                    , CardModerator =. val mid
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          addMessageI msgSuccess MsgRequestApproved
+          redirect (DataR $ UserCardR uid cid,stati)
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect (DataR $ UserCardR uid cid,stati)
 
 
 getCardsR :: UserId -> Handler Html
@@ -303,7 +401,7 @@ postUserCardNewFieldR uid cid = do
     ((fr,fw),et) <- runFormPost $ formCard route uid card fields
     
     case fr of
-      FormSuccess ((_, attrs),(Just name,Just value)) -> do
+      FormSuccess ((_,_, attrs),(Just name,Just value)) -> do
           (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,value)])
 
           msgr <- getMessageRender
@@ -313,7 +411,7 @@ postUserCardNewFieldR uid cid = do
               idOverlay <- newIdent
               $(widgetFile "data/users/cards/edit")
               
-      FormSuccess ((_, attrs),(Just name,Nothing)) -> do
+      FormSuccess ((_,_, attrs),(Just name,Nothing)) -> do
           (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,"")])
 
           msgr <- getMessageRender
@@ -323,7 +421,7 @@ postUserCardNewFieldR uid cid = do
               idOverlay <- newIdent
               $(widgetFile "data/users/cards/edit")
               
-      FormSuccess ((_, attrs),(Nothing,_)) -> do
+      FormSuccess ((_,_, attrs),(Nothing,_)) -> do
           (fw,et) <- generateFormPost $ formCard route uid Nothing attrs
 
           msgr <- getMessageRender
@@ -356,7 +454,22 @@ postUserCardR uid cid = do
     ((fr,fw),et) <- runFormPost $ formCard (DataR $ UserCardNewFieldR uid cid) uid card fields
 
     case fr of
-      FormSuccess ((c,attrs),_) -> do
+      FormSuccess ((c,Just fi,attrs),_) -> do
+          runDB $ replace cid c
+          bs <- fileSourceByteString fi
+          void $ runDB $ upsert (Photo cid (fileContentType fi) bs Nothing)
+                    [ PhotoMime P.=. fileContentType fi
+                    , PhotoPhoto P.=. bs
+                    , PhotoAttribution P.=. Nothing
+                    ]
+          runDB $ delete $ do
+              x <- from $ table @Info
+              where_ $ x ^. InfoCard ==. val cid
+          runDB $ insertMany_ $ uncurry (Info cid) <$> attrs
+          addMessageI msgSuccess MsgRecordEdited
+          redirect $ DataR $ UserCardR uid cid
+          
+      FormSuccess ((c,Nothing,attrs),_) -> do
           runDB $ replace cid c
           runDB $ delete $ do
               x <- from $ table @Info
@@ -409,7 +522,7 @@ postUserCardsNewFieldR uid = do
     ((fr,fw),et) <- runFormPost $ formCard route uid Nothing fields
     
     case fr of
-      FormSuccess ((_, attrs),(Just name,Just value)) -> do
+      FormSuccess ((_,_, attrs),(Just name,Just value)) -> do
           (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,value)])
 
           msgr <- getMessageRender
@@ -419,7 +532,7 @@ postUserCardsNewFieldR uid = do
               idOverlay <- newIdent
               $(widgetFile "data/users/cards/new")
               
-      FormSuccess ((_, attrs),(Just name,Nothing)) -> do
+      FormSuccess ((_,_, attrs),(Just name,Nothing)) -> do
           (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,"")])
 
           msgr <- getMessageRender
@@ -429,7 +542,7 @@ postUserCardsNewFieldR uid = do
               idOverlay <- newIdent
               $(widgetFile "data/users/cards/new")
               
-      FormSuccess ((_, attrs),(Nothing,_)) -> do
+      FormSuccess ((_,_, attrs),(Nothing,_)) -> do
           (fw,et) <- generateFormPost $ formCard route uid Nothing attrs
 
           msgr <- getMessageRender
@@ -457,7 +570,22 @@ postUserCardsR uid = do
     ((fr,fw),et) <- runFormPost $ formCard (DataR $ UserCardsNewFieldR uid) uid Nothing fields
 
     case fr of
-      FormSuccess ((c,attrs),_) -> do
+      FormSuccess ((c,Just fi,attrs),_) -> do
+          cid <- runDB $ insert c
+          bs <- fileSourceByteString fi
+          void $ runDB $ upsert (Photo cid (fileContentType fi) bs Nothing)
+                    [ PhotoMime P.=. fileContentType fi
+                    , PhotoPhoto P.=. bs
+                    , PhotoAttribution P.=. Nothing
+                    ]
+          runDB $ delete $ do
+              x <- from $ table @Info
+              where_ $ x ^. InfoCard ==. val cid
+          runDB $ insertMany_ $ uncurry (Info cid) <$> attrs
+          addMessageI msgSuccess MsgRecordAdded
+          redirect $ DataR $ UserCardsR uid
+          
+      FormSuccess ((c,Nothing,attrs),_) -> do
           cid <- runDB $ insert c
           runDB $ delete $ do
               x <- from $ table @Info
@@ -490,8 +618,14 @@ getUserCardNewR uid = do
 
 
 formCard :: Route App -> UserId -> Maybe (Entity Card) -> [(Text, Html)]
-         -> Form ((Card,[(Text,Html)]),(Maybe Text,Maybe Html))
+         -> Form ((Card,Maybe FileInfo,[(Text,Html)]),(Maybe Text,Maybe Html))
 formCard route uid card fields extra = do
+
+    user <- liftHandler $ runDB $ selectOne $ do
+        x <- from $ table @User
+        where_ $ x ^. UserId ==. val uid
+        return x
+        
     now <- liftIO getCurrentTime
 
     attrs <- forM fields $ \(name, value) -> mreq htmlField FieldSettings
@@ -499,8 +633,20 @@ formCard route uid card fields extra = do
         , fsName = Just name
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
         } (Just value) >>= \x -> return (first ((name,) <$>) x)
+
+    samples <- if null fields then
+               do
+                   msgr <- getMessageRender
+                   name <- mreq textField FieldSettings
+                       { fsLabel = SomeMessage MsgFullName
+                       , fsName = Just (msgr MsgFullName)
+                       , fsTooltip = Nothing, fsId = Nothing, fsAttrs = []
+                       } (userName . entityVal =<< user) >>= \x -> return ( first ((\y -> (msgr MsgFullName, toHtml y)) <$>) x )
+                   return [name] 
+                   
+               else return []
     
-    (nameR,nameV) <- mopt textField FieldSettings
+    (fieldR,fieldV) <- mopt textField FieldSettings
         { fsLabel = SomeMessage MsgName
         , fsName = Just paramFieldNewName
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
@@ -512,14 +658,31 @@ formCard route uid card fields extra = do
         , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
         } Nothing
 
-    authId <- maybeAuthId 
+    (photoR,photoV) <- mopt fileField FieldSettings
+        { fsLabel = SomeMessage MsgPhoto
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
+        , fsAttrs = [("style","display:none"),("accept","image/*")]
+        } Nothing
 
-    let r = (,) <$> ( (,) (maybe (Card uid "" now CardStatusApproved (Just now) authId) entityVal card) <$> traverse fst attrs )
-                <*> ( (,) <$> nameR <*> valR )
-    let w = do
-            idDetailsNewField <- newIdent
-            $(widgetFile "data/users/cards/form")
-    return (r,w)
+    let qr = ""
+    
+    let r = (,) <$> ( (,,) ( maybe (Card uid qr now CardStatusAwaiting Nothing Nothing) entityVal card )
+                      <$> photoR <*> traverse fst attrs
+                    )
+                <*> ( (,) <$> fieldR <*> valR )
+    
+    idDetailsNewField <- newIdent
+    idLabelPhoto <- newIdent
+    idImgPhoto <- newIdent
+    idButtonUploadPhoto <- newIdent
+    idButtonTakePhoto <- newIdent
+    idOverlay <- newIdent
+    idDialogSnapshot <- newIdent
+    idButtonCloseDialogSnapshot <- newIdent
+    idVideo <- newIdent
+    idButtonCapture <- newIdent
+            
+    return (r, $(widgetFile "data/users/cards/form"))
 
 
 paramFieldNewName :: Text
@@ -537,8 +700,6 @@ paramsOut (p,_) = (p /= paramFieldToken) && (p /= paramFieldNewName) && (p /= pa
 
 getUserCardR :: UserId -> CardId -> Handler Html
 getUserCardR uid cid = do
-
-    stati <- reqGetParams <$> getRequest
 
     card <- runDB $ selectOne $ do
         x :& u :& m <- from $ table @Card

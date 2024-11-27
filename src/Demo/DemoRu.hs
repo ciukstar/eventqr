@@ -15,7 +15,7 @@ import Database.Persist (PersistStoreWrite (insert, insert_))
 import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
-    ( keyApiVapid, keyApiGmail
+    ( keyApiVapid, keyApiGmail, secretVapid
     , User
       ( User, userEmail, userPassword, userSuper, userAdmin, userName, userManager
       , userAuthType, userVerkey, userVerified
@@ -31,8 +31,10 @@ import Model
     , Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
     , Token (Token, tokenApi, tokenStore)
     , Store (Store, storeToken, storeKey, storeVal)
-    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager), secretVapid
-    , AuthenticationType (UserAuthTypePassword), CardStatus (CardStatusApproved, CardStatusAwaiting), Photo (Photo, photoCard, photoMime, photoPhoto, photoAttribution)
+    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager)
+    , AuthenticationType (UserAuthTypePassword)
+    , CardStatus (CardStatusApproved, CardStatusAwaiting)
+    , Photo (Photo, photoCard, photoMime, photoPhoto, photoAttribution)
     )
     
 import Settings (AppSettings (appDevelopment))

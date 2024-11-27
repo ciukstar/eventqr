@@ -1,27 +1,45 @@
 
 ^{extra}
+
+<figure.center-align>
+  <label for=#{fvId photoV} ##{idLabelPhoto}>
+    <img.circle.extra src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto} ##{idImgPhoto}>
+
+    ^{fvInput photoV}
+
+  <figcaption.margin>
+
+    $maybe errs <- fvErrors photoV
+      <div.error>
+        #{errs}
+    <nav.center-align>
+      <button.border.round.transparent type=button ##{idButtonUploadPhoto}>
+        <i>upload_file
+        _{MsgUploadPhoto}
+
+      <button.circle.transparent.border title=_{MsgTakePhoto} type=button ##{idButtonTakePhoto} data-ui=##{idOverlay}>
+        <i>photo_camera
+
+$forall (_,v) <- samples
+  ^{md3widget v}
+  
 $forall (_,v) <- attrs
   ^{md3textareaWidget v}
 
-$if null fields
-  <figure.margin.pading style="text-align:center">
-    <i.extra>folder_open
-    <figcaption>
-      _{MsgNoFieldsForThisCardYet}.
 
-$else
-  <nav.right-align>
-    <a.button.transparent href=@{DataR $ UserCardsR uid}>
-      _{MsgCancel}
-    <button.primary type=submit>
-      _{MsgSave}
+<nav.right-align>
+  <a.button.transparent href=@{DataR $ UserCardsR uid}>
+    _{MsgCancel}
+  <button.primary type=submit>
+    _{MsgSave}
+
 
 <details ##{idDetailsNewField}>
   <summary.none.button.small.tertiary>
     <i>add
     <span>_{MsgNewField}
 
-  ^{md3widget nameV}
+  ^{md3widget fieldV}
 
   ^{md3textareaWidget valV}
 
@@ -29,3 +47,22 @@ $else
     <button.small.primary type=submit formaction=@{route}>
       <i>add
       _{MsgAdd}
+
+
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
+<dialog ##{idDialogSnapshot}>
+ 
+  <h6.row>
+    <div.max>
+      _{MsgTakePhoto}
+    <button.transparent.circle type=button title=_{MsgClose} ##{idButtonCloseDialogSnapshot} data-ui=##{idOverlay}>
+      <i>close
+
+  <figure.center-align>
+    <video ##{idVideo} playsinline autoplay width=128 height=128
+           poster=@{StaticR img_camera_24dp_0000F5_FILL0_wght400_GRAD0_opsz24_svg}>
+  
+  <nav.center-align>
+    <button.circle.extra.transparent.border type=button ##{idButtonCapture} data-ui=##{idOverlay}>
+      <i.extra>circle

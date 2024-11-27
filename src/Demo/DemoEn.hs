@@ -15,7 +15,7 @@ import Database.Persist (PersistStoreWrite (insert, insert_))
 import Database.Persist.SqlBackend (SqlBackend)
 
 import Model
-    ( keyApiVapid, keyApiGmail
+    ( keyApiVapid, keyApiGmail, secretVapid
     , User
       ( User, userEmail, userPassword, userSuper, userAdmin, userName
       , userManager, userAuthType, userVerkey, userVerified
@@ -31,7 +31,7 @@ import Model
     , Poster (Poster, posterEvent, posterMime, posterPhoto, posterAttribution)
     , Token (Token, tokenApi, tokenStore)
     , Store (Store, storeToken, storeKey, storeVal)
-    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager), secretVapid
+    , StoreType (StoreTypeDatabase, StoreTypeGoogleSecretManager)
     , AuthenticationType (UserAuthTypePassword)
     , CardStatus (CardStatusApproved, CardStatusAwaiting)
     , Photo (photoCard, photoMime, photoPhoto, photoAttribution, Photo)
@@ -178,7 +178,7 @@ fillDemoEn appSettings = do
                         , userPhotoAttribution = Just freepik
                         }
 
-    pass6 <- liftIO $ saltPass "jaturnbow"
+    pass6 <- liftIO $ saltPass "cswatkins"
     let user6 = User { userEmail = "cswatkins@xmail.edu"
                      , userPassword = Just pass6
                      , userName = Just "Charles S. Watkins"

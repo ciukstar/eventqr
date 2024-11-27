@@ -108,6 +108,9 @@ import Handler.Cards
     , getUserCardEditR
     , postUserCardNewFieldR
     , postUserCardDeleR
+    , postUserCardApproveR
+    , postUserCardRevokeR
+    , postUserCardRejectR
     , getCardQrImageR
     , getCardPhotoR
     , getCardsR

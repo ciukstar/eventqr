@@ -352,6 +352,9 @@ instance Yesod App where
     isAuthorized (DataR (UserCardEditR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardNewFieldR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardDeleR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardApproveR uid _)) _ = isAdmin
+    isAuthorized (DataR (UserCardRevokeR uid _)) _ = isAdmin
+    isAuthorized (DataR (UserCardRejectR uid _)) _ = isAdmin
         
     isAuthorized (DataR (CardQrImageR _)) _ = isAuthenticated
     isAuthorized (DataR (CardPhotoR _)) _ = isAuthenticated

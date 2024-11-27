@@ -20,7 +20,7 @@
       $forall (Entity cid (Card _ _ ordered status updated _),Entity uid (User email _ uname _ _ _ _ _ _)) <- cards
         <a.row.padding.wave href=@{DataR $ UserCardR uid cid}>
 
-          <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+          <img.circle src=@{DataR $ CardPhotoR cid} alt=_{MsgPhoto} loading=lazy>
 
           <div.content.max>
             <h6.headline.large-text>
@@ -48,7 +48,7 @@
                 $of CardStatusRevoked
                   <span>
                     <i.small.red-text>remove_moderator
-                    _{MsgDateRevoked}
+                    _{MsgRevoked}
                     
                 $of _
                     

@@ -3,7 +3,7 @@
 
 <main.responsive.horizontal-padding.bottom-padding>
 
-  $maybe ((Entity cid (Card oid _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)),moderator) <- card
+  $maybe ((Entity cid (Card _ _ ordered status updated _),Entity _ (User email _ uname _ _ _ _ _ _)),moderator) <- card
     <dl>
       <dt.bold>_{MsgStatus}
       <dd.bottom-margin.left-margin>
@@ -58,7 +58,7 @@
       
       <dt.bold>_{MsgCardholder}
       <dd.bottom-margin.left-margin>
-        <img.circle.small src=@{DataR $ UserPhotoR oid} alt=_{MsgPhoto} loading=lazy>
+        <img.circle.small src=@{DataR $ CardPhotoR cid} alt=_{MsgPhoto} loading=lazy>
         $maybe name <- uname
           #{name}
         $nothing
@@ -88,20 +88,20 @@
         
     $case status
       $of CardStatusAwaiting
-        <form method=post action=@{DataR $ CardApproveR uid cid} enctype=#{etApprove}>
+        <form method=post action=@{DataR $ UserCardApproveR uid cid} enctype=#{etApprove}>
           ^{fwApprove}
           <button.responsive.green type=submit>
             <i>verified
             <span>_{MsgApprove}
             
-        <form method=post action=@{DataR $ CardRejectR uid cid} enctype=#{etReject}>
+        <form method=post action=@{DataR $ UserCardRejectR uid cid} enctype=#{etReject}>
           ^{fwReject}          
           <button.responsive.border.transparent type=submit>
             <i.red-text>block
             <span>_{MsgReject}
           
       $of CardStatusApproved
-        <form method=post action=@{DataR $ CardRevokeR uid cid} enctype=#{etRevoke}>
+        <form method=post action=@{DataR $ UserCardRevokeR uid cid} enctype=#{etRevoke}>
           ^{fwRevoke}
           <button.responsive.red type=submit>
             <i>remove_moderator
@@ -109,31 +109,37 @@
           
       $of _
 
+
+    <div.overlay ##{idOverlay}>
+
+
+    <dialog ##{idDialogQrCode}>
+      <h6>_{MsgQrCode}
+      <div>
+        <figure>
+          <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
+          <figcaption>
+            $maybe name <- uname
+              #{name}
+            $nothing
+              #{email}
+
+
+      <nav.right-align>
+        <button.transparent.link ##{idButtonCloseDialogQrCode}>
+          _{MsgClose}
+
+
+    <dialog ##{idDialogDelete}>
+      <h6>_{MsgConfirmPlease}
+      <div>_{MsgDeleteAreYouSure}
+      <nav.right-align.no-space>
+        <button.transparent.link data-ui=##{idOverlay}
+          onclick="document.getElementById('#{idDialogDelete}').close()">
+          _{MsgCancel}
+        <form method=post action=@{DataR $ UserCardDeleR uid cid} enctype=#{et0}>
+          ^{fw0}
+          <button.primary type=submit>
+            _{MsgDele}
+
   ^{widgetSnackbar msgs}
-
-
-<div.overlay ##{idOverlay}>
-
-
-<dialog ##{idDialogQrCode}>
-  <h5>_{MsgQrCode}
-  <div>
-    <figure>
-      <img.margin.no-round.no-border.no-padding src=@{DataR $ CardQrImageR cid} width=203 height=203 loading=lazy>
-
-  <nav.right-align>
-    <button.transparent.link ##{idButtonCloseDialogQrCode}>
-      _{MsgClose}
-
-
-<dialog ##{idDialogDelete}>
-  <h5>_{MsgConfirmPlease}
-  <div>_{MsgDeleteAreYouSure}
-  <nav.right-align.no-space>
-    <button.transparent.link data-ui=##{idOverlay}
-      onclick="document.getElementById('#{idDialogDelete}').close()">
-      _{MsgCancel}
-    <form method=post action=@{DataR $ UserCardDeleR uid cid} enctype=#{et0}>
-      ^{fw0}
-      <button.primary type=submit>
-        _{MsgDele}
