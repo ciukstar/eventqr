@@ -13,6 +13,7 @@ module Handler.Cards
   , getUserCardEditR
   , postUserCardNewFieldR
   , postUserCardDeleR
+  , postUserCardInfoDeleR
   , postUserCardApproveR
   , postUserCardRevokeR
   , postUserCardRejectR
@@ -37,6 +38,7 @@ import Control.Monad (forM, void)
 import Control.Monad.IO.Class (liftIO)
 
 import Data.Bifunctor (Bifunctor(first, second))
+import Data.Maybe (isJust)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock (getCurrentTime)
@@ -60,6 +62,7 @@ import Foundation
       , UserCardNewR, UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
       , UserCardDeleR, CardsR, CardR, CardApproveR, CardRevokeR, CardRejectR
       , UserCardRejectR, UserCardRevokeR, UserCardApproveR, CardPhotoR
+      , UserCardInfoDeleR
       )
     , AppMessage
       ( MsgPhoto, MsgUser, MsgName, MsgAwaiting, MsgTakePhoto
@@ -90,7 +93,7 @@ import Model
     , Info (Info), Photo (Photo)
     , EntityField
       ( UserId, CardUpdated, CardUser, CardId, InfoId, InfoCard, PhotoCard
-      , CardStatus, CardModerator, PhotoMime, PhotoPhoto, PhotoAttribution
+      , CardStatus, CardModerator, PhotoMime, PhotoPhoto, PhotoAttribution, InfoName
       )
     )
 
@@ -100,6 +103,7 @@ import Settings.StaticFiles
     , img_camera_24dp_0000F5_FILL0_wght400_GRAD0_opsz24_svg
     )
 
+import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Hamlet (Html)
 import Text.Read (readMaybe)
 
@@ -120,9 +124,10 @@ import Yesod.Form.Functions (generateFormPost, mreq, mopt, runFormPost)
 import Yesod.Form.Types
     ( FormResult (FormSuccess)
     , FieldSettings(FieldSettings, fsLabel, fsTooltip, fsId, fsName, fsAttrs)
-    , FieldView (fvInput, fvId, fvErrors)
+    , FieldView (fvInput, fvId, fvErrors, fvRequired, fvLabel)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+import Data.Text.Lazy (toStrict)
 
 
 postCardRejectR :: UserId -> CardId -> Handler Html
@@ -373,6 +378,24 @@ getCardsR uid = do
         $(widgetFile "data/moderation/cards")
 
 
+postUserCardInfoDeleR :: UserId -> CardId -> Text -> Handler Html
+postUserCardInfoDeleR uid cid field = do
+    ((fr,_),_) <- runFormPost formCardInfoDelete
+    case fr of
+      FormSuccess () -> do
+          runDB $ delete $ do
+              x <- from $ table @Info
+              where_ $ x ^. InfoCard ==. val cid
+              where_ $ x ^. InfoName ==. val field
+              
+          addMessageI msgSuccess MsgRecordDeleted
+          redirect $ DataR $ UserCardEditR uid cid
+          
+      _otherwise -> do
+          addMessageI msgError MsgInvalidFormData
+          redirect $ DataR $ UserCardEditR uid cid
+
+
 postUserCardDeleR :: UserId -> CardId -> Handler Html
 postUserCardDeleR  uid cid = do
     ((fr,_),_) <- runFormPost formCardDelete
@@ -395,14 +418,16 @@ postUserCardNewFieldR uid cid = do
         x <- from $ table @Card
         where_ $ x ^. CardId ==. val cid
         return x
+        
+    idFormInfoDelete <- newIdent
+    (fw00,et00) <- liftHandler $ generateFormPost formCardInfoDelete
 
     let route = DataR $ UserCardNewFieldR uid cid
-    
-    ((fr,fw),et) <- runFormPost $ formCard route uid card fields
+    ((fr,fw),et) <- runFormPost $ formCard idFormInfoDelete route uid card fields
     
     case fr of
       FormSuccess ((_,_, attrs),(Just name,Just value)) -> do
-          (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,value)])
+          (fw,et) <- generateFormPost $ formCard idFormInfoDelete route uid Nothing (attrs <> [(name,value)])
 
           msgr <- getMessageRender
           msgs <- getMessages
@@ -412,7 +437,7 @@ postUserCardNewFieldR uid cid = do
               $(widgetFile "data/users/cards/edit")
               
       FormSuccess ((_,_, attrs),(Just name,Nothing)) -> do
-          (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,"")])
+          (fw,et) <- generateFormPost $ formCard idFormInfoDelete route uid Nothing (attrs <> [(name,"")])
 
           msgr <- getMessageRender
           msgs <- getMessages
@@ -422,7 +447,7 @@ postUserCardNewFieldR uid cid = do
               $(widgetFile "data/users/cards/edit")
               
       FormSuccess ((_,_, attrs),(Nothing,_)) -> do
-          (fw,et) <- generateFormPost $ formCard route uid Nothing attrs
+          (fw,et) <- generateFormPost $ formCard idFormInfoDelete route uid Nothing attrs
 
           msgr <- getMessageRender
           addMessageI msgError MsgNewFieldNameRequired
@@ -451,7 +476,8 @@ postUserCardR uid cid = do
         where_ $ x ^. CardId ==. val cid
         return x
 
-    ((fr,fw),et) <- runFormPost $ formCard (DataR $ UserCardNewFieldR uid cid) uid card fields
+    idFormInfoDelete <- newIdent
+    ((fr,fw),et) <- runFormPost $ formCard idFormInfoDelete (DataR $ UserCardNewFieldR uid cid) uid card fields
 
     case fr of
       FormSuccess ((c,Just fi,attrs),_) -> do
@@ -479,6 +505,8 @@ postUserCardR uid cid = do
           redirect $ DataR $ UserCardR uid cid
           
       _otherwise -> do
+          idFormInfoDelete <- newIdent
+          (fw00,et00) <- liftHandler $ generateFormPost formCardInfoDelete
           msgr <- getMessageRender
           addMessageI msgError MsgInvalidFormData
           msgs <- getMessages
@@ -501,8 +529,11 @@ getUserCardEditR uid cid = do
         where_ $ x ^. InfoCard ==. val cid
         orderBy [asc (x ^. InfoId)]
         return x )
-    
-    (fw,et) <- generateFormPost $ formCard (DataR $ UserCardNewFieldR uid cid) uid card attrs
+        
+    idFormInfoDelete <- newIdent
+    (fw00,et00) <- liftHandler $ generateFormPost formCardInfoDelete
+        
+    (fw,et) <- generateFormPost $ formCard idFormInfoDelete (DataR $ UserCardNewFieldR uid cid) uid card attrs
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -516,14 +547,16 @@ postUserCardsNewFieldR :: UserId -> Handler Html
 postUserCardsNewFieldR uid = do
 
     fields <- (second toHtml <$>) . filter paramsOut <$> getPostParams
+
+    idFormInfoDelete <- newIdent
+    (fw00,et00) <- liftHandler $ generateFormPost formCardInfoDelete
     
     let route = DataR $ UserCardsNewFieldR uid
-    
-    ((fr,fw),et) <- runFormPost $ formCard route uid Nothing fields
+    ((fr,fw),et) <- runFormPost $ formCard idFormInfoDelete route uid Nothing fields
     
     case fr of
       FormSuccess ((_,_, attrs),(Just name,Just value)) -> do
-          (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,value)])
+          (fw,et) <- generateFormPost $ formCard idFormInfoDelete route uid Nothing (attrs <> [(name,value)])
 
           msgr <- getMessageRender
           msgs <- getMessages
@@ -533,7 +566,7 @@ postUserCardsNewFieldR uid = do
               $(widgetFile "data/users/cards/new")
               
       FormSuccess ((_,_, attrs),(Just name,Nothing)) -> do
-          (fw,et) <- generateFormPost $ formCard route uid Nothing (attrs <> [(name,"")])
+          (fw,et) <- generateFormPost $ formCard idFormInfoDelete route uid Nothing (attrs <> [(name,"")])
 
           msgr <- getMessageRender
           msgs <- getMessages
@@ -543,7 +576,7 @@ postUserCardsNewFieldR uid = do
               $(widgetFile "data/users/cards/new")
               
       FormSuccess ((_,_, attrs),(Nothing,_)) -> do
-          (fw,et) <- generateFormPost $ formCard route uid Nothing attrs
+          (fw,et) <- generateFormPost $ formCard idFormInfoDelete route uid Nothing attrs
 
           msgr <- getMessageRender
           addMessageI msgError MsgNewFieldNameRequired
@@ -567,7 +600,8 @@ postUserCardsR uid = do
 
     fields <- (second toHtml <$>) . filter paramsOut <$> getPostParams
 
-    ((fr,fw),et) <- runFormPost $ formCard (DataR $ UserCardsNewFieldR uid) uid Nothing fields
+    idFormInfoDelete <- newIdent
+    ((fr,fw),et) <- runFormPost $ formCard idFormInfoDelete (DataR $ UserCardsNewFieldR uid) uid Nothing fields
 
     case fr of
       FormSuccess ((c,Just fi,attrs),_) -> do
@@ -595,6 +629,9 @@ postUserCardsR uid = do
           redirect $ DataR $ UserCardsR uid
           
       _otherwise -> do
+          idFormInfoDelete <- newIdent
+          (fw00,et00) <- liftHandler $ generateFormPost formCardInfoDelete
+          
           msgr <- getMessageRender
           addMessageI msgError MsgInvalidFormData
           msgs <- getMessages
@@ -606,8 +643,10 @@ postUserCardsR uid = do
 
 getUserCardNewR :: UserId -> Handler Html
 getUserCardNewR uid = do
-
-    (fw,et) <- generateFormPost $ formCard (DataR $ UserCardsNewFieldR uid) uid Nothing []
+    idFormInfoDelete <- newIdent
+    (fw00,et00) <- liftHandler $ generateFormPost formCardInfoDelete
+    
+    (fw,et) <- generateFormPost $ formCard idFormInfoDelete (DataR $ UserCardsNewFieldR uid) uid Nothing []
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -617,9 +656,9 @@ getUserCardNewR uid = do
         $(widgetFile "data/users/cards/new")
 
 
-formCard :: Route App -> UserId -> Maybe (Entity Card) -> [(Text, Html)]
+formCard :: Text -> Route App -> UserId -> Maybe (Entity Card) -> [(Text, Html)]
          -> Form ((Card,Maybe FileInfo,[(Text,Html)]),(Maybe Text,Maybe Html))
-formCard route uid card fields extra = do
+formCard idFormInfoDelete route uid card fields extra = do
 
     user <- liftHandler $ runDB $ selectOne $ do
         x <- from $ table @User
@@ -630,21 +669,20 @@ formCard route uid card fields extra = do
 
     attrs <- forM fields $ \(name, value) -> mreq htmlField FieldSettings
         { fsLabel = SomeMessage name
-        , fsName = Just name
-        , fsId = Nothing, fsTooltip = Nothing, fsAttrs = []
+        , fsName = Just name, fsId = Nothing, fsTooltip = Nothing
+        , fsAttrs = [("autocomplete","off")]
         } (Just value) >>= \x -> return (first ((name,) <$>) x)
 
-    samples <- if null fields then
-               do
-                   msgr <- getMessageRender
-                   name <- mreq textField FieldSettings
-                       { fsLabel = SomeMessage MsgFullName
-                       , fsName = Just (msgr MsgFullName)
-                       , fsTooltip = Nothing, fsId = Nothing, fsAttrs = []
-                       } (userName . entityVal =<< user) >>= \x -> return ( first ((\y -> (msgr MsgFullName, toHtml y)) <$>) x )
-                   return [name] 
-                   
-               else return []
+    samples <- if null fields then do
+        msgr <- getMessageRender
+        name <- mreq textField FieldSettings
+            { fsLabel = SomeMessage MsgFullName
+            , fsName = Just (msgr MsgFullName), fsTooltip = Nothing, fsId = Nothing
+            , fsAttrs = [("autocomplete","off")]
+            } (userName . entityVal =<< user) >>= \x -> return ( first ((\y -> (msgr MsgFullName, toHtml y)) <$>) x )
+        return [name] 
+              
+        else return []
     
     (fieldR,fieldV) <- mopt textField FieldSettings
         { fsLabel = SomeMessage MsgName
@@ -670,7 +708,8 @@ formCard route uid card fields extra = do
                       <$> photoR <*> traverse fst attrs
                     )
                 <*> ( (,) <$> fieldR <*> valR )
-    
+
+    idDialogDelete <- newIdent
     idDetailsNewField <- newIdent
     idLabelPhoto <- newIdent
     idImgPhoto <- newIdent
@@ -680,9 +719,13 @@ formCard route uid card fields extra = do
     idDialogSnapshot <- newIdent
     idButtonCloseDialogSnapshot <- newIdent
     idVideo <- newIdent
-    idButtonCapture <- newIdent
-            
+    idButtonCapture <- newIdent 
+    
     return (r, $(widgetFile "data/users/cards/form"))
+
+
+formCardInfoDelete :: Form ()
+formCardInfoDelete extra = return (pure (),[whamlet|^{extra}|])
 
 
 paramFieldNewName :: Text

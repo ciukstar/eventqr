@@ -1,3 +1,10 @@
 
+.field.suffix
+
+    i[role=button]
+        inset: 50% 0.5rem auto auto
+        padding: 0.5rem
+        z-index: 1
+
 ##{idDetailsNewField}
     margin-top: 2rem

@@ -78,3 +78,9 @@ fetch(
 document.getElementById(#{idDetailsNewField}).addEventListener('toggle', e => {
   e.target.querySelector('summary > i').textContent = e.target.open ? 'expand_less' : 'add';
 });
+
+
+document.getElementById(#{idOverlay}).addEventListener('click', e => {
+  document.body.querySelector('dialog[open]').close();
+});
+

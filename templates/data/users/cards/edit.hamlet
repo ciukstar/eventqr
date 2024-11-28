@@ -3,6 +3,9 @@
 
 <main.responsive>
 
+  <form method=post action=# enctype=#{et00} ##{idFormInfoDelete}>
+    ^{fw00}
+    
   <form.margin method=post action=@{DataR $ UserCardR uid cid} enctype=#{et} novalidate>
     ^{fw}
       

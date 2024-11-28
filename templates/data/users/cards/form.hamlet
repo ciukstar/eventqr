@@ -1,4 +1,6 @@
 
+<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+
 ^{extra}
 
 <figure.center-align>
@@ -21,10 +23,69 @@
         <i>photo_camera
 
 $forall (_,v) <- samples
-  ^{md3widget v}
+
+  $maybe Entity cid _ <- card
+    <dialog ##{idDialogDelete}-#{fvId v}>
+      <h6>_{MsgConfirmPlease}
+      <div>_{MsgDeleteAreYouSure}
+      <nav.right-align.no-space>
+      
+        <button.transparent.link data-ui=##{idOverlay} type=button
+                                 onclick="document.getElementById('#{idDialogDelete}-#{fvId v}').close()">
+          _{MsgCancel}
+          
+        <button.primary type=submit form=#{idFormInfoDelete}
+                        formaction=@{DataR $ UserCardInfoDeleR uid cid (toStrict $ renderHtml $ fvLabel v)}>
+          _{MsgDele}
+    
+  <div.field.label.border.round.suffix :isJust (fvErrors v):.invalid>
+
+    ^{fvInput v}
+    <label for=#{fvId v}>
+      #{fvLabel v}
+      $if fvRequired v
+        <sup>*
+        
+    $maybe _ <- card  
+      <i.error-text.circle.wave role=button title=_{MsgDele} data-ui=##{idOverlay}
+                                onclick="document.getElementById('#{idDialogDelete}-#{fvId v}').show()">
+        delete
+      
+    $maybe err <- fvErrors v
+      <span.error>#{err}
+  
   
 $forall (_,v) <- attrs
-  ^{md3textareaWidget v}
+
+  $maybe Entity cid _ <- card
+    <dialog ##{idDialogDelete}-#{fvId v}>
+      <h6>_{MsgConfirmPlease}
+      <div>_{MsgDeleteAreYouSure}
+      <nav.right-align.no-space>
+      
+        <button.transparent.link data-ui=##{idOverlay} type=button
+                                 onclick="document.getElementById('#{idDialogDelete}-#{fvId v}').close()">
+          _{MsgCancel}
+          
+        <button.primary type=submit form=#{idFormInfoDelete} 
+                        formaction=@{DataR $ UserCardInfoDeleR uid cid (toStrict $ renderHtml $ fvLabel v)}>
+          _{MsgDele}
+    
+  <div.field.textarea.label.border.round.suffix :isJust (fvErrors v):.invalid>
+
+    ^{fvInput v}
+    <label for=#{fvId v}>
+      #{fvLabel v}
+      $if fvRequired v
+        <sup>*
+        
+    $maybe _ <- card  
+      <i.error-text.circle.wave role=button title=_{MsgDele} data-ui=##{idOverlay}
+                                onclick="document.getElementById('#{idDialogDelete}-#{fvId v}').show()">
+        delete
+      
+    $maybe err <- fvErrors v
+      <span.error>#{err}
 
 
 <nav.right-align>
@@ -34,7 +95,7 @@ $forall (_,v) <- attrs
     _{MsgSave}
 
 
-<details ##{idDetailsNewField}>
+<details.bottom-margin ##{idDetailsNewField}>
   <summary.none.button.small.tertiary>
     <i>add
     <span>_{MsgNewField}
@@ -47,9 +108,7 @@ $forall (_,v) <- attrs
     <button.small.primary type=submit formaction=@{route}>
       <i>add
       _{MsgAdd}
-
-
-<div.overlay ##{idOverlay} data-ui=##{idOverlay}>
+      
 
 <dialog ##{idDialogSnapshot}>
  

@@ -117,6 +117,8 @@
     /users/#UserId/cards/#CardId/reject  UserCardRejectR  POST
     /users/#UserId/cards/#CardId/revoke  UserCardRevokeR  POST
     /users/#UserId/cards/#CardId/approve UserCardApproveR POST
+
+    /users/#UserId/cards/#CardId/fields/#Text/dele UserCardInfoDeleR POST
     
     /users/#UserId/cards/#CardId/dele   UserCardDeleR      POST
     /users/#UserId/cards/#CardId/field  UserCardNewFieldR  POST
