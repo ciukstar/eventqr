@@ -143,6 +143,7 @@ import Handler.Users
     , getUserR, postUserR
     , getUserNewR, getUserEditR, postUserDeleR
     , getUserPhotoR
+    , getUserResetPasswordR, postUserResetPasswordR
     )
 
 import Handler.Tokens

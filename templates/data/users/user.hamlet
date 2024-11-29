@@ -17,6 +17,10 @@ $maybe Entity _ (User _ _ _ super _ _ _ _ _) <- user
   <div.page.active>
     $maybe Entity _ (User email _ uname super admin manager _ _ _) <- user
       <dl.margin>
+        <dt.bold>_{MsgPhoto}
+        <dd.small-margin>
+          <img.circle src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto} width=48 height=48>
+          
         <dt.bold>_{MsgName}
         <dd.small-margin>
           $maybe name <- uname
@@ -48,7 +52,7 @@ $maybe Entity _ (User _ _ _ super _ _ _ _ _) <- user
             _{MsgNo}
 
       <p.center-align>
-        <a.button.border.transparent href=#>
+        <a.button.border.transparent href=@{DataR $ UserResetPasswordR uid} role=button>
           <i>lock_reset
           _{MsgChangePassword}
 

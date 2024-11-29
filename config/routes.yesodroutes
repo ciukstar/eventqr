@@ -128,11 +128,13 @@
     /users/#UserId/cards/#CardId        UserCardR          GET POST
     /users/#UserId/cards                UserCardsR         GET POST
 
-    /users/#UserId/dele UserDeleR POST
-    /users/#UserId/edit UserEditR GET
-    /users/new/form     UserNewR  GET
-    /users/#UserId      UserR     GET POST
-    /users              UsersR    GET POST
+    
+    /users/#UserId/pwd  UserResetPasswordR GET POST
+    /users/#UserId/dele UserDeleR          POST
+    /users/#UserId/edit UserEditR          GET
+    /users/new/form     UserNewR           GET
+    /users/#UserId      UserR              GET POST
+    /users              UsersR             GET POST
     
     /users/#UserId/photo                              UserPhotoR            GET
 

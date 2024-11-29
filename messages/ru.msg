@@ -1,3 +1,7 @@
+PasswordChanged: Пароль изменен
+PasswordDoesNotMatch: Пароль не совпадает
+RepeatPassword: Повторите пароль
+PasswordChange: Смена пароля
 Moderator: Модератор
 CardRejected: Запрос был отклонен
 DateRevoked: Дата аннулирования

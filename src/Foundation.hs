@@ -329,7 +329,9 @@ instance Yesod App where
     isAuthorized (DataR (AccountEventScheduleCalendarEventAttendeesR uid _ _ _)) _ = isAuthenticatedSelf uid
                             
     isAuthorized (DataR (AccountCardNewR uid)) _ = isAuthenticatedSelf uid
-        
+
+    
+    isAuthorized (DataR (UserResetPasswordR _)) _ = isAdmin
     isAuthorized (DataR (UserDeleR _)) _ = isAdmin
     isAuthorized (DataR (UserEditR _)) _ = isAdmin
     isAuthorized (DataR UserNewR) _ = isAdmin

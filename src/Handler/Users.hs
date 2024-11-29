@@ -11,6 +11,8 @@ module Handler.Users
   , postUserDeleR
   , getUserEditR
   , getUserNewR
+  , getUserResetPasswordR
+  , postUserResetPasswordR
   ) where
 
 
@@ -24,11 +26,11 @@ import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Experimental
     ( select, from, table, selectOne, where_, val, update, set
     , (^.), (==.), (=.)
-    , Value (unValue), orderBy, asc
+    , Value (unValue), orderBy, asc, just
     )
     
 import Database.Persist
-    ( Entity (Entity), entityVal, insert, insert_, upsert)
+    ( Entity (Entity), entityVal, insert, upsert)
 import qualified Database.Persist as P ((=.), delete)
 
 import Foundation
@@ -36,7 +38,7 @@ import Foundation
     , Route (DataR, StaticR)
     , DataR
       ( UserPhotoR, UsersR, UserR, UserNewR, UserEditR, UserDeleR
-      , UserCardsR
+      , UserCardsR, UserResetPasswordR
       )
     , AppMessage
       ( MsgUsers, MsgPhoto, MsgUser, MsgAdministrator, MsgEmail, MsgName
@@ -44,8 +46,9 @@ import Foundation
       , MsgNo, MsgAttribution, MsgPassword, MsgSave, MsgAlreadyExists
       , MsgRecordAdded, MsgInvalidFormData, MsgRecordDeleted
       , MsgDetails, MsgCards, MsgChangePassword, MsgRecordEdited
-      , MsgSuperuser, MsgManager
-      , MsgSuperuserCannotBeDeleted
+      , MsgSuperuser, MsgManager, MsgPasswordChange, MsgSuperuserCannotBeDeleted
+      , MsgUploadPhoto, MsgTakePhoto, MsgClose, MsgRepeatPassword
+      , MsgPasswordDoesNotMatch, MsgPasswordChanged
       )
     )
 
@@ -54,17 +57,24 @@ import Material3 (md3widget, md3switchWidget)
 import Model
     ( msgSuccess, msgError
     , UserId
-    , User(User, userName, userEmail, userPassword, userAdmin, userManager, userAuthType, userVerkey, userVerified)
+    , User
+      ( User, userName, userEmail, userAdmin, userManager
+      , userAuthType, userVerkey, userVerified
+      )
     , UserPhoto (UserPhoto)
+    , AuthenticationType (UserAuthTypePassword)
     , EntityField
       ( UserPhotoUser, UserId, UserPhotoAttribution, UserEmail, UserPhotoPhoto
-      , UserPhotoMime, UserName, UserAdmin, UserManager, UserAuthType, UserVerkey, UserVerified
-      ), AuthenticationType (UserAuthTypePassword)
+      , UserPhotoMime, UserName, UserAdmin, UserManager, UserAuthType, UserVerkey
+      , UserVerified, UserPassword
+      )
     )
 
 import Settings (widgetFile)
 import Settings.StaticFiles
-    ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg)
+    ( img_account_circle_24dp_013048_FILL0_wght400_GRAD0_opsz24_svg
+    , img_camera_24dp_0000F5_FILL0_wght400_GRAD0_opsz24_svg
+    )
 
 import Text.Hamlet (Html)
 
@@ -86,6 +96,66 @@ import Yesod.Form.Types
     , FieldView (fvErrors, fvInput, fvRequired, fvLabel, fvId )
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
+
+
+postUserResetPasswordR :: UserId -> Handler Html
+postUserResetPasswordR uid = do
+    ((fr,fw),et) <- runFormPost formPassword
+    case fr of
+      FormSuccess (pwd,_) -> do
+          salted <- liftIO $ saltPass pwd
+          runDB $ update $ \x -> do
+              set x [UserPassword =. just (val salted)]
+              where_ $ x ^. UserId ==. val uid
+
+          addMessageI msgSuccess MsgPasswordChanged
+          redirect $ DataR $ UserR uid
+          
+      _otherwise -> do
+          msgr <- getMessageRender
+          addMessageI msgSuccess MsgInvalidFormData
+          msgs <- getMessages
+          defaultLayout $ do
+              setTitleI MsgUser
+              idOverlay <- newIdent
+              $(widgetFile "data/users/pwd")
+
+
+getUserResetPasswordR :: UserId -> Handler Html
+getUserResetPasswordR uid = do
+    (fw,et) <- generateFormPost formPassword
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgUser
+        idOverlay <- newIdent
+        $(widgetFile "data/users/pwd")
+    
+
+formPassword :: Form (Text,Text)
+formPassword extra = do
+    
+    (pwdR,pwdV) <- mreq passwordField FieldSettings
+        { fsLabel = SomeMessage MsgPassword
+        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+        } Nothing
+        
+    (repeatR,repeatV) <- let samePasswordField = flip checkM passwordField $ \a -> do
+                                 case pwdR of
+                                   FormSuccess pwd | a == pwd -> return $ Right a
+                                   FormSuccess pwd | a /= pwd -> return $ Left MsgPasswordDoesNotMatch
+                                   _otherwise -> return $ Right a
+                         in mreq samePasswordField FieldSettings
+                            { fsLabel = SomeMessage MsgRepeatPassword
+                            , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
+                            } Nothing
+        
+    let w = [whamlet|
+                    ^{extra}
+                    ^{md3widget pwdV}
+                    ^{md3widget repeatV}
+                    |]
+    return ((,) <$> pwdR <*> repeatR, w)
 
 
 postUserDeleR :: UserId -> Handler Html
@@ -120,7 +190,7 @@ getUserEditR uid = do
         where_ $ x ^. UserId ==. val uid
         return x
 
-    (fw,et) <- generateFormPost $ formUserEdit user
+    (fw,et) <- generateFormPost $ formUser user
 
     msgr <- getMessageRender
     msgs <- getMessages
@@ -151,7 +221,7 @@ postUserR uid = do
         where_ $ x ^. UserId ==. val uid
         return x
     
-    ((fr,fw),et) <- runFormPost $ formUserEdit user
+    ((fr,fw),et) <- runFormPost $ formUser user
 
     case fr of
       FormSuccess (User email _ name _ admin manager authType vekey verified,(Just fi,attrib)) -> do
@@ -172,7 +242,7 @@ postUserR uid = do
                     , UserPhotoAttribution P.=. attrib
                     ]
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR UsersR
+          redirect $ DataR $ UserR uid
           
       FormSuccess (User email _ name _ admin manager authType vekey verified,(Nothing,attrib)) -> do
           void $ runDB $ update $ \x -> do
@@ -189,7 +259,7 @@ postUserR uid = do
               set x [UserPhotoAttribution =. val attrib]
               where_ $ x ^. UserPhotoUser ==. val uid
           addMessageI msgSuccess MsgRecordEdited
-          redirect $ DataR UsersR
+          redirect $ DataR $ UserR uid
 
       _otherwise -> do
           addMessageI msgError MsgInvalidFormData
@@ -197,7 +267,7 @@ postUserR uid = do
           msgs <- getMessages
           defaultLayout $ do
               idOverlay <- newIdent
-              $(widgetFile "data/users/new")
+              $(widgetFile "data/users/edit")
 
 
 getUserR :: UserId -> Handler Html
@@ -229,9 +299,8 @@ postUsersR = do
     ((fr,fw),et) <- runFormPost $ formUser Nothing
 
     case fr of
-      FormSuccess (r@(User _ (Just pass) _ _ _ _ _ _ _),(Just fi,attrib)) -> do
-          password <- liftIO $ saltPass pass
-          uid <- runDB $ insert r { userPassword = Just password }
+      FormSuccess (r,(Just fi,attrib)) -> do
+          uid <- runDB $ insert r
           bs <- fileSourceByteString fi
           void $ runDB $ upsert (UserPhoto uid (fileContentType fi) bs attrib)
                     [ UserPhotoMime P.=. fileContentType fi
@@ -241,17 +310,11 @@ postUsersR = do
           addMessageI msgSuccess MsgRecordAdded
           redirect $ DataR UsersR
           
-      FormSuccess (r@(User _ (Just pass) _ _ _ _ _ _ _),(Nothing,attrib)) -> do
-          password <- liftIO $ saltPass pass
-          uid <- runDB $ insert r { userPassword = Just password }
+      FormSuccess (r,(Nothing,attrib)) -> do
+          uid <- runDB $ insert r
           void $ runDB $ update $ \x -> do
               set x [UserPhotoAttribution =. val attrib]
               where_ $ x ^. UserPhotoUser ==. val uid
-          addMessageI msgSuccess MsgRecordAdded
-          redirect $ DataR UsersR
-
-      FormSuccess (r,_) -> do
-          runDB $ insert_ r
           addMessageI msgSuccess MsgRecordAdded
           redirect $ DataR UsersR
 
@@ -282,89 +345,6 @@ getUsersR = do
 
 formUser :: Maybe (Entity User) -> Form (User,(Maybe FileInfo,Maybe Html))
 formUser user extra = do
-
-    (emailR,emailV) <- mreq uniqueEmailField FieldSettings
-        { fsLabel = SomeMessage MsgEmail
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
-        } (userEmail . entityVal <$> user)
-
-    (passR,passV) <- mopt passwordField FieldSettings
-        { fsLabel = SomeMessage MsgPassword
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
-        } (userPassword . entityVal <$> user)
-
-    (nameR,nameV) <- mopt textField FieldSettings
-        { fsLabel = SomeMessage MsgName
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing, fsAttrs = []
-        } (userName . entityVal <$> user)
-
-    (adminR,adminV) <- mreq checkBoxField FieldSettings
-        { fsLabel = SomeMessage MsgAdministrator
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = []
-        } (userAdmin . entityVal <$> user)
-
-    (managerR,managerV) <- mreq checkBoxField FieldSettings
-        { fsLabel = SomeMessage MsgManager
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = []
-        } (userManager . entityVal <$> user)
-
-    let authTypeR = pure $ maybe UserAuthTypePassword (userAuthType . entityVal) user 
-    let verkeyR = pure $ userVerkey . entityVal =<< user
-    let verifiedR = pure $ maybe False (userVerified . entityVal) user
-
-    (photoR,photoV) <- mopt fileField FieldSettings
-        { fsLabel = SomeMessage MsgPhoto
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = [("style","display:none"),("accept","image/*")]
-        } Nothing
-
-    attrib <- (unValue =<<) <$> case user of
-      Just (Entity uid _) -> liftHandler $ runDB $ selectOne $ do
-          x <- from $ table @UserPhoto
-          where_ $ x ^. UserPhotoUser ==. val uid
-          return $ x ^. UserPhotoAttribution
-      Nothing -> return Nothing
-
-    (attribR,attribV) <- mopt htmlField FieldSettings
-        { fsLabel = SomeMessage MsgAttribution
-        , fsTooltip = Nothing, fsId = Nothing, fsName = Nothing
-        , fsAttrs = []
-        } (Just attrib)
-
-    let r = (,) <$> ( User <$> emailR <*> passR <*> nameR <*> pure False <*> adminR <*> managerR
-                     <*> authTypeR <*> verkeyR <*> verifiedR
-                    )
-                <*> ((,) <$> photoR <*> attribR)
-
-    idPhotoContainer <- newIdent
-    idFigurePhoto <- newIdent
-    idLabelPhoto <- newIdent
-    idImgPhoto <- newIdent
-
-    let w = $(widgetFile "data/users/form") 
-    return (r,w)
-  where
-      uniqueEmailField :: Field Handler Text
-      uniqueEmailField = checkM uniqueEmail emailField
-
-      uniqueEmail :: Text -> Handler (Either AppMessage Text)
-      uniqueEmail email = do
-          x <- runDB $ selectOne $ do
-              x <- from $ table @User
-              where_ $ x ^. UserEmail ==. val email
-              return x
-          return $ case x of
-            Nothing -> Right email
-            Just (Entity rid _) -> case user of
-              Nothing -> Left MsgAlreadyExists
-              Just (Entity rid' _) | rid == rid' -> Right email
-                                   | otherwise -> Left MsgAlreadyExists
-
-
-formUserEdit :: Maybe (Entity User) -> Form (User,(Maybe FileInfo,Maybe Html))
-formUserEdit user extra = do
 
     (emailR,emailV) <- mreq uniqueEmailField FieldSettings
         { fsLabel = SomeMessage MsgEmail
@@ -416,12 +396,17 @@ formUserEdit user extra = do
                     )
                 <*> ((,) <$> photoR <*> attribR)
 
-    idPhotoContainer <- newIdent
-    idFigurePhoto <- newIdent
+    idOverlay <- newIdent
     idLabelPhoto <- newIdent
     idImgPhoto <- newIdent
+    idButtonUploadPhoto <- newIdent
+    idButtonTakePhoto <- newIdent
+    idDialogSnapshot <- newIdent
+    idButtonCloseDialogSnapshot <- newIdent
+    idVideo <- newIdent
+    idButtonCapture <- newIdent
 
-    return (r, $(widgetFile "data/users/form-edit"))
+    return (r, $(widgetFile "data/users/form")) 
   where
       uniqueEmailField :: Field Handler Text
       uniqueEmailField = checkM uniqueEmail emailField

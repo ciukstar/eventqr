@@ -1,12 +1,12 @@
 
-document.getElementById(#{fvId photoV}).addEventListener('change',(e) => {
-  [e.target.files].map(xs => xs[0]).forEach(file => {
-    const fr = new FileReader();
-    fr.onload = (e) => {
+document.getElementById(#{fvId photoV}).addEventListener('change',function (e) {
+  for (const file of e.target.files) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
       document.getElementById(#{idImgPhoto}).setAttribute('src',e.target.result);
     };
-    fr.readAsDataURL(file);
-  });  
+    reader.readAsDataURL(file);
+  }
 });
 
 document.getElementById(#{idButtonUploadPhoto}).addEventListener('click', e => {
@@ -55,9 +55,13 @@ document.getElementById(#{idButtonTakePhoto}).addEventListener('click', e => {
 [#{idButtonCloseDialogSnapshot},#{idOverlay}].map(x => document.getElementById(x)).forEach(x => {
     x.addEventListener('click', e => {
       const video = document.getElementById(#{idVideo});
-      video.srcObject.getVideoTracks().forEach(track => track.stop());
-      video.srcObject = null;
-      document.getElementById(#{idDialogSnapshot}).close();
+      if (!video.srcObject) {
+        window.location.reload();
+      } else {
+        video.srcObject.getVideoTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        document.getElementById(#{idDialogSnapshot}).close();
+      }
     });
 });
 
@@ -77,10 +81,5 @@ fetch(
 
 document.getElementById(#{idDetailsNewField}).addEventListener('toggle', e => {
   e.target.querySelector('summary > i').textContent = e.target.open ? 'expand_less' : 'add';
-});
-
-
-document.getElementById(#{idOverlay}).addEventListener('click', e => {
-  document.body.querySelector('dialog[open]').close();
 });
 

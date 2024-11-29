@@ -5,7 +5,10 @@
 
 <figure.center-align>
   <label for=#{fvId photoV} ##{idLabelPhoto}>
-    <img.circle.extra src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto} ##{idImgPhoto}>
+    $maybe Entity cid _ <- card
+      <img.circle.extra src=@{DataR $ CardPhotoR cid} loading=lazy alt=_{MsgPhoto} ##{idImgPhoto}>
+    $nothing
+      <img.circle.extra src=@{DataR $ UserPhotoR uid} loading=lazy alt=_{MsgPhoto} ##{idImgPhoto}>
 
     ^{fvInput photoV}
 

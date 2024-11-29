@@ -10,7 +10,7 @@
     <button.responsive type=submit #btnLogin>
       _{MsgSignIn}
 
-<div.responsive.center-align>
+<div.responsive.center-align.margin>
   <div.small-text>
     _{MsgDoNotHaveAnAccount}
     

@@ -1,3 +1,7 @@
+PasswordChanged: Password changed
+PasswordDoesNotMatch: The password does not match
+RepeatPassword: Repeat password
+PasswordChange: Password change
 Moderator: Moderator
 CardRejected: The request was rejected
 DateRevoked: Date of cancellation
