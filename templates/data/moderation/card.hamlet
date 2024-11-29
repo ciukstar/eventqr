@@ -95,25 +95,54 @@
             <i>verified
             <span>_{MsgApprove}
             
-        <form method=post action=@{DataR $ CardRejectR uid cid} enctype=#{etReject}>
-          ^{fwReject}          
-          <button.responsive.border.transparent type=submit>
-            <i.red-text>block
-            <span>_{MsgReject}
+        <button.responsive.border.transparent.top-margin type=button ##{idButtonReject} data-ui=##{idOverlay}
+               onclick="document.getElementById('#{idDialogReject}').show()">
+          <i.red-text>block
+          <span>_{MsgReject}
           
       $of CardStatusApproved
-        <form method=post action=@{DataR $ CardRevokeR uid cid} enctype=#{etRevoke}>
-          ^{fwRevoke}
-          <button.responsive.red type=submit>
-            <i>remove_moderator
-            <span>_{MsgRevoke}
+        <button.responsive.red type=submit type=button ##{idButtonRevoke} data-ui=##{idOverlay}
+               onclick="document.getElementById('#{idDialogRevoke}').show()">
+          <i>remove_moderator
+          <span>_{MsgRevoke}
           
       $of _
 
-    ^{widgetSnackbar msgs}
-
 
     <div.overlay ##{idOverlay}>
+
+    <dialog ##{idDialogRevoke}>
+      <h6>_{MsgConfirmPlease}
+      
+      <p>
+        _{MsgAreYouSureYouWantToRevokeCard}
+        
+      <form method=post action=@{DataR $ CardRevokeR uid cid} enctype=#{etRevoke}>
+        ^{fwRevoke}
+        <nav.right-align>
+          <button.transparent.link type=button data-ui=##{idOverlay}
+                                   onclick="document.getElementById('#{idDialogRevoke}').close()">
+            _{MsgCancel}
+     
+          <button type=submit>
+            _{MsgRevoke}
+
+
+    <dialog ##{idDialogReject}>
+      <h6>_{MsgConfirmPlease}
+      
+      <p>
+        _{MsgAreYouSureYouWantToRejectRequest}
+        
+      <form method=post action=@{DataR $ CardRejectR uid cid} enctype=#{etReject}>
+        ^{fwReject}
+        <nav.right-align>
+          <button.transparent.link type=button data-ui=##{idOverlay}
+                                   onclick="document.getElementById('#{idDialogReject}').close()">
+            _{MsgCancel}
+     
+          <button type=submit>
+            _{MsgReject}
 
 
     <dialog ##{idDialogQrCode}>
@@ -130,3 +159,17 @@
       <nav.right-align>
         <button.transparent.link ##{idButtonCloseDialogQrCode}>
           _{MsgClose}
+          
+
+    $forall (_,msg) <- filter ((==) msgUndo . fst) msgs
+      <div.snackbar.active>
+      
+        <div.max>
+          #{msg}
+
+        <form.no-padding.no-margin method=post action=@{DataR $ CardStatusUndoR uid cid status} enctype=#{etUndo}>
+          ^{fwUndo}
+          <button.small.transparent.inverse-link.no-padding.no-margin>
+            _{MsgUndo}
+
+    ^{widgetSnackbar (filter ((/=) msgUndo . fst) msgs)}

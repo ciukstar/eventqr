@@ -92,8 +92,13 @@ $forall (_,v) <- attrs
 
 
 <nav.right-align>
-  <a.button.transparent href=@{DataR $ UserCardsR uid}>
-    _{MsgCancel}
+  $maybe Entity cid _ <- card 
+    <a.button.transparent href=@{DataR $ UserCardR uid cid}>
+      _{MsgCancel}
+  $nothing
+    <a.button.transparent href=@{DataR $ UserCardsR uid}>
+      _{MsgCancel}
+    
   <button.primary type=submit>
     _{MsgSave}
 

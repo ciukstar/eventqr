@@ -2,10 +2,10 @@
 
 Array.from(
   document.querySelectorAll('.snackbar')
-).forEach(snackbar => {
-  snackbar.querySelector('button.close').addEventListener('click', e => {
-    snackbar.classList.remove('active');
-  });
+).map(
+  x => [x,Array.from(x.querySelectorAll('button.close'))]
+).forEach(([snackbar,buttons]) => {
+  buttons.forEach(x => x.addEventListener('click', e => { snackbar.classList.remove('active'); }));
 });
 
 setTimeout(() => {

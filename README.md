@@ -47,9 +47,19 @@ Event and Attendance Management
   * Project ID  
     ```$YESOD_GCLOUD_PROJECT_ID```
 
+## Basic entities
 
 *Entity Relationship Diagram*
 ![Entity Relationship Diagram](static/img/EventQr_ERD.svg)
+
+### Card
+...
+
+### Moderation
+
+*State machine diagram*
+![State machine diagram](static/img/Moderation_SMD.svg)
+
 
 ## Demo
 

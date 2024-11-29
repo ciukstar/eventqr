@@ -500,6 +500,8 @@ formRegistration event card extra = do
 getEventAttendeeR :: EventId -> AttendeeId -> Handler Html
 getEventAttendeeR eid aid = do
 
+    user <- maybeAuth
+    
     card <- runDB $ selectOne $ do
         x :& c :& u <- from $ table @Attendee
             `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)
@@ -523,12 +525,20 @@ getEventAttendeeR eid aid = do
         idButtonShowDialogQrCode <- newIdent
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
+        case user of
+          Just (Entity _ (User _ _ _ super admin manager _ _ _))
+              | manager || admin || super -> toWidget $(juliusFile "templates/upcoming/attendees/card-if.julius")
+              | otherwise -> return ()
+          Nothing -> return ()
+                                                                   
         $(widgetFile "upcoming/attendees/card")
 
 
 getEventAttendeesR :: EventId -> Handler Html
 getEventAttendeesR eid = do
 
+    user <- maybeAuth
+    
     attendees <- runDB $ select $ do
         x :& c :& u <- from $ table @Attendee
             `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)

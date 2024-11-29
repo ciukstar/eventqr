@@ -18,27 +18,60 @@
         <i.extra>folder_open
         <figcaption>
           _{MsgNoAttendeesForThisEventYet}.
+          
     $else
-      $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _ _ _ _)) <- attendees
-        <a.row.padding.no-margin.wave href=@{EventAttendeeR eid aid}>
+      $maybe Entity _ (User _ _ _ super admin manager _ _ _) <- user
+        $if (manager || admin) || super
+          $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _ _ _ _)) <- attendees
+            <a.row.padding.no-margin.wave href=@{EventAttendeeR eid aid}>
 
-          <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+              <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
 
-          <div.content.max>
-            <div.headline.large-text>
-              $maybe name <- uname
-                #{name}
-              $nothing
-                #{email}
+              <div.content.max>
+                <div.headline.large-text>
+                  $maybe name <- uname
+                    #{name}
+                  $nothing
+                    #{email}
 
-            <div.supporting-text.small-text>
-              _{MsgRegistrationDate}
-            <div.supporting-text.small-text>
-              $with dt <- show rdate
-                <time.full-datetime datetime=#{dt}>
-                  #{dt}
+                <div.supporting-text.small-text>
+                  _{MsgRegistrationDate}
+                <div.supporting-text.small-text>
+                  $with dt <- show rdate
+                    <time.full-datetime datetime=#{dt}>
+                      #{dt}
 
-          <i>arrow_forward_ios
+              <i>arrow_forward_ios
 
-        <hr>
+            <hr>
+       
+        $else
+          $forall (_, _, Entity uid (User email _ uname _ _ _ _ _ _)) <- attendees
+            <div.row.padding.no-margin>
+
+              <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+              <div.content.max>
+                <div.headline.large-text>
+                  $maybe name <- uname
+                    #{name}
+                  $nothing
+                    #{email}
+
+            <hr>
+                    
+      $nothing
+        $forall (_, _, Entity uid (User email _ uname _ _ _ _ _ _)) <- attendees
+          <div.row.padding.no-margin>
+
+            <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+
+            <div.content.max>
+              <div.headline.large-text>
+                $maybe name <- uname
+                  #{name}
+                $nothing
+                  #{email}
+
+          <hr>
     

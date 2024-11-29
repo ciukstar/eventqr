@@ -1,3 +1,6 @@
+Undo: Отменить
+AreYouSureYouWantToRevokeCard: Вы уверены, что хотите отозвать эту карточку?
+AreYouSureYouWantToRejectRequest: Вы уверены, что хотите отклонить этот запрос?
 PasswordChanged: Пароль изменен
 PasswordDoesNotMatch: Пароль не совпадает
 RepeatPassword: Повторите пароль

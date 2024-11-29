@@ -17,6 +17,7 @@ module Handler.Cards
   , postUserCardApproveR
   , postUserCardRevokeR
   , postUserCardRejectR
+  , postUserCardStatusUndoR
   , getCardQrImageR
   , getCardPhotoR
   , getCardsR
@@ -24,6 +25,7 @@ module Handler.Cards
   , postCardApproveR
   , postCardRevokeR
   , postCardRejectR
+  , postCardStatusUndoR
   ) where
 
 
@@ -41,6 +43,7 @@ import Data.Bifunctor (Bifunctor(first, second))
 import Data.Maybe (isJust)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8)
+import Data.Text.Lazy (toStrict)
 import Data.Time.Clock (getCurrentTime)
 
 import Database.Esqueleto.Experimental
@@ -62,7 +65,7 @@ import Foundation
       , UserCardNewR, UserCardsNewFieldR, UserCardEditR, UserCardNewFieldR
       , UserCardDeleR, CardsR, CardR, CardApproveR, CardRevokeR, CardRejectR
       , UserCardRejectR, UserCardRevokeR, UserCardApproveR, CardPhotoR
-      , UserCardInfoDeleR
+      , UserCardInfoDeleR, UserCardStatusUndoR, CardStatusUndoR
       )
     , AppMessage
       ( MsgPhoto, MsgUser, MsgName, MsgAwaiting, MsgTakePhoto
@@ -77,13 +80,15 @@ import Foundation
       , MsgReject, MsgRevoked, MsgIssueDate, MsgRequestDate, MsgStatus
       , MsgRequestApproved, MsgRevoke, MsgCardRevoked, MsgDateRevoked
       , MsgDateRejected, MsgCardRejected, MsgModerator, MsgUploadPhoto
+      , MsgAreYouSureYouWantToRejectRequest, MsgAreYouSureYouWantToRevokeCard
+      , MsgUndo
       )
     )
 
 import Material3 (md3widget, md3textareaWidget)
     
 import Model
-    ( msgSuccess, msgError
+    ( msgSuccess, msgError, msgUndo
     , UserId, User(User, userName)
     , CardId, Card (Card)
     , CardStatus
@@ -93,7 +98,8 @@ import Model
     , Info (Info), Photo (Photo)
     , EntityField
       ( UserId, CardUpdated, CardUser, CardId, InfoId, InfoCard, PhotoCard
-      , CardStatus, CardModerator, PhotoMime, PhotoPhoto, PhotoAttribution, InfoName
+      , CardStatus, CardModerator, PhotoMime, PhotoPhoto, PhotoAttribution
+      , InfoName
       )
     )
 
@@ -127,7 +133,43 @@ import Yesod.Form.Types
     , FieldView (fvInput, fvId, fvErrors, fvRequired, fvLabel)
     )
 import Yesod.Persist.Core (YesodPersist(runDB))
-import Data.Text.Lazy (toStrict)
+
+
+postCardStatusUndoR :: UserId -> CardId -> CardStatus -> Handler Html
+postCardStatusUndoR uid cid status = do
+    
+  ((fr,_),_) <- runFormPost formCardStatusUndo
+  case fr of
+    FormSuccess () -> case status of
+      CardStatusAwaiting -> redirect $ DataR $ CardR uid cid
+
+      CardStatusApproved -> do
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusAwaiting
+                    , CardModerator =. val Nothing
+                    , CardUpdated =. val Nothing
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          redirect $ DataR $ CardR uid cid
+
+      CardStatusRejected -> do
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusAwaiting
+                    , CardModerator =. val Nothing
+                    , CardUpdated =. val Nothing
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          redirect $ DataR $ CardR uid cid
+
+      CardStatusRevoked -> do
+          runDB $ update $ \x -> do
+              set x [CardStatus =. val CardStatusApproved]
+              where_ $ x ^. CardId ==. val cid
+          redirect $ DataR $ CardR uid cid
+
+    _otherwise -> do
+        addMessageI msgError MsgInvalidFormData
+        redirect $ DataR $ CardR uid cid
 
 
 postCardRejectR :: UserId -> CardId -> Handler Html
@@ -151,7 +193,7 @@ postCardRejectR uid cid = do
                     , CardModerator =. just (val uid)
                     ]
               where_ $ x ^. CardId ==. val cid
-          addMessageI msgSuccess MsgCardRejected
+          addMessageI msgUndo MsgCardRejected
           redirect (DataR $ CardR uid cid,stati)
           
       _otherwise -> do
@@ -180,7 +222,7 @@ postCardRevokeR uid cid = do
                     , CardModerator =. just (val uid)
                     ]
               where_ $ x ^. CardId ==. val cid
-          addMessageI msgSuccess MsgCardRevoked
+          addMessageI msgUndo MsgCardRevoked
           redirect (DataR $ CardR uid cid,stati)
           
       _otherwise -> do
@@ -209,7 +251,7 @@ postCardApproveR uid cid = do
                     , CardModerator =. just (val uid)
                     ]
               where_ $ x ^. CardId ==. val cid
-          addMessageI msgSuccess MsgRequestApproved
+          addMessageI msgUndo MsgRequestApproved
           redirect (DataR $ CardR uid cid,stati)
           
       _otherwise -> do
@@ -237,7 +279,8 @@ getCardR uid cid = do
 
     (fwApprove,etApprove) <- generateFormPost formCardApprove
     (fwRevoke,etRevoke) <- generateFormPost formCardRevoke
-    (fwReject,etReject) <- generateFormPost formCardReject    
+    (fwReject,etReject) <- generateFormPost formCardReject
+    (fwUndo,etUndo) <- generateFormPost formCardStatusUndo
     
     msgr <- getMessageRender
     msgs <- getMessages
@@ -247,6 +290,10 @@ getCardR uid cid = do
         idButtonShowDialogQrCode <- newIdent
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
+        idButtonRevoke <- newIdent
+        idDialogRevoke <- newIdent
+        idButtonReject <- newIdent
+        idDialogReject <- newIdent 
         $(widgetFile "data/moderation/card")
 
 
@@ -260,6 +307,43 @@ formCardRevoke extra = return (pure (), [whamlet|^{extra}|])
 
 formCardApprove :: Form ()
 formCardApprove extra = return (pure (), [whamlet|^{extra}|])
+
+
+postUserCardStatusUndoR :: UserId -> CardId -> CardStatus -> Handler Html
+postUserCardStatusUndoR uid cid status = do
+    
+  ((fr,_),_) <- runFormPost formCardStatusUndo
+  case fr of
+    FormSuccess () -> case status of
+      CardStatusAwaiting -> redirect $ DataR $ UserCardR uid cid
+
+      CardStatusApproved -> do
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusAwaiting
+                    , CardModerator =. val Nothing
+                    , CardUpdated =. val Nothing
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          redirect $ DataR $ UserCardR uid cid
+
+      CardStatusRejected -> do
+          runDB $ update $ \x -> do
+              set x [ CardStatus =. val CardStatusAwaiting
+                    , CardModerator =. val Nothing
+                    , CardUpdated =. val Nothing
+                    ]
+              where_ $ x ^. CardId ==. val cid
+          redirect $ DataR $ UserCardR uid cid
+
+      CardStatusRevoked -> do
+          runDB $ update $ \x -> do
+              set x [CardStatus =. val CardStatusApproved]
+              where_ $ x ^. CardId ==. val cid
+          redirect $ DataR $ UserCardR uid cid
+
+    _otherwise -> do
+        addMessageI msgError MsgInvalidFormData
+        redirect $ DataR $ UserCardR uid cid
 
 
 postUserCardRejectR :: UserId -> CardId -> Handler Html
@@ -284,7 +368,7 @@ postUserCardRejectR uid cid = do
                     , CardModerator =. val mid
                     ]
               where_ $ x ^. CardId ==. val cid
-          addMessageI msgSuccess MsgCardRejected
+          addMessageI msgUndo MsgCardRejected
           redirect (DataR $ UserCardR uid cid,stati)
           
       _otherwise -> do
@@ -314,7 +398,7 @@ postUserCardRevokeR uid cid = do
                     , CardModerator =. val mid
                     ]
               where_ $ x ^. CardId ==. val cid
-          addMessageI msgSuccess MsgCardRevoked
+          addMessageI msgUndo MsgCardRevoked
           redirect (DataR $ UserCardR uid cid,stati)
           
       _otherwise -> do
@@ -345,7 +429,7 @@ postUserCardApproveR uid cid = do
                     , CardModerator =. val mid
                     ]
               where_ $ x ^. CardId ==. val cid
-          addMessageI msgSuccess MsgRequestApproved
+          addMessageI msgUndo MsgRequestApproved
           redirect (DataR $ UserCardR uid cid,stati)
           
       _otherwise -> do
@@ -759,7 +843,8 @@ getUserCardR uid cid = do
 
     (fwApprove,etApprove) <- generateFormPost formCardApprove
     (fwRevoke,etRevoke) <- generateFormPost formCardRevoke
-    (fwReject,etReject) <- generateFormPost formCardReject    
+    (fwReject,etReject) <- generateFormPost formCardReject
+    (fwUndo,etUndo) <- generateFormPost formCardStatusUndo
 
     (fw0,et0) <- generateFormPost formCardDelete
     
@@ -772,7 +857,15 @@ getUserCardR uid cid = do
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
         idDialogDelete <- newIdent
+        idButtonRevoke <- newIdent
+        idDialogRevoke <- newIdent
+        idButtonReject <- newIdent
+        idDialogReject <- newIdent 
         $(widgetFile "data/users/cards/card")
+
+
+formCardStatusUndo :: Form ()
+formCardStatusUndo extra = return (pure (),[whamlet|^{extra}|])
 
 
 formCardDelete :: Form ()

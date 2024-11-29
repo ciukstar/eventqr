@@ -1,14 +1,7 @@
 
-$forall (_,msg) <- filter ((/=) msgError . fst) msgs
-  <div.snackbar.primary.active>
+$forall (s,msg) <- msgs
+  <div.snackbar.active :s == msgError:.error>
     <div.max>
       #{msg}
-    <button.close.transparent.circle>
-      <i>close
-    
-$forall (_,msg) <- filter ((==) msgError . fst) msgs
-  <div.snackbar.error.active>
-    <div.max>
-      #{msg}
-    <button.close.transparent.circle>
+    <button.close.transparent.circle.small>
       <i>close

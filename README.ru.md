@@ -47,8 +47,18 @@
     ```$YESOD_GCLOUD_PROJECT_ID```
 
 
+## Базовые сущности
+
 *Диаграмма взаимосвязи сущностей*
 ![Entity Relationship Diagram](static/img/EventQr_ERD.svg)
+
+### Карточка
+...
+
+### Модерация
+
+*Схема машины состояний*
+![State machine diagram](static/img/Moderation_SMD.svg)
 
 ## Демо
 

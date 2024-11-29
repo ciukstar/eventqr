@@ -112,6 +112,7 @@ import Handler.Cards
     , postUserCardApproveR
     , postUserCardRevokeR
     , postUserCardRejectR
+    , postUserCardStatusUndoR
     , getCardQrImageR
     , getCardPhotoR
     , getCardsR
@@ -119,6 +120,7 @@ import Handler.Cards
     , postCardApproveR
     , postCardRevokeR
     , postCardRejectR
+    , postCardStatusUndoR
     )
 
 import Handler.Accounts

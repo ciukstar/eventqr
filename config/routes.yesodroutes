@@ -46,11 +46,12 @@
 
 /data DataR:
 
-    /moderation/#UserId/cards/#CardId/reject  CardRejectR  POST
-    /moderation/#UserId/cards/#CardId/revoke  CardRevokeR  POST
-    /moderation/#UserId/cards/#CardId/approve CardApproveR POST
-    /moderation/#UserId/cards/#CardId         CardR        GET
-    /moderation/#UserId/cards                 CardsR       GET
+    /moderation/#UserId/cards/#CardId/undo/#CardStatus CardStatusUndoR POST
+    /moderation/#UserId/cards/#CardId/reject           CardRejectR     POST
+    /moderation/#UserId/cards/#CardId/revoke           CardRevokeR     POST
+    /moderation/#UserId/cards/#CardId/approve          CardApproveR    POST
+    /moderation/#UserId/cards/#CardId                  CardR           GET
+    /moderation/#UserId/cards                          CardsR          GET
 
     /users/#UserId/subscriptions/#PushSubscriptionId/unsubscribe UserUnsubscribeR   POST
     /users/#UserId/subscriptions                                 UserSubscriptionsR POST
@@ -113,10 +114,12 @@
     /qrcode/#CardId CardQrImageR GET
     
     /cards/#CardId CardPhotoR GET
+
     
-    /users/#UserId/cards/#CardId/reject  UserCardRejectR  POST
-    /users/#UserId/cards/#CardId/revoke  UserCardRevokeR  POST
-    /users/#UserId/cards/#CardId/approve UserCardApproveR POST
+    /users/#UserId/cards/#CardId/undo/#CardStatus UserCardStatusUndoR POST
+    /users/#UserId/cards/#CardId/reject           UserCardRejectR     POST
+    /users/#UserId/cards/#CardId/revoke           UserCardRevokeR     POST
+    /users/#UserId/cards/#CardId/approve          UserCardApproveR    POST
 
     /users/#UserId/cards/#CardId/fields/#Text/dele UserCardInfoDeleR POST
     

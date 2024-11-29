@@ -358,6 +358,7 @@ instance Yesod App where
     isAuthorized (DataR (UserCardApproveR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardRevokeR _ _)) _ = isAdmin
     isAuthorized (DataR (UserCardRejectR _ _)) _ = isAdmin
+    isAuthorized (DataR (UserCardStatusUndoR {})) _ = isAdmin
         
     isAuthorized (DataR (CardQrImageR _)) _ = isAuthenticated
     isAuthorized (DataR (CardPhotoR _)) _ = isAuthenticated
@@ -367,7 +368,8 @@ instance Yesod App where
     isAuthorized (DataR (CardApproveR uid _)) _ = isManagerSelfOrAdmin uid
     isAuthorized (DataR (CardRevokeR uid _)) _ = isManagerSelfOrAdmin uid
     isAuthorized (DataR (CardRejectR uid _)) _ = isManagerSelfOrAdmin uid
-                    
+    isAuthorized (DataR (CardStatusUndoR uid _ _)) _ = isManagerSelfOrAdmin uid
+                            
 
     isAuthorized (DataR (DataEventsR uid)) _ = setUltDestCurrent >> isManagerSelfOrAdmin uid
     isAuthorized (DataR (DataEventNewR uid)) _ = isManagerSelfOrAdmin uid

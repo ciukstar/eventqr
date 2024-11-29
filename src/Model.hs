@@ -95,6 +95,14 @@ data CardStatus = CardStatusAwaiting | CardStatusApproved | CardStatusRejected |
 derivePersistField "CardStatus"
 
 
+instance PathPiece CardStatus where
+    toPathPiece :: CardStatus -> Text
+    toPathPiece = pack . show
+
+    fromPathPiece :: Text -> Maybe CardStatus
+    fromPathPiece = readMaybe . unpack
+
+
 instance PathPiece Month where
     toPathPiece :: Month -> Text
     toPathPiece = pack . show
@@ -194,6 +202,9 @@ mediae = [("s","small"),("m","medium"),("l","large")] :: [(Text,Text)]
 
 langs :: [(Text,Text)]
 langs = [("ru","RU"),("en","EN")]
+
+msgUndo :: Text
+msgUndo = "undo"
 
 msgSuccess :: Text
 msgSuccess = "success"
