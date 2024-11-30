@@ -1,0 +1,29 @@
+
+^{widgetTopbar (Just (CalendarEventsR month day,[])) (msgr MsgEvent) idOverlay Nothing Nothing}
+
+<main.responsive.no-padding>
+
+  <div.tabs.min>
+    <a href=@{CalendarEventR month day eid}>
+      _{MsgDetails}
+      
+    <a href=@{CalendarEventAttendeesR month day eid}>
+      _{MsgAttendees}
+      
+    <a.active href=@{CalendarEventOrganizerR month day eid}>
+      _{MsgOrganizer}
+    
+  <div.padding.page.active>
+    $maybe Entity uid (User email _ uname _ _ _ _ _ _) <- organizer
+      <figure.center-align>
+        <img.circle.extra src=@{DataR $ UserPhotoR uid} height=64 width=64 loading=lazy alt=_{MsgPhoto}>
+        <figcaption>
+          $maybe name <- uname
+            <p.large-text>#{name}
+          $nothing
+            <p.large-text>_{MsgEventManager}
+          
+          <a.link href="mailto:#{email}">#{email}
+        
+
+    ^{widgetSnackbar msgs}

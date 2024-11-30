@@ -13,8 +13,7 @@ module Handler.Home
   , getEventRegistrationR, postEventRegistrationR
   , getEventUserRegisterR, postEventUserRegisterR
   , postEventUserCardRegisterR, postEventUserUnregisterR
-  , getEventAttendeesR
-  , getEventAttendeeR
+  , getEventAttendeesR, getEventAttendeeR, getEventOrganizerR
   , getScanQrR
   , getAttendeeRegistrationR, postAttendeeRegistrationR
   , getApiEventsR
@@ -47,8 +46,8 @@ import Foundation
     , Route
       ( AuthR, CalendarR, HomeR, EventR, EventRegistrationR
       , EventUserRegisterR, EventUserCardRegisterR, EventUserUnregisterR
-      , ScanQrR, AttendeeRegistrationR, EventAttendeesR
-      , EventAttendeeR, EventScannerR
+      , ScanQrR, AttendeeRegistrationR, EventAttendeesR, EventAttendeeR
+      , EventOrganizerR, EventScannerR
       , ApiEventsR, DataR, StaticR, EventPosterR
       )
     , DataR
@@ -76,7 +75,8 @@ import Foundation
       , MsgFillInCard, MsgMyVisitingSchedule, MsgNoAttendeesForThisEventYet
       , MsgUpcoming, MsgOrderNewCard, MsgCardIsRequiredToParticipateInEvents
       , MsgAwaitingModeration, MsgRejected, MsgCardStatusActive, MsgRevoked
-      , MsgRequestDate, MsgDateRejected, MsgDateRevoked
+      , MsgRequestDate, MsgDateRejected, MsgDateRevoked, MsgEventManager
+      , MsgOrganizer
       )
     )
 
@@ -495,6 +495,25 @@ formRegistration event card extra = do
     let r = (,) <$> eidR <*> cidR
     let w = [whamlet|#{extra} ^{fvInput eidV} ^{fvInput cidV}|]
     return (r,w)
+
+
+getEventOrganizerR :: EventId -> Handler Html
+getEventOrganizerR  eid = do
+
+    organizer <- runDB $ selectOne $ do
+        x <- from $ table @User
+        where_ $ x ^. UserId `in_` subSelectList ( do
+            e <- from $ table @Event
+            where_ $ e ^. EventId ==. val eid
+            return $ e ^. EventManager )
+        return x
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgEventManager 
+        idOverlay <- newIdent
+        $(widgetFile "upcoming/organizer/organizer")
 
 
 getEventAttendeeR :: EventId -> AttendeeId -> Handler Html

@@ -275,6 +275,7 @@ instance Yesod App where
     isAuthorized (EventScannerR _) _ = return Authorized
     isAuthorized (EventAttendeesR _) _ = return Authorized
     isAuthorized (EventAttendeeR _ _) _ = return Authorized
+    isAuthorized (EventOrganizerR _) _ = return Authorized
     isAuthorized (EventRegistrationR _) _ = return Authorized
     isAuthorized (EventUserRegisterR _ uid) _ = isAuthenticatedSelf uid
     isAuthorized (EventUserCardRegisterR _ uid _) _ = isAuthenticatedSelf uid
@@ -296,6 +297,7 @@ instance Yesod App where
     
     isAuthorized (CalendarEventAttendeesR {}) _ = return Authorized
     isAuthorized (CalendarEventAttendeeR {}) _ = return Authorized
+    isAuthorized (CalendarEventOrganizerR {}) _ = return Authorized
     
     isAuthorized DocsR _ = setUltDestCurrent >> return Authorized
     

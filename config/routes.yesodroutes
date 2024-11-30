@@ -1,6 +1,8 @@
 -- By default this file is used by `parseRoutesFile` in Foundation.hs
 -- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
 
+
+/calendar/#Month/#Day/events/#EventId/organizer                            CalendarEventOrganizerR        GET
 /calendar/#Month/#Day/events/#EventId/attendees/#AttendeeId                CalendarEventAttendeeR         GET
 /calendar/#Month/#Day/events/#EventId/attendees                            CalendarEventAttendeesR        GET
 /calendar/#Month/#Day/events/#EventId/users/#UserId/unregister             CalendarEventUserUnregisterR   POST
@@ -16,6 +18,8 @@
 /scanner/#UserId/attendee/register AttendeeRegistrationR GET POST
 /scanner/#UserId                   ScanQrR               GET
 
+
+/events/#EventId/organizer                            EventOrganizerR        GET
 /events/#EventId/attendees/#AttendeeId                EventAttendeeR         GET
 /events/#EventId/attendees                            EventAttendeesR        GET
 /events/#EventId/users/#UserId/unregister             EventUserUnregisterR   POST

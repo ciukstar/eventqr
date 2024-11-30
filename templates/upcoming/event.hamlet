@@ -9,6 +9,9 @@
       
     <a href=@{EventAttendeesR eid}>
       _{MsgAttendees}
+      
+    <a href=@{EventOrganizerR eid}>
+      _{MsgOrganizer}
     
   <div.padding.page.active>
 

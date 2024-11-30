@@ -7,6 +7,7 @@
 module Handler.Calendar
   ( getCalendarR, getCalendarEventsR, getCalendarEventR
   , getCalendarEventAttendeesR, getCalendarEventAttendeeR
+  , getCalendarEventOrganizerR
   , getCalendarEventScannerR
   , getCalendarEventRegistrationR
   , postCalendarEventUserCardRegisterR
@@ -50,8 +51,9 @@ import Foundation
       , CalendarEventScannerR, CalendarEventRegistrationR, EventPosterR
       , CalendarEventAttendeeR, HomeR, DataR, CalendarEventUserCardRegisterR
       , CalendarEventUserRegisterR, CalendarEventUserUnregisterR
+      , CalendarEventOrganizerR
       )
-    , DataR (UserPhotoR, CardQrImageR)
+    , DataR (UserPhotoR, CardQrImageR, CardPhotoR)
     , AppMessage
       ( MsgCalendar, MsgMon, MsgTue, MsgWed, MsgThu, MsgFri, MsgSat, MsgSun
       , MsgPrevious, MsgNext, MsgEvents, MsgEvent, MsgName, MsgTime
@@ -66,9 +68,9 @@ import Foundation
       , MsgNotManagerOfEventSorry, MsgYouDoNotHaveACardToRegisterYet
       , MsgRegisterForThisEvent, MsgUnsubscribe, MsgYouAreRegisteredForThisEvent
       , MsgRegisterWithQrCode, MsgSubscriptionSuccessful, MsgSelectCardToRegister
-      , MsgCards, MsgRegisterForEvent, MsgUnsubscribeAreYouSure
+      , MsgCards, MsgRegisterForEvent, MsgUnsubscribeAreYouSure, MsgEventManager
       , MsgConfirmPlease, MsgUnsubscribeSuccessful, MsgNoAttendeesForThisEventYet
-      , MsgAwaitingModeration, MsgRejected, MsgCardStatusActive
+      , MsgAwaitingModeration, MsgRejected, MsgCardStatusActive, MsgOrganizer
       )
     )
     
@@ -82,7 +84,7 @@ import Model
     , UserId, User (User)
     , EntityField
       ( EventTime, EventId, AttendeeCard, CardId, CardUser, AttendeeEvent
-      , UserId, AttendeeId, InfoCard, InfoId, CardUpdated
+      , UserId, AttendeeId, InfoCard, InfoId, CardUpdated, EventManager
       )
     )
 
@@ -109,8 +111,30 @@ import Yesod.Form.Input (runInputGet, ireq)
 import Yesod.Persist.Core (YesodPersist(runDB))
 
 
+getCalendarEventOrganizerR :: Month -> Day -> EventId -> Handler Html
+getCalendarEventOrganizerR month day eid = do
+
+    organizer <- runDB $ selectOne $ do
+        x <- from $ table @User
+        where_ $ x ^. UserId `in_` subSelectList ( do
+            e <- from $ table @Event
+            where_ $ e ^. EventId ==. val eid
+            return $ e ^. EventManager )
+        return x
+    
+    msgr <- getMessageRender
+    msgs <- getMessages
+    defaultLayout $ do
+        setTitleI MsgEventManager 
+        idOverlay <- newIdent
+        $(widgetFile "calendar/events/organizer/organizer")
+    
+
+
 getCalendarEventAttendeeR :: Month -> Day -> EventId -> AttendeeId -> Handler Html
 getCalendarEventAttendeeR month day eid aid = do
+
+    user <- maybeAuth
 
     card <- runDB $ selectOne $ do
         x :& c :& u <- from $ table @Attendee
@@ -135,12 +159,19 @@ getCalendarEventAttendeeR month day eid aid = do
         idButtonShowDialogQrCode <- newIdent
         idDialogQrCode <- newIdent
         idButtonCloseDialogQrCode <- newIdent
+        case user of
+          Just (Entity _ (User _ _ _ super admin manager _ _ _))
+              | manager || admin || super -> toWidget $(juliusFile "templates/calendar/events/attendees/card-if.julius")
+              | otherwise -> return ()
+          Nothing -> return ()
         $(widgetFile "calendar/events/attendees/card")
 
 
 getCalendarEventAttendeesR :: Month -> Day -> EventId -> Handler Html
 getCalendarEventAttendeesR month day eid = do
 
+    user <- maybeAuth
+    
     attendees <- runDB $ select $ do
         x :& c :& u <- from $ table @Attendee
             `innerJoin` table @Card `on` (\(x :& c) -> x ^. AttendeeCard ==. c ^. CardId)

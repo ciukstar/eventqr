@@ -11,6 +11,9 @@
       
     <a.active href=@{EventAttendeesR eid}>
       _{MsgAttendees}
+      
+    <a href=@{EventOrganizerR eid}>
+      _{MsgOrganizer}
     
   <div.page.active>
     $if null attendees
@@ -22,10 +25,10 @@
     $else
       $maybe Entity _ (User _ _ _ super admin manager _ _ _) <- user
         $if (manager || admin) || super
-          $forall (Entity aid (Attendee _ _ rdate), _, Entity uid (User email _ uname _ _ _ _ _ _)) <- attendees
+          $forall (Entity aid (Attendee _ cid rdate), _, Entity _ (User email _ uname _ _ _ _ _ _)) <- attendees
             <a.row.padding.no-margin.wave href=@{EventAttendeeR eid aid}>
 
-              <img.circle src=@{DataR $ UserPhotoR uid} alt=_{MsgPhoto} loading=lazy>
+              <img.circle src=@{DataR $ CardPhotoR cid} alt=_{MsgPhoto} loading=lazy>
 
               <div.content.max>
                 <div.headline.large-text>

@@ -1,3 +1,4 @@
+Organizer: Организатор
 Undo: Отменить
 AreYouSureYouWantToRevokeCard: Вы уверены, что хотите отозвать эту карточку?
 AreYouSureYouWantToRejectRequest: Вы уверены, что хотите отклонить этот запрос?

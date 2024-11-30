@@ -58,7 +58,7 @@ import Handler.Home
     , getEventRegistrationR, postEventRegistrationR
     , getEventUserRegisterR, postEventUserRegisterR
     , postEventUserCardRegisterR, postEventUserUnregisterR
-    , getEventAttendeesR, getEventAttendeeR
+    , getEventAttendeesR, getEventAttendeeR, getEventOrganizerR
     , getScanQrR
     , getAttendeeRegistrationR, postAttendeeRegistrationR
     , getApiEventsR
@@ -66,7 +66,7 @@ import Handler.Home
 
 import Handler.Calendar
     ( getCalendarR, getCalendarEventsR, getCalendarEventR, getCalendarEventAttendeesR
-    , getCalendarEventAttendeeR
+    , getCalendarEventAttendeeR, getCalendarEventOrganizerR
     , getCalendarEventScannerR
     , getCalendarEventRegistrationR
     , postCalendarEventUserCardRegisterR

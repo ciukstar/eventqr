@@ -1,3 +1,4 @@
+Organizer: Organizer
 Undo: Undo
 AreYouSureYouWantToRevokeCard: Are you sure you want to revoke this card?
 AreYouSureYouWantToRejectRequest: Are you sure you want to reject this request?

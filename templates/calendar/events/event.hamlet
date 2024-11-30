@@ -9,6 +9,9 @@
       
     <a href=@{CalendarEventAttendeesR month day eid}>
       _{MsgAttendees}
+      
+    <a href=@{CalendarEventOrganizerR month day eid}>
+      _{MsgOrganizer}
     
   <div.padding.page.active>
     $maybe (Entity _ (Event _ time name descr dur),attendees) <- event
